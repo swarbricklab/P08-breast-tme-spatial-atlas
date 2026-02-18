@@ -335,4 +335,3 @@ dependencies:
   - zstd=1.5.6
   - pip:
       - mycolorpy==1.5.1
-prefix: /g/data/a56/conda/envs/usr/sl6147/gseapy
