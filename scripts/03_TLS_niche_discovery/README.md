@@ -1,0 +1,46 @@
+# TLS Niche Discovery Workflow
+
+This directory contains scripts and workflows for identifying, scoring, and characterizing tertiary lymphoid structure (TLS) niches and related immune aggregates in Visium data.
+
+## Directory Structure
+
+- **01_identify_TLS/**  
+  Initial TLS scoring and spatial grouping.
+  - `01_run_TLS_model.py`: Apply the published TLS predictive model (Andersson et al., 2021) to Visium spots.
+  - `02_group_TLS_high.py`: Visualize and group spatially contiguous regions with high TLS scores.
+
+- **02_identify_TLS_niches/**  
+  Refined clustering and identification of internal TLS architectures.
+  - `01_cluster_TLS_high.py`: Integrate, cluster, and visualize TLS-high spots to identify core niches (T cell zone, B cell zone, Germinal Center, HEV). *(Generates data for Table S4)*.
+
+- **03_extract_niche_signatures/**  
+  Extraction and biological filtering of niche marker gene signatures. *(Generates data for Table S5)*.
+  - `01_extract_niche_signatures.py`: Derive raw marker gene signatures from TLS clustering results.
+  - `02_filter_GC_signature.py`: Filter germinal center (GC) signature genes against an epithelial background to remove shared markers (e.g., proliferation, DNA damage repair).
+  - `03a_identify_endothelial_high.py`: Identify a background of pan-endothelial high spots across the tissue.
+  - `03b_create_endothelial_object.py`: Integrate endothelial-high spots across samples to create a vascular reference.
+  - `03c_filter_HEV_signature.py`: Filter HEV marker genes against the generic endothelial background to isolate HEV-specific markers.
+
+- **04_map_niche_signatures/**  
+  Scoring and spatial mapping of the refined niche signatures across the tissue.
+  - `01_score_signatures.py`: Score all tissue spots for the derived TLS niche gene signatures.
+  - `02_group_high_score_areas.py`: Group contiguous regions with high TLS niche scores to enable region quantification (e.g., count GC reactions per tissue).
+
+## Workflow Overview
+
+1. **TLS Scoring:**  
+   Apply published TLS predictive models to Visium data to assign a baseline TLS probability score to each spot.
+
+2. **Spatial Grouping:**  
+   Identify and visualize regions with high TLS scores, using spatial graphs to group neighboring spots into discrete aggregate structures.
+
+3. **Clustering & Niche Identification:**  
+   Integrate and cluster the TLS-high spots to resolve internal architecture. Extract marker genes and apply background filtering to isolate highly specific signatures for GC and HEV niches.
+
+4. **Signature Mapping:**  
+   Score the whole tissue for the refined TLS niche signatures, group high-scoring regions, and assess spatial continuity.
+
+5. **Output:**  
+   - Spatially annotated `.h5ad` objects with TLS and niche scores.
+   - CSV files containing raw differentially expressed genes (**Table S4**) and final filtered spatial signatures (**Table S5**).
+   - Spatial plots mapping the T cell zone, B cell zone, and GC niches.
