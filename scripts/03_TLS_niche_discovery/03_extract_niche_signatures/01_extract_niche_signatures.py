@@ -226,7 +226,7 @@ for region, cluster in clusters_of_interest.items():
     print(f"{region}: Cluster {cluster}")
 
 # Save the filtered gene lists for the clusters of interest in a separate directory for downstream analysis
-signature_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', 'niche_signatures')
+signature_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
 os.makedirs(signature_dir, exist_ok=True)
 
 for region, cluster in clusters_of_interest.items():
