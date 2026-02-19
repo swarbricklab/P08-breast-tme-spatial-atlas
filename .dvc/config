@@ -1,0 +1,4 @@
+[core]
+    remote = p08-spatial-benchmarking-analysis-for-publication
+['remote "p08-spatial-benchmarking-analysis-for-publication"']
+    url = ssh://gadi-dm.nci.org.au/g/data/a56/dvc/analysis/P08-Spatial-Benchmarking-Analysis-for-publication
