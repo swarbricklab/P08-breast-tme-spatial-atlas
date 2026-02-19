@@ -143,8 +143,8 @@ to_score_df = pd.DataFrame.from_dict(to_score, orient='index').T
 
 # --- Save the plots
 
-# Output to results/03_TLS_niche_discovery/identify_TLS/run_TLS_model/<date>
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', 'identify_TLS', 'run_TLS_model')
+# Output to results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model/<date>
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 today = date.today().strftime("%Y%m%d")
 out_dir = os.path.join(base_results, today)
 os.makedirs(out_dir, exist_ok=True)
@@ -154,7 +154,5 @@ TLS_model_result = adata.obs['TLS_model']
 filename = f'{sample_id}_TLS_model.csv'
 TLS_model_result.to_csv(os.path.join(out_dir, filename), index=True)
 
-# Also save the pandas dataframe as a csv file (to be able to check which genes were used in each sample)
-to_score_df.to_csv(os.path.join(out_dir, f'{sample_id}_genes_used.csv'), index=False)
 
 print("Script succesfully completed")

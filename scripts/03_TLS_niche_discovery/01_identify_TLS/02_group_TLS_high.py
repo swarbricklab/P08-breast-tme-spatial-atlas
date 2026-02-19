@@ -102,7 +102,7 @@ else:
 
 # --- Load TLS results
 
-TLS_res_dir = os.path.join(res_dir, 'TLS_model')
+TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
 # Find most recent results
 subdirs = [d for d in os.listdir(TLS_res_dir) if os.path.isdir(os.path.join(TLS_res_dir, d))]
@@ -116,8 +116,6 @@ for subdir in subdirs:
         valid_subdirs.append(subdir)
     except ValueError:
         pass
-
-# Sort the valid subdirectories by date and get the most recent one
 if valid_subdirs:
     most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
     most_recent_dir_path = os.path.join(TLS_res_dir, most_recent_dir)
@@ -134,8 +132,8 @@ adata.obs['TLS_model'] = TLS_results
 
 # --- Prepare for saving the plots
 
-# Output to results/03_TLS_niche_discovery/01_identify_TLS/<date>
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', 'identify_TLS', 'group_TLS_high')
+# Output to results/03_TLS_niche_discovery/01_identify_TLS/
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high')
 today = date.today().strftime("%Y%m%d")
 qc_dir = base_results
 os.makedirs(qc_dir, exist_ok=True)
@@ -188,7 +186,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - TLS score + TLS-high spots', y=1.05, fo
 threshold_adj = str(threshold).split('.')[-1]
 
 if len(adata_sub) == 0 or len(adata_sub) == 1:
-    out_dir = os.path.join(qc_dir, 'TLS_plots_per_sample', f'threshold_{threshold_adj}')
+    out_dir = os.path.join(qc_dir, f'threshold_{threshold_adj}')
     os.makedirs(out_dir, exist_ok=True)
     # Save plots
     out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)
