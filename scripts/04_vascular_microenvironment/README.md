@@ -15,8 +15,8 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
 
 - **02_identify_all_vasculature/** 
   Classification of the broader tumor vascular network.
-  - `01_classify_vessels.py`: Classify segmented vessels based on the dominant deconvolved endothelial cell type (Arterial, Capillary, Venous, Lymphatic).
-  - `02_investigate_vessels.py`: Analyze spatial overlap and associations between vessel types and specific Perivascular-Like (PVL) subsets.
+  - `01_classify_vessels.py`: Classify segmented vessels based on the dominant deconvolved endothelial cell type (arterial, capillary, venous, lymphatic).
+  - `02_investigate_vessels.py`: Analyze spatial overlap and associations between vessel types and specific perivascular-like (PVL) subsets.
   - `03_calculate_distances.py`: Calculate radial distances from segmented vessels to surrounding tissue bins.
   - `04_assess_PVL_association.py`: Generate spatial enrichment profiles of PVL composition across distance bins from vessels.
 
