@@ -1,0 +1,5 @@
+donor_id,tissue_id,section_id,data_type,tissue_type
+P26,P26,P26_HD,Visium HD,Primary tumor
+P27,P27,P27_HD,Visium HD,Primary tumor
+P29,P29,P29_HD,Visium HD,Primary tumor
+P32,P32,P32_HD,Visium HD,Primary tumor
