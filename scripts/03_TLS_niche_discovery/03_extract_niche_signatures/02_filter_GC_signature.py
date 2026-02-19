@@ -90,9 +90,7 @@ epithelial_annotations = {}
 annotation_dir_base = os.path.join(project_dir, 'resources', 'path_annotations')
 
 for sample in sample_list:
-    external_id = sample_lut.loc[sample, 'external_id']
-    joined_id = f'{external_id}-{sample}'
-    annotation_dir = os.path.join(annotation_dir_base, joined_id)
+    annotation_dir = os.path.join(annotation_dir_base, sample)
     if os.path.exists(annotation_dir):
         annotation_files = os.listdir(annotation_dir)
         epithelial_file = [file for file in annotation_files if 'epithelial' in file.lower()][0]
@@ -110,9 +108,7 @@ sample_id_key = 'sample_id'
 # Load only samples with epithelial annotations
 
 for sample in epithelial_annotations:
-    external_id = sample_lut.loc[sample, 'external_id']
-    joined_id = f'{external_id}-{sample}'
-    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, use_layer, f'{joined_id}_{use_layer}.h5ad'))
+    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample}.h5ad'))
     # Add subtype to obs for easier splitting
     adata_dict[sample].obs[subtype_key] = subtype_dict[sample]
     # Also add sample id for easier splitting
@@ -137,8 +133,7 @@ reworked_anno_dir = os.path.join(project_dir, 'results', 'path_annotations', 're
 for sample in epithelial_annotations:
     sample_anno_dir = os.path.join(reworked_anno_dir, sample, 'csv_files', 'reworked_annotations_per_layer')
     if os.path.exists(sample_anno_dir):
-        external_id = sample_lut.loc[sample, 'external_id']
-        filename = f'{sample}-{external_id}_{path_layer}_reworked.csv'
+        filename = f'{sample}_{path_layer}_reworked.csv'
         path_to_file = os.path.join(sample_anno_dir, filename)
         if os.path.exists(path_to_file):
             print(f'Found reworked annotations for {sample}')

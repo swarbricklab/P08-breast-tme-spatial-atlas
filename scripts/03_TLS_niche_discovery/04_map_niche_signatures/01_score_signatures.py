@@ -65,7 +65,7 @@ run_lymph_node = False
 
 # --- Get some info from the sample sheet
 
-# Extract the external_id
+# Extract sample info
 sample_dir = os.path.join(project_dir, 'config')
 if run_lymph_node:
     sample_sheet_file = 'sample_sheet_lymph_nodes.csv'
@@ -73,11 +73,10 @@ else:
     sample_sheet_file = 'sample_sheet.csv'
 
 sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
 
-joined_id = f'{external_id}-{sample_id}'
+joined_id = sample_id
 
 # --- Also get some tissue metadata
 
@@ -92,16 +91,10 @@ if run_lymph_node:
 else:
     subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clinical_subtype'].values[0]
 
+
 # --- Load the adata object
 
-use_data = 'log_norm'
-
-if run_lymph_node:
-    adata_file = f'{sample_id}_{use_data}.h5ad'
-else:
-    adata_file = f'{joined_id}_{use_data}.h5ad'
-
-adata = ad.read_h5ad(os.path.join(h5ad_dir, use_data, adata_file))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 # Specify which layer to use
 use_layer = 'log_norm'
@@ -252,7 +245,7 @@ for score_name, filename in clusters_of_i.items():
 
     # Extract the layer you want to score on
 
-    score_obj = ad.AnnData(adata.layers[use_layer])
+    score_obj = ad.AnnData(adata.X)
     score_obj.obs_names = adata.obs_names
     score_obj.var_names = adata.var_names
 

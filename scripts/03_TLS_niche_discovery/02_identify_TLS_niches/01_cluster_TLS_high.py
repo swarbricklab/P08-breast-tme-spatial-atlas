@@ -96,9 +96,7 @@ use_data = 'log_norm'
 use_layer = 'log_norm'
 
 for sample in sample_list:
-    external_id = sample_lut.loc[sample, 'external_id']
-    joined_id = f'{external_id}-{sample}'
-    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, use_data, f'{joined_id}_{use_data}.h5ad'))
+    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample}.h5ad'))
 
 # Add some info for plotting
 
@@ -161,7 +159,6 @@ most_recent_dir_path = find_most_recent(TLS_res_dir)
 
 # Read in the results & add to anndata
 for sample in adata_dict.keys():
-    external_id = sample_lut.loc[sample, 'external_id']
     TLS_file_name = f'{sample}_TLS_model.csv'
     TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
     adata_dict[sample].obs['TLS_model'] = TLS_results
@@ -198,7 +195,6 @@ most_recent_dir_path = find_most_recent(TLS_group_dir)
 group_key = 'group_singleton_removed'
 
 for sample in sample_list:
-    external_id = sample_lut.loc[sample, 'external_id']
     TLS_file_name = f'{sample}_TLS_groups.csv'
     TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
     adata_dict[sample].obs[group_key] = TLS_results[group_key]

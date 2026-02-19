@@ -49,19 +49,15 @@ project_dir=args["project_dir"]
 
 # --- Extract some info from the sample sheet
 
-# Extract the external_id
 sample_dir = os.path.join(project_dir, 'config')
 sample_sheet_file = 'sample_sheet.csv'
 
 sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
-
-joined_id = f'{external_id}-{sample_id}'
 
 
 # --- Load the adata object
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{joined_id}_log_norm.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 
 # --- Load the coefficient file from andersson 2021

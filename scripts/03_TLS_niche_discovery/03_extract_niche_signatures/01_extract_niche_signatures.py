@@ -85,10 +85,7 @@ harmony_dir = os.path.join(project_dir, 'results', 'TLS_model', 'TLS_plots_all_s
 most_recent = find_most_recent(harmony_dir)
 
 # Load the adata containing results
-adata = ad.read_h5ad(os.path.join(most_recent, 'csv_files', 'All_samples_TLS_umap.h5ad'))
-
-use_data = 'log_norm'
-use_layer = 'log_norm'
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', 'All_samples_TLS_umap.h5ad'))
 
 
 # --- Also load top genes

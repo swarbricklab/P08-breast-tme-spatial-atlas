@@ -82,9 +82,8 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 
 # --- Load the adata object
 
-use_data = 'log_norm'
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, use_data, f'{joined_id}_{use_data}.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation

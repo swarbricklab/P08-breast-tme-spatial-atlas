@@ -109,7 +109,7 @@ filename = 'All_samples_endothelial_umap.h5ad'
 most_recent = find_most_recent(harmony_dir)
 
 # Load the adata containing results
-adata = ad.read_h5ad(os.path.join(most_recent, 'csv_files', filename))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', filename))
 
 use_data = 'log_norm'
 use_layer = 'log_norm'

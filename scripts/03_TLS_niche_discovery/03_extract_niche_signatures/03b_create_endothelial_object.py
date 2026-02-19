@@ -87,13 +87,8 @@ for sample in sample_list:
 # Multiple samples as a dictionary seems like an okay idea
 adata_dict = {}
 
-use_data = 'log_norm'
-use_layer = 'log_norm'
-
 for sample in sample_list:
-    external_id = sample_lut.loc[sample, 'external_id']
-    joined_id = f'{external_id}-{sample}'
-    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, use_data, f'{joined_id}_{use_data}.h5ad'))
+    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample}.h5ad'))
 
 # Add some info for plotting
 

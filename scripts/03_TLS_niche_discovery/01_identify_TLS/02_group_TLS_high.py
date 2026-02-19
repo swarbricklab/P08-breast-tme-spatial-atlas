@@ -59,16 +59,14 @@ project_dir=args["project_dir"]
 
 # --- Get some info from the sample sheet
 
-# Extract the external_id
+# Extract sample info
 sample_dir = os.path.join(project_dir, 'config')
 sample_sheet_file = 'sample_sheet.csv'
 
 sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
 
-joined_id = f'{external_id}-{sample_id}'
 
 # --- Also get some tissue metadata
 
@@ -82,9 +80,7 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 
 # --- Load the adata object
 
-use_data = 'log_norm'
-
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'raw', f'{joined_id}_raw.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
