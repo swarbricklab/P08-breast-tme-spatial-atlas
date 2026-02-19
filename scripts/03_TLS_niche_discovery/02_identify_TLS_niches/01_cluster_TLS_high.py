@@ -1,0 +1,909 @@
+#!/usr/bin/env python3
+
+# --- Aim
+# Integrate spatial transcriptomics samples to identify TLS clusters:
+# - Load and merge sample/tissue metadata
+# - Perform PCA, Harmony integration, UMAP, Leiden clustering across samples
+# - Visualize QC metrics, subtype/sample/donor distributions, spatial clusters
+# - Extract and plot marker genes for TLS clusters
+# - Save clustering results, marker gene lists, and integrated AnnData for downstream analysis
+
+# --- Define environment
+# env: spatial-pilot
+
+# --- Load packages
+import argparse
+import scanpy as sc
+import scanpy.external as sce
+import anndata as ad
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import date
+from datetime import datetime
+import numpy as np
+import matplotlib.patches as patches
+
+import math
+from matplotlib.colors import LinearSegmentedColormap
+from mycolorpy import colorlist as mcp
+import scanpy.plotting.palettes as sc_palettes
+
+# Custom functions
+from sophiesfunctions.auto_crop import auto_crop_scanpy
+from sophiesfunctions.save_multi_image import save_multi_image
+
+sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=10)
+sc.settings.verbosity = 3
+
+
+# --- Argparse arguments
+parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+parser.add_argument("-s", "--samples",
+    nargs="*",  # 0 or more values expected => creates a list
+    type=str,
+    help="List of samples")
+parser.add_argument("-r", "--res_dir", help="Path to results directory")
+parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
+parser.add_argument("--project_dir", help="Project directory (root)")
+
+args = vars(parser.parse_args())
+
+# Arguments
+project_dir = args["project_dir"]
+h5ad_dir = args["h5ad_dir"]
+res_dir = args["res_dir"]
+sample_list = args["samples"]
+
+print(f'Samples in python: {sample_list}')
+
+# --- Extract some info from the sample sheet
+
+sample_dir = os.path.join(project_dir, 'config')
+sample_sheet_file = 'sample_sheet.csv'
+
+sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_lut = sample_sheet.set_index('section_id')
+
+
+# --- Also get some tissue metadata
+
+resource_dir = os.path.join(project_dir, 'resources')
+metadata_file = 'tissue_metadata.csv'
+
+tissue_metadata = pd.read_csv(os.path.join(resource_dir, metadata_file))
+
+# Merge the two DataFrames on the common column 'tissue_id'
+merged_df = pd.merge(sample_sheet, tissue_metadata, on='tissue_id')
+
+# Create a sample - subtype dictionary
+subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
+
+# And make a sample patient LUT
+sample_donor_lut = {}
+
+for sample in sample_list:
+    sample_donor_lut[sample] = sample_lut.loc[sample, 'donor_id']
+
+
+# -- Load data
+# Multiple samples as a dictionary seems like an okay idea
+adata_dict = {}
+
+use_data = 'log_norm'
+use_layer = 'log_norm'
+
+for sample in sample_list:
+    external_id = sample_lut.loc[sample, 'external_id']
+    joined_id = f'{external_id}-{sample}'
+    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, use_data, f'{joined_id}_{use_data}.h5ad'))
+
+# Add some info for plotting
+
+for sample in sample_list:
+    adata_dict[sample].obs['sample_id'] = sample
+    adata_dict[sample].obs['subtype'] = subtype_dict[sample]
+    adata_dict[sample].obs['donor_id'] = sample_lut.loc[sample, 'donor_id']
+
+
+# --- Calculate crop coords for optimal presentation
+coords = {}
+for sample in adata_dict.keys():
+    coords[sample] = auto_crop_scanpy(adata_dict[sample], border_size=0.1)
+
+
+# --- Order based on sample ID
+
+ordered_keys = sorted(adata_dict.keys())
+
+
+# --- Set spot size for large & small capture area
+# Plotting the spots larger to make it easier to see
+
+spot_size={}
+
+for sample in adata_dict.keys():
+    if sample_lut.loc[sample, 'slide_size'] == '11 mm':
+        spot_size[sample]=1.8
+    else:
+        spot_size[sample]=1.6
+
+
+# --- Load the TLS model results for each sample
+
+TLS_res_dir = os.path.join(res_dir, 'TLS_model')
+
+# Function to find the most recent results
+def find_most_recent(dir):
+    # Find most recent results
+    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
+    # Filter subdirectories to keep only those with date format YYYYmmdd
+    date_format = '%Y%m%d'
+    valid_subdirs = []
+    for subdir in subdirs:
+        try:
+            datetime.strptime(subdir, date_format)
+            valid_subdirs.append(subdir)
+        except ValueError:
+            pass
+    # Sort the valid subdirectories by date and get the most recent one
+    if valid_subdirs:
+        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
+        most_recent_dir_path = os.path.join(dir, most_recent_dir)
+        print("Most recent results:", most_recent_dir_path)
+    else:
+        print("No valid directories found.")
+    return most_recent_dir_path
+
+most_recent_dir_path = find_most_recent(TLS_res_dir)
+
+# Read in the results & add to anndata
+for sample in adata_dict.keys():
+    external_id = sample_lut.loc[sample, 'external_id']
+    TLS_file_name = f'{sample}_TLS_model.csv'
+    TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
+    adata_dict[sample].obs['TLS_model'] = TLS_results
+
+
+# --- Make a custom color map for better visualization
+
+# Set everything under 0 as the lowest color of a color map
+
+cmap = "YlOrRd"
+
+color_list = mcp.gen_color(cmap=cmap, n=11)
+
+color_list_extracted = ['lightgray'] + color_list[2:]
+
+n_bins = 100
+cmap_name = 'my_list'
+cmap_adj = LinearSegmentedColormap.from_list(cmap_name, color_list_extracted, N=n_bins)
+
+cmap_adj.set_under(color='lightgray', alpha=0.4)
+
+
+# --- Also load the TLS groupings
+
+threshold = 0.01
+
+threshold_adj = str(threshold).split('.')[-1]
+
+TLS_group_dir = os.path.join(TLS_res_dir, 'TLS_plots_per_sample', f'threshold_{threshold_adj}', 'csv_files')
+
+most_recent_dir_path = find_most_recent(TLS_group_dir)
+
+# Read in the results & add to anndata
+group_key = 'group_singleton_removed'
+
+for sample in sample_list:
+    external_id = sample_lut.loc[sample, 'external_id']
+    TLS_file_name = f'{sample}_TLS_groups.csv'
+    TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
+    adata_dict[sample].obs[group_key] = TLS_results[group_key]
+    # Set singletons to NA to exclude them
+    # adata_dict[sample].obs[group_key] = np.where(adata_dict[sample].obs[group_key] == 'singleton', None, adata_dict[sample].obs[group_key])
+
+# Subset adata to include only the TLS  groups
+for sample, adata in adata_dict.items():
+    adata_dict[sample] = adata[~adata.obs[group_key].isna()]
+
+
+# --- Prepare for plotting the result per subtype: define a plotting order based on subtype
+
+# Convert to adata list & concatenate
+adata_list = list(adata_dict.values())
+all_adata = ad.concat(adata_list, merge='same')
+
+# all_adata.obs_names_make_unique()
+
+# Extract all subtypes
+all_subtypes = all_adata.obs.subtype.unique()
+
+# Sort according to preferred plotting order
+subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+sorted_subtypes = sorted(all_subtypes, key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
+
+
+# -- Define a plotting order
+
+# Extract all sample ids per subtype
+adata_per_subtype_list = {}
+
+for subtype in sorted_subtypes:
+    adata_per_subtype_list[subtype] = []
+    for sample in adata_dict.keys():
+        if subtype_dict[sample] == subtype:
+            adata_per_subtype_list[subtype] += [sample]
+
+# Sort each list of sample IDs based
+for list_samples in adata_per_subtype_list.values():
+    list_samples.sort()
+
+
+# --- Get colors per subtype
+
+color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
+color_file = 'SCSubtype_colors.csv'
+
+color_lut = pd.read_csv(os.path.join(color_dir, color_file))
+color_lut = color_lut.set_index('subtype')
+
+subtype_colors = list(color_lut.reindex(sorted_subtypes)['color'])
+
+
+# --- PCA + UMAP
+
+# seed for reproducibility
+seed = 42
+
+# Get highly variable genes
+sc.pp.highly_variable_genes(all_adata, flavor="seurat", n_top_genes=2000, layer=use_layer)
+
+n_comps = 50
+
+# create a new object
+pca_obj = ad.AnnData(all_adata.layers['scaled'])
+pca_obj.var = all_adata.var
+sc.tl.pca(pca_obj, n_comps = n_comps, zero_center = True, svd_solver='arpack', random_state = seed, return_info = True, use_highly_variable = True)
+
+all_adata.uns['pca'] = pca_obj.uns['pca']
+all_adata.obsm['X_pca'] = pca_obj.obsm['X_pca']
+all_adata.varm['PCs'] = pca_obj.varm['PCs']
+
+# Adjust the PCs with harmony
+sce.pp.harmony_integrate(all_adata, 'sample_id')
+
+# Assign the new PCs to the standard slot
+all_adata.obsm['X_pca'] = all_adata.obsm['X_pca_harmony']
+
+# neighbourhood graph
+n_pcs=30
+
+sc.pp.neighbors(all_adata, n_pcs=n_pcs, random_state=seed)
+
+# calculate umap
+sc.tl.umap(all_adata, random_state=seed)
+
+# Leiden clustering
+resolution = 1.5
+
+sc.tl.leiden(all_adata, key_added='leiden', resolution=resolution)
+
+
+# --- Plot 1: Variance ratio
+
+sc.set_figure_params(scanpy=True, fontsize=8)
+
+sc.pl.pca_variance_ratio(all_adata, n_pcs=n_comps, log=True)
+plt.suptitle(f'All samples - PCA variance (n_comps={n_comps}, n_pcs={n_pcs}) - TLS groups threshold={threshold}', y=1.1, fontweight='bold')
+
+
+# --- Plot 2: Plot the genes driving each PC
+
+sc.set_figure_params(scanpy=True, fontsize=10)
+
+# Note: this doesn't work with the SCT data because you can't save the PCs
+if use_data == 'log_norm':
+    dimensions_to_check=10
+    plt.rcParams['figure.figsize']=(5, 5)
+    sc.pl.pca_loadings(all_adata, components = range(1, dimensions_to_check+1, 1), n_points = 10)
+    plt.suptitle(f'All samples - PCA loadings (top 10) - Use data: {use_data} TLS groups threshold={threshold}', y=1, fontweight='bold')
+
+
+# --- Plot 3: Plot qc metrics in UMAP
+
+plt.rcParams["figure.figsize"] = (4, 4)
+
+to_plot = ['sample_id', 'donor_id', 'batch', 'subtype', 'leiden']
+
+# Make donor id type string for correct plotting
+all_adata.obs['donor_id'] = all_adata.obs['donor_id'].astype('category')
+
+# Order the subtypes
+all_adata.obs['subtype'] = all_adata.obs['subtype'].astype(pd.CategoricalDtype(categories=sorted_subtypes, ordered=True))
+
+# Also include the batch
+# Create an empty dictionary to store the indices
+batch_dict = {}
+
+# Iterate over unique categories
+for category in sample_lut['batch'].unique():
+    key = category.replace('SciLife_FFPE_', '')
+    # Get the indices for each category and convert them to a list
+    indices = sample_lut.index[sample_lut['batch'] == category].tolist()
+    for index in indices:
+        if 'Xe1' in index:
+            key = 'xenium_visium'
+            if key in batch_dict:
+                batch_dict[key].append(index)
+            else:
+                batch_dict[key] = [index]
+        else:
+            if key in batch_dict:
+                batch_dict[key].append(index)
+            else:
+                batch_dict[key] = [index]
+
+def assign_category(row):
+    for category, indices in batch_dict.items():
+        if row['sample_id'] in indices:
+            return category
+    return ''
+
+all_adata.obs['batch'] = all_adata.obs.apply(assign_category, axis=1)
+
+all_adata[all_adata.obs['sample_id'] == '3962_3H_R1L'].obs[['batch', 'sample_id']]
+
+# Make plots
+ncols = 3
+nrows = math.ceil((len(to_plot))/ncols)
+
+plt.figure(figsize=(7*ncols, 4*nrows))
+
+for n, plot in enumerate(to_plot):
+    # add a new subplot iteratively
+    ax = plt.subplot(nrows, ncols, n + 1)
+    if plot == 'subtype':
+        palette = subtype_colors
+    else:
+        palette = None
+    sc.pl.umap(all_adata, color=plot, ax=ax, palette=palette)
+    ax.set_title(ax.get_title(), fontweight='bold')
+
+plt.suptitle(f'All samples - UMAP qc metrics - (use_data={use_data}, resolution={resolution})', y=1.1, fontweight='bold')
+
+plt.tight_layout()
+
+
+
+# --- Plot 4a: Subtypes
+
+# Function to avoid repetition
+def plot_separate_umaps(adata, group_key, group_list, color_list, ncols=3, add_subtype=False, subtype_lut=None):
+    nrows = math.ceil((len(group_list) + 2)/ncols)
+    plt.figure(figsize=(3*ncols, 3*nrows))
+    # Then plot the groups
+    for n, group in enumerate(group_list):
+        # add a new subplot iteratively
+        ax = plt.subplot(nrows, ncols, n + 1)
+        if add_subtype:
+            subtype = adata[adata.obs[group_key] == group].obs['subtype'].unique()[0]
+            sc.pl.umap(adata, color=group_key, groups=[group], ax=ax, palette=[color_list[n]], na_color='lightgray', title=f'{group} ({subtype})')
+        else:
+            # filter df and plot ticker on the new subplot axis
+            sc.pl.umap(adata, color=group_key, groups=[group], ax=ax, palette=[color_list[n]], na_color='lightgray', title=group)
+        ax.set_title(ax.get_title(), fontweight='bold')
+        ax.get_legend().remove()
+
+
+# Plot separate umaps for subtype
+group_key = 'subtype'
+
+plot_separate_umaps(all_adata, group_key, sorted_subtypes, color_list=subtype_colors)
+
+plt.suptitle(f'All samples - UMAP per subtype TLS groups (threshold={threshold})', y=1, fontweight='bold')
+
+plt.tight_layout()
+
+
+# --- Plot 4b: Samples
+
+group_key = 'sample_id'
+
+sorted_samples = adata_per_subtype_list.values()
+sorted_samples = [item for sublist in sorted_samples for item in sublist]
+
+# Check that there aren't any samples that didn't make it because they don't have aggregates
+samples_w_aggregates = list(all_adata.obs['sample_id'].cat.categories)
+
+cleaned_list = [item for item in sorted_samples if item in samples_w_aggregates]
+
+group_list = cleaned_list
+
+# Extract colors
+if len(group_list) < 21:
+    color_list = sc_palettes.default_20[:len(group_list)]
+else:
+    color_list = sc_palettes.godsnot_102[:len(group_list)]
+
+plot_separate_umaps(all_adata, group_key, group_list, color_list=color_list, add_subtype=True, ncols=5)
+
+plt.suptitle(f'All samples - UMAP per sample TLS groups (threshold={threshold})', y=1, fontweight='bold')
+
+plt.tight_layout()
+
+
+# --- Plot 4c: Donors
+
+group_key = 'donor_id'
+
+# Create a list of donors corresponding to the samples
+donor_list = [sample_donor_lut[sample] for sample in cleaned_list]
+
+# Remove duplicates while preserving order
+unique_list = []
+seen = set()
+for item in donor_list:
+    if item not in seen:
+        unique_list.append(item)
+        seen.add(item)
+
+group_list = donor_list
+
+# Extract colors
+if len(group_list) < 21:
+    color_list = sc_palettes.default_20[:len(group_list)]
+else:
+    color_list = sc_palettes.godsnot_102[:len(group_list)]
+
+plot_separate_umaps(all_adata, group_key, group_list, color_list=color_list, add_subtype=True, ncols=5)
+
+plt.suptitle(f'All samples - UMAP per patient TLS groups (threshold={threshold})', y=1, fontweight='bold')
+
+plt.tight_layout()
+
+
+# --- Plot 5: Plot clusters spatially
+
+sc.set_figure_params(scanpy=True, fontsize=20)
+
+# Add the clustering results to the original adata_dict
+for sample in adata_dict:
+    adata_sub = all_adata[all_adata.obs['sample_id'] == sample]
+    adata_dict[sample].obs['leiden'] = adata_sub.obs['leiden']
+
+leiden_clusters = list(all_adata.obs['leiden'].cat.categories)
+
+# Extract colors
+if len(leiden_clusters) < 21:
+    color_list = sc_palettes.default_20[:len(leiden_clusters)]
+else:
+    color_list = sc_palettes.godsnot_102[:len(leiden_clusters)]
+
+# Set up for plotting
+if len(adata_dict.keys()) < 5:
+        ncols = len(adata_dict.keys())
+else:
+    ncols = 5
+
+# Plotting
+nrows = math.ceil((len(adata_dict.keys()))/ncols)
+
+plt.figure(figsize=(8*ncols, 7*nrows))
+
+list_all_samples = [value for sublist in adata_per_subtype_list.values() for value in sublist]
+
+for n, sample in enumerate(list_all_samples):
+    # add a new subplot iteratively
+    ax = plt.subplot(nrows, ncols, n + 1)
+    # Extract colors
+    clusters = list(adata_dict[sample].obs['leiden'].unique())
+    # Extract the numbers and convert them to integers
+    numbers = [int(num_str) for num_str in clusters]
+    # Sort the numbers
+    sorted_numbers = sorted(numbers)
+    # Extract items corresponding to the indices
+    palette = [color_list[i] for i in sorted_numbers]
+    # filter df and plot ticker on the new subplot axis
+    subtype = subtype_dict[sample]
+    sc.pl.spatial(adata_dict[sample], color='leiden', size=spot_size[sample], ax=ax, bw=False, alpha_img=1, palette=palette,
+        crop_coord=coords[sample], title=f'{sample} ({subtype})', vmin=0)
+    ax.set_title(ax.get_title(), fontweight='bold')
+    legend = ax.get_legend()
+    # Increase the size of the markers in the legend
+    for handle in legend.legend_handles:
+        handle.set_sizes([100]) 
+
+plt.suptitle(f'All samples - leiden clusters (resolution={resolution}) TLS groups spatial (threshold={threshold})', y=1, fontweight='bold')
+
+
+# --- Plot 6a: Composition of groups
+sc.set_figure_params(scanpy=True, fontsize=10)
+
+# Composition per sample, split by subtype
+
+group_key = 'sample_id'
+group_list = cleaned_list
+
+leiden_groups_df = all_adata.obs[[group_key, 'leiden']]
+
+plot_df = leiden_groups_df.value_counts().reset_index()
+
+# Pivot the DataFrame
+pivot_df = plot_df.pivot(index=group_key, columns='leiden', values='count').fillna(0)
+
+# Calculate rowsums
+rowsums = pd.DataFrame(pivot_df.sum(axis=1))
+
+# Also make a proportion df
+proportion_df = pivot_df.div(pivot_df.sum(axis=1), axis=0)
+
+# Convert df to per subtype df
+def split_df_subtype(df, subtype_lut=subtype_dict):
+    dfs_dict = {}
+    for sample, category in subtype_lut.items():
+        if sample in pivot_df.index:
+                if category not in dfs_dict:
+                    dfs_dict[category] = df.loc[[sample]]
+                else:
+                    dfs_dict[category] = pd.concat([dfs_dict[category], df.loc[[sample]]])
+    return dfs_dict
+
+barplot_dict = split_df_subtype(pivot_df)
+prop_dict = split_df_subtype(proportion_df)
+
+
+# Prepare for plotting the barplot
+def prepare_custom_barplot(barplot_dict, ncols=ncols, nrows=1, all_subtypes=sorted_subtypes, width=10, height=5):
+    # Calculate the width of each subtype subplot based on how many samples per subtype
+    grid_spec = []
+    for subtype in all_subtypes:
+        all_samples = barplot_dict[subtype].index
+        grid_spec.append(len(all_samples))
+    fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(width, height*nrows), sharey='row', gridspec_kw={'width_ratios': grid_spec})
+    # If ncols = 1: need to reshape to make axs iterable
+    if ncols == 1:
+        if nrows == 1:
+            axs = np.reshape(axs, 1)
+        else:
+            for n, ax in enumerate(axs):
+                axs[n] = np.reshape(axs[n], 1)
+    return axs, grid_spec
+
+
+# Define a function for creating barplots
+def plot_custom_barplot(barplot_dict, axs, grid_spec, title=None, all_subtypes=sorted_subtypes, ylabel=None, 
+                         plot_subtype_cols=False, offset=0.02, bar_width=0.02, annotate=False):
+    for n, (subtype, ax) in enumerate(zip(all_subtypes, axs)):
+        # Sort samples for correct plotting order
+        sorted_samples = sorted(barplot_dict[subtype].index)
+        barplot_dict[subtype] = barplot_dict[subtype].reindex(sorted_samples)
+        barplot_dict[subtype].plot(kind='bar', stacked=True, ax=ax, grid=False, width=0.8, linewidth=0.2, edgecolor='black')
+        if title is None:
+            ax.set_title(subtype, fontweight='bold', fontsize=12)
+        else:
+            ax.set_title(title, fontweight='bold', fontsize=12)
+        # move x-axis tick labels to the left
+        xlabels = ax.get_xticklabels()
+        ax.set_xticklabels(xlabels, rotation=45, ha='right')
+        # remove the x-axis label
+        ax.set_xlabel('')
+        if ylabel is not None:
+            ax.set_ylabel(ylabel)
+        if n > 0:
+            ax.set_ylabel('')
+        # Adjust the positions of the subplots
+        ax_pos = ax.get_position()
+        # Shift the subplot to the desired location + set the width so it's equal for all plots
+        if n == 0:
+            ax.set_position([ax_pos.x0, ax_pos.y0, bar_width*grid_spec[n], ax_pos.height])
+        else:
+            new_pos = ax_pos_prev.x0 + ax_pos_prev.width + offset
+            ax.set_position([new_pos, ax_pos.y0, bar_width*grid_spec[n], ax_pos.height])
+        ax_pos_prev = ax.get_position()
+        # Remove legend
+        ax.get_legend().remove()
+        # Annotate the bars
+        if annotate:
+            rowsums = pd.DataFrame(barplot_dict[subtype].sum(axis=1))
+            for index, value in enumerate(rowsums[0]):
+                ax.annotate(str(int(value)), xy=(index, value), ha='center', va='bottom', fontsize=8)
+        # Add legend
+        if n == (ncols-1):
+            ax.legend(loc='upper left', title='Leiden clusters', title_fontproperties={'weight': 'bold'}, bbox_to_anchor=(1.0, 1.05), 
+                    fancybox=False, frameon=False, handlelength=1.5, alignment='left')
+    # Adjust y-axis limits to accommodate the highest value
+    if annotate:
+        margin = 1.05  # Set the margin
+        ymax = ax.get_ylim()[1]
+        for ax in axs:
+            ax.set_ylim(0, ymax * margin)
+    # Add subtype color at top & bottom    
+    if plot_subtype_cols:
+        for n, subtype in enumerate(all_subtypes):
+            # Add colors for subtypes
+            color = color_lut.loc[subtype, 'color']
+            width = grid_spec[n] + 1
+            xlim = axs[n].get_xlim()
+            ylim = axs[n].get_ylim()
+            range_y = ylim[1] - ylim[0]
+            height = 0.03 * range_y
+            # Markings at top
+            rect = patches.Rectangle((xlim[0], ylim[1]-height), width=width, height=height, facecolor=color, alpha=0.7, zorder=-1)
+            axs[n].add_patch(rect)
+
+# Prepare for plotting
+ncols=len(sorted_subtypes)
+plot_subtype_cols = True
+
+# Plot
+axs, grid_spec = prepare_custom_barplot(barplot_dict, ncols=ncols, nrows=2, height=4, width=12)
+
+plot_custom_barplot(barplot_dict, axs[0], grid_spec, ylabel='Number of spots', plot_subtype_cols=plot_subtype_cols, annotate=True, offset=0)
+plot_width = plot_custom_barplot(prop_dict, axs[1], grid_spec, ylabel='Proportion of spots', plot_subtype_cols=plot_subtype_cols, annotate=False, offset=0)
+
+# More space between plots for xlabels
+plt.subplots_adjust(hspace=0.6, wspace=0.1)
+
+# Calculate the midpoint to position the title
+title_x = (axs[0][0].get_position().x0 + axs[0][len(grid_spec)-1].get_position().x1)/2
+
+plt.suptitle(f'All samples - leiden clusters (resolution={resolution}) contribution per sample (threshold={threshold})', y=1, x=title_x, fontweight='bold')
+
+
+# --- Plot 7a: Clusters per subtype
+
+group_key = 'subtype'
+group_list = cleaned_list
+
+leiden_groups_df = all_adata.obs[[group_key, 'leiden']]
+
+plot_df = leiden_groups_df.value_counts().reset_index()
+
+# Pivot the DataFrame
+pivot_df = plot_df.pivot(index=group_key, columns='leiden', values='count').fillna(0)
+
+# Calculate rowsums
+rowsums = pd.DataFrame(pivot_df.sum(axis=1))
+
+# Also make a proportion df
+proportion_df = pivot_df.div(pivot_df.sum(axis=1), axis=0)
+
+nrows = 1
+ncols = 2
+
+# Make a function for ease
+def plot_composition(pivot_df, ax, ylabel=None, title=None, annotate=True, legend=True, palette=None, alpha=1, rotate_labels=True):
+    pivot_df.plot(kind='bar', stacked=True, ax=ax, grid=False, width=0.8, linewidth=0.2, edgecolor='black', color=palette)
+    # Annotate the bars
+    if annotate:
+        for index, value in enumerate(rowsums[0]):
+            ax.annotate(str(int(value)), xy=(index, value), ha='center', va='bottom', fontsize=8)
+        # Make some room for the annotations
+        margin = 1.05  # Set the margin
+        ymax = ax.get_ylim()[1]
+        ax.set_ylim(0, ymax * margin)
+    for bar in ax.patches: # Adjust the colors of the bars
+        # Get the RGBA values of the fill color
+        fill_color = bar.get_facecolor()
+        fill_color = list(fill_color)
+        fill_color[-1] = alpha # make the fill color a bit transparent
+        bar.set_color(tuple(fill_color))
+        bar.set_edgecolor('black')
+    if rotate_labels:
+        # Rotate xlabels
+        xlabels = ax.get_xticklabels()
+        ax.set_xticklabels(xlabels, rotation=45, ha='right')
+    else:
+        # Rotate xlabels
+        ax.tick_params(axis='x', labelrotation=0)
+    # Set axis labels
+    ax.set_xlabel('')
+    ax.set_ylabel(ylabel)
+    # Set title
+    ax.set_title(title, fontweight='bold')
+    if legend:
+        # Move legend
+        ax.legend(loc='upper left', bbox_to_anchor=(1.0, 1.0), fancybox=False, frameon=False, handlelength=1.5)
+    else:
+        ax.get_legend().remove()
+
+
+fig, axs = plt.subplots(nrows, ncols, figsize=(3*ncols, 3*nrows))
+
+plot_composition(pivot_df, ax=axs[0], ylabel='Number of spots', title='Composition by cluster')
+plot_composition(proportion_df, ax=axs[1], ylabel='Proportion of spots', title='Composition by cluster', annotate=False)
+
+# Adjust plot width to the number of bars
+plot_width = 0.04*len(sorted_subtypes)
+
+for ax in axs:
+    prev_position = ax.get_position()
+    ax.set_position([prev_position.x0, prev_position.y0, plot_width, prev_position.height])
+
+# Stop plots from overlapping with legend
+plt.subplots_adjust(wspace=0.8)
+
+title_x = (axs[0].get_position().x0 + axs[1].get_position().x1)/2
+
+plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}) - contribution per group', y=1.1, x=title_x, fontweight='bold')
+
+
+# --- Plot 7b: Subtypes per cluster
+
+# Transpose the dataframe
+pivot_df = pivot_df.T
+
+# Calculate rowsums
+rowsums = pd.DataFrame(pivot_df.sum(axis=1))
+
+# Also make a proportion df
+proportion_df = pivot_df.div(pivot_df.sum(axis=1), axis=0)
+
+ncols = 1
+nrows = 2
+
+# Plotting
+fig, axs = plt.subplots(nrows, ncols, figsize=(4*ncols, 4*nrows))
+
+plot_composition(pivot_df, ax=axs[0], ylabel='Number of spots', title='Composition by subtype', legend=True, palette=subtype_colors, 
+                 alpha=0.8, rotate_labels=False)
+plot_composition(proportion_df, ax=axs[1], ylabel='Proportion of spots', title='Composition by subtype', annotate=False, palette=subtype_colors,
+                 alpha=0.8, rotate_labels=False)
+
+# Adjust plot width to the number of bars
+plot_width = 0.04*len(sorted_subtypes)
+
+for ax in axs:
+    prev_position = ax.get_position()
+    ax.set_position([prev_position.x0, prev_position.y0, plot_width, prev_position.height])
+
+# Stop plots from overlapping with legend
+plt.subplots_adjust(hspace=0.3)
+
+title_x = (axs[0].get_position().x0 + axs[0].get_position().x1)/2
+
+plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}) - contribution per group', y=1, x=title_x, fontweight='bold')
+
+
+# --- Plot 7c: Samples per cluster
+
+group_key = 'sample_id'
+group_list = cleaned_list
+
+leiden_groups_df = all_adata.obs[[group_key, 'leiden']]
+
+plot_df = leiden_groups_df.value_counts().reset_index()
+
+# Pivot the DataFrame
+pivot_df = plot_df.pivot(index=group_key, columns='leiden', values='count').fillna(0)
+
+# Transpose to plot per cluster
+pivot_df = pivot_df.T
+
+# Calculate rowsums
+rowsums = pd.DataFrame(pivot_df.sum(axis=1))
+
+# Also make a proportion df
+proportion_df = pivot_df.div(pivot_df.sum(axis=1), axis=0)
+
+# Plotting
+fig, axs = plt.subplots(nrows, ncols, figsize=(4*ncols, 4*nrows))
+
+plot_composition(pivot_df, ax=axs[0], ylabel='Number of spots', title='Samples per cluster', legend=True, rotate_labels=False)
+plot_composition(proportion_df, ax=axs[1], ylabel='Proportion of spots', title='Samples per cluster', annotate=False, legend=False, rotate_labels=False)
+
+# Adjust plot width to the number of bars
+plot_width = 0.04*len(sorted_subtypes)
+
+for ax in axs:
+    prev_position = ax.get_position()
+    ax.set_position([prev_position.x0, prev_position.y0, plot_width, prev_position.height])
+
+# Stop plots from overlapping with legend
+plt.subplots_adjust(hspace=0.3)
+
+title_x = (axs[0].get_position().x0 + axs[1].get_position().x1)/2
+
+plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}) - contribution per group', y=1, x=title_x, fontweight='bold')
+
+
+# --- Extract marker genes
+
+rank_genes_key = 'rank_genes_leiden'
+
+# Remove clusters with a single spot
+single_spot_clusters = all_adata.obs['leiden'].value_counts()[all_adata.obs['leiden'].value_counts() == 1].index
+
+single_spot_clusters = list(single_spot_clusters.unique())
+
+all_adata.obs['leiden_2'] = all_adata.obs['leiden']
+all_adata.obs['leiden_2'] = np.where(all_adata.obs['leiden_2'].isin(single_spot_clusters), None, all_adata.obs['leiden_2'])
+
+sc.tl.rank_genes_groups(all_adata, 'leiden_2', use_raw = False, layer=use_layer, method='wilcoxon', key_added=rank_genes_key,
+                        pts=True)
+sc.tl.dendrogram(all_adata, 'leiden_2')
+
+
+# --- Plot 7: Dot plots for top 10 genes per cluster
+
+sc.pl.rank_genes_groups_dotplot(all_adata, n_genes=50, groupby='leiden_2', key=rank_genes_key, layer=use_layer)
+
+plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}), top 10 genes per cluster (use_data={use_data})', y=1.1, fontweight='bold')
+
+
+# --- Plot 8: 1 vs rest plots
+
+sc.pl.rank_genes_groups(all_adata, n_genes=25, groupby='leiden_2', key=rank_genes_key, layer=use_layer)
+
+plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}) 1 vs rest plots, 25 genes (use_data={use_data})', y=1.1, fontweight='bold')
+
+sc.pl.dotplot(all_adata, var_names=['RGS13', 'MEF2B', 'ELL3', 'BCL7A', 'VNN2', 'HMCES', 'DTX1'], groupby='leiden_2', layer=use_layer)
+
+
+# --- Save output
+
+# Put in a timestamped folder to avoid overwriting older plots
+qc_dir = os.path.join(res_dir, 'TLS_model')
+os.makedirs(qc_dir, exist_ok=True)
+
+today = date.today()
+today = today.strftime("%Y%m%d")
+
+out_dir = os.path.join(qc_dir, 'TLS_plots_all_samples', 'gene_expression', f'threshold_{threshold_adj}', 'umap', 'harmony_integration', today)
+os.makedirs(out_dir, exist_ok=True)
+
+# Save plots
+out_dir_plots = os.path.join(out_dir, 'plots')
+os.makedirs(out_dir_plots, exist_ok=True)
+
+filename = f'All_samples_TLS_groups_umap.pdf'
+
+save_multi_image(os.path.join(out_dir_plots, filename))
+
+# Save the clustering
+out_dir_csv = os.path.join(out_dir, 'csv_files')
+os.makedirs(out_dir_csv, exist_ok=True)
+clusters_df = all_adata.obs[['sample_id', 'donor_id', 'subtype', 'leiden']]
+
+clusters_df.to_csv(os.path.join(out_dir_csv, f'All_samples_leiden_clusters.csv'))
+
+# Also save the differential genes
+dfs = []
+
+result = all_adata.uns[rank_genes_key]
+groups = result['names'].dtype.names
+reference = result['params']['reference']
+
+# Iterate through the groups
+for group in groups:
+    # Create a DataFrame for the current group
+    df = pd.DataFrame({
+        'group': group,
+        'reference': reference,
+        'genes': result['names'][group],
+        'pvals': result['pvals'][group],
+        'logfoldchanges': result['logfoldchanges'][group],
+        'pts': result['pts'][group],
+        'pvals_adj': result['pvals_adj'][group],
+        'z-score': result['scores'][group]
+    })
+    # Append the DataFrame to the list
+    dfs.append(df)
+
+# Concatenate the DataFrames from all groups into one DataFrame
+final_df = pd.concat(dfs, ignore_index=True)
+
+filename = f'All_samples_leiden_clusters_DEGS.csv'
+final_df.to_csv(os.path.join(out_dir_csv, filename), index=False)
+
+
+# Save the whole object as well to have all the umap stuff
+ad.AnnData.write(all_adata, filename=os.path.join(out_dir_csv, f"All_samples_TLS_umap.h5ad"))
+
+
+# --- Finish
+
+print("Script successfully completed")
