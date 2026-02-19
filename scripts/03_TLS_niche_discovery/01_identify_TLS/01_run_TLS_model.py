@@ -21,8 +21,6 @@ from datetime import date
 
 # --- Argparse arguments
 
-# --- Argparse arguments
-
 parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -31,6 +29,7 @@ parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -49,10 +48,14 @@ project_dir=args["project_dir"]
 
 # --- Extract some info from the sample sheet
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_path = os.path.join(sample_dir, 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 
 
 # --- Load the adata object
@@ -140,14 +143,10 @@ to_score_df = pd.DataFrame.from_dict(to_score, orient='index').T
 
 # --- Save the plots
 
-# Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model')
-os.makedirs(qc_dir, exist_ok=True)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir = os.path.join(qc_dir, today)
+# Output to results/03_TLS_niche_discovery/identify_TLS/run_TLS_model/<date>
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', 'identify_TLS', 'run_TLS_model')
+today = date.today().strftime("%Y%m%d")
+out_dir = os.path.join(base_results, today)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save the TLS model output as a dataframe

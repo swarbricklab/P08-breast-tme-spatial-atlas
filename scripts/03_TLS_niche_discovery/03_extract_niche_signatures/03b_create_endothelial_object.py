@@ -36,6 +36,7 @@ sc.settings.verbosity = 3
 parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+
 parser.add_argument("-s", "--samples",
     nargs="*",  # 0 or more values expected => creates a list
     type=str,
@@ -43,6 +44,7 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -54,12 +56,15 @@ sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
 
+
 # --- Extract some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 

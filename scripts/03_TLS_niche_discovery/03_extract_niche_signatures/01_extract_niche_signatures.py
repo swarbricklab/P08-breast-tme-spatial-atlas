@@ -40,6 +40,7 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -52,30 +53,14 @@ sample_list = args["samples"]
 print(f'Samples in python: {sample_list}')
 
 
-# --- Load the clustering results
+# --- Load the sample sheet
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
+sample_sheet = pd.read_csv(sample_sheet_path)
 
 # Load harmony clustering results
 threshold = 0.01

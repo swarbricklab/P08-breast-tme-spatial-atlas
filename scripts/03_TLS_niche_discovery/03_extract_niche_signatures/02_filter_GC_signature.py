@@ -35,6 +35,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+
 parser.add_argument("-s", "--samples",
     nargs="*",  # 0 or more values expected => creates a list
     type=str,
@@ -43,6 +44,7 @@ parser.add_argument("-r", "--res_dir",
                     help="Path to results directory (optional)")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files") # Not necessary for this script
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -59,13 +61,15 @@ print(f'Samples in python: {sample_list}')
 
 use_layer = 'log_norm'
 
-
 # --- Extract some info from the sample sheet
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 
@@ -634,30 +638,35 @@ for idx in filtered_indices:
 axs[-1].set_xticklabels(xtick_labels)
 
 
-# --- Save the output
-
 out_dir = os.path.join(gene_dir, 'GC_score_filtered_genes')
 os.makedirs(out_dir, exist_ok=True)
-
 out_file = os.path.join(out_dir, f'GC_score_filtered_genes.csv')
 top_genes_table.to_csv(out_file, index=False)
-
 out_file = os.path.join(out_dir, f'GC_score_filtered_genes_all.csv')
 gene_table.to_csv(out_file, index=False)
-
-#  Also save the plots
-# Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'GC_score_filtering')
 os.makedirs(qc_dir, exist_ok=True)
-
 today = date.today()
 today = today.strftime("%Y%m%d")
-
 out_dir = os.path.join(qc_dir, 'filter_GC_score', 'plots', today)
 os.makedirs(out_dir, exist_ok=True)
-
-filename = 'All_samples_GC_score_filtering.pdf'
 save_multi_image(os.path.join(out_dir, filename))
+
+# --- Save the output to results/03_TLS_niche_discovery/03_extract_niche_signatures
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures')
+os.makedirs(base_results, exist_ok=True)
+
+out_file = os.path.join(base_results, 'GC_score_filtered_genes.csv')
+top_genes_table.to_csv(out_file, index=False)
+
+out_file = os.path.join(base_results, 'GC_score_filtered_genes_all.csv')
+gene_table.to_csv(out_file, index=False)
+
+# Also save the plots
+today = date.today().strftime("%Y%m%d")
+plot_dir = os.path.join(base_results, 'filter_GC_score', 'plots', today)
+os.makedirs(plot_dir, exist_ok=True)
+filename = 'All_samples_GC_score_filtering.pdf'
+save_multi_image(os.path.join(plot_dir, filename))
 
 # Also save the values per sample
 out_dir_csv = os.path.join(qc_dir, 'filter_GC_score', 'csv_files', today)

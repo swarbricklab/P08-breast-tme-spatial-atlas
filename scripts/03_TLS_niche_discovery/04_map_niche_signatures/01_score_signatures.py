@@ -38,10 +38,12 @@ parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
 
 # Required
 
+
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -64,19 +66,21 @@ run_lymph_node = False
 
 
 # --- Get some info from the sample sheet
-
-# Extract sample info
-sample_dir = os.path.join(project_dir, 'config')
-if run_lymph_node:
-    sample_sheet_file = 'sample_sheet_lymph_nodes.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
 else:
-    sample_sheet_file = 'sample_sheet.csv'
+    sample_dir = os.path.join(project_dir, 'config')
+    if run_lymph_node:
+        sample_sheet_file = 'sample_sheet_lymph_nodes.csv'
+    else:
+        sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
 
-joined_id = sample_id
 
 # --- Also get some tissue metadata
 

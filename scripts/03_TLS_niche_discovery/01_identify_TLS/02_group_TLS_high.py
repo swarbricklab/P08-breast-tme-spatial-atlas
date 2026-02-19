@@ -41,6 +41,7 @@ parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -59,11 +60,14 @@ project_dir=args["project_dir"]
 
 # --- Get some info from the sample sheet
 
-# Extract sample info
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_path = os.path.join(sample_dir, 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
 
@@ -130,14 +134,11 @@ adata.obs['TLS_model'] = TLS_results
 
 # --- Prepare for saving the plots
 
-# Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model')
+# Output to results/03_TLS_niche_discovery/01_identify_TLS/<date>
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', 'identify_TLS', 'group_TLS_high')
+today = date.today().strftime("%Y%m%d")
+qc_dir = base_results
 os.makedirs(qc_dir, exist_ok=True)
-
-os.chdir(qc_dir)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
 
 
 # --- Plot 1: Plot the TLS model score + spots above a certain threshold

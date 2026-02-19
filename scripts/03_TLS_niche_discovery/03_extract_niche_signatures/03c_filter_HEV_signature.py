@@ -30,6 +30,7 @@ sc.settings.verbosity = 3
 parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+
 parser.add_argument("-s", "--samples",
     nargs="*",  # 0 or more values expected => creates a list
     type=str,
@@ -37,6 +38,7 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -50,10 +52,13 @@ print(f'Samples in python: {sample_list}')
 
 # --- Extract some info from the sample sheet
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 
@@ -168,8 +173,13 @@ final_df_sub = final_df_sub[final_df_sub['pct_expressing_rest'] < max_expressed_
 
 # --- Plot 1: Dot plots for top 30 genes per cluster - separated by cluster
 
-# Prepare for saving
-out_dir_plots = os.path.join(most_recent, 'post_filtering')
+os.makedirs(out_dir_plots, exist_ok=True)
+
+# Prepare for saving in results/03_TLS_niche_discovery/03_extract_niche_signatures
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures')
+os.makedirs(base_results, exist_ok=True)
+today = date.today().strftime("%Y%m%d")
+out_dir_plots = os.path.join(base_results, 'filter_HEV_score', 'plots', today)
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Slash to be only the top x per cluster
@@ -201,8 +211,10 @@ for num_top in num_tops:
 
 # --- Save some csv files
 
-# Prepare for saving
-out_dir_csv = os.path.join(out_dir_plots, 'csv_files')
+os.makedirs(out_dir_csv, exist_ok=True)
+
+# Prepare for saving csvs in results/03_TLS_niche_discovery/03_extract_niche_signatures
+out_dir_csv = os.path.join(base_results, 'filter_HEV_score', 'csv_files', today)
 os.makedirs(out_dir_csv, exist_ok=True)
 
 filename = 'All_samples_HEV_vs_endothelial_positive_LFC_pct_expressing.csv'
