@@ -62,15 +62,34 @@ else:
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 
-# Load harmony clustering results
-threshold = 0.01
-threshold_adj = str(threshold).split('.')[-1]
+# Function to find the most recent results
+def find_most_recent(dir):
+    # Find most recent results
+    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
+    # Filter subdirectories to keep only those with date format YYYYmmdd
+    date_format = '%Y%m%d'
+    valid_subdirs = []
+    for subdir in subdirs:
+        try:
+            datetime.strptime(subdir, date_format)
+            valid_subdirs.append(subdir)
+        except ValueError:
+            pass
+    # Sort the valid subdirectories by date and get the most recent one
+    if valid_subdirs:
+        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
+        most_recent_dir_path = os.path.join(dir, most_recent_dir)
+        print("Most recent results:", most_recent_dir_path)
+    else:
+        print("No valid directories found.")
+    return most_recent_dir_path
 
-harmony_dir = os.path.join(project_dir, 'results', 'TLS_model', 'TLS_plots_all_samples', 'gene_expression', f'threshold_{threshold_adj}', 'umap', 'harmony_integration')
+harmony_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
 most_recent = find_most_recent(harmony_dir)
 
 # Load the adata containing results
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', 'All_samples_TLS_umap.h5ad'))
+use_layer = 'log_norm'
+adata = ad.read_h5ad(os.path.join(most_recent, 'csv_files', 'All_samples_TLS_umap.h5ad'))
 
 
 # --- Also load top genes
@@ -137,7 +156,7 @@ os.makedirs(out_dir_plots, exist_ok=True)
 # Slash to be only the top x per cluster
 # Keep only the first x rows for each group
 
-num_tops = [20, 25, 30, 50, 100]
+num_tops = [20, 25, 30]
 
 for num_top in num_tops:
     top_df = final_df_sub.groupby('group').head(num_top)
@@ -155,7 +174,7 @@ for num_top in num_tops:
             # Get the top_ax to add a title
             top_ax = axs[0]
             top_ax.set_title(f'Top {num_top} genes cluster {cluster} (post filtering)', fontweight='bold', fontsize=9.5)
-            plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}), top {num_top} genes (by LFC) for cluster {cluster} (use_data={use_data}, min_expressed={min_expressed}, max_expressed_rest={max_expressed_rest})', y=1, fontweight='bold')
+            plt.suptitle(f'All samples - leiden clusters TLS groups (top {num_top} genes (by LFC) for cluster {cluster} (use_data={use_layer}, min_expressed={min_expressed}, max_expressed_rest={max_expressed_rest})', y=1, fontweight='bold')
     # Save plots
     filename = f'All_samples_TLS_umap_marker_genes_top_{num_top}_LFC_filtered.pdf'
     save_multi_image(os.path.join(out_dir_plots, filename))
@@ -177,6 +196,44 @@ for cluster in all_groups:
     top_genes = final_df_sub[final_df_sub['group'] == cluster]
     filename = f'Cluster_{cluster}_top_genes_filtered.csv'
     top_genes.to_csv(os.path.join(out_dir_csv, filename), index=False)
+
+
+# --- Also identify the clusters of interest
+
+# Cluster numbers may shift a bit but should be pretty clear from gene expression which is which
+top_marker_dict = {
+    'T cell zone': ['CCL19', 'LAMP3'],
+    'B cell zone': ['CXCL13', 'MS4A1'],
+    'HEVs': ['CCL21', 'ACKR1'],
+    'Germinal center': ['RGS13', 'MEF2B'],
+}
+
+# Extract cluster numbers of interest based on marker gene expression
+clusters_of_interest = {}
+
+# Ensure clusters are sorted numerically (as strings)
+sorted_clusters = sorted(all_groups, key=lambda x: int(x) if str(x).isdigit() else x)
+for region, markers in top_marker_dict.items():
+    for cluster in sorted_clusters:
+        # Get the top 20 genes for this cluster
+        cluster_genes = final_df[final_df['group'] == cluster]['genes'].values[:20]
+        if all(marker in cluster_genes for marker in markers):
+            clusters_of_interest[region] = cluster
+            break
+
+print("Clusters of interest based on marker gene expression:")
+for region, cluster in clusters_of_interest.items():
+    print(f"{region}: Cluster {cluster}")
+
+# Save the filtered gene lists for the clusters of interest in a separate directory for downstream analysis
+signature_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', 'niche_signatures')
+os.makedirs(signature_dir, exist_ok=True)
+
+for region, cluster in clusters_of_interest.items():
+    region_adj = region.replace(' ', '_').lower()
+    top_genes = final_df_sub[final_df_sub['group'] == cluster]
+    filename = f'{region_adj}_top_genes_filtered.csv'
+    top_genes.to_csv(os.path.join(signature_dir, filename), index=False)
 
 
 # --- Finish
