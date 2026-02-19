@@ -351,7 +351,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - grouping of spots with TLS score >{thre
 
 threshold_adj = str(threshold).split('.')[-1]
 
-out_dir = os.path.join(qc_dir, 'TLS_plots_per_sample', f'threshold_{threshold_adj}')
+out_dir = os.path.join(qc_dir, f'threshold_{threshold_adj}')
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
