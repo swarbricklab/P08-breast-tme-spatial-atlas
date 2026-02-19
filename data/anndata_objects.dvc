@@ -1,0 +1,6 @@
+outs:
+- md5: 9f5aa6449233a82788a0cf583df986c0.dir
+  size: 120908524553
+  nfiles: 55
+  hash: md5
+  path: anndata_objects
