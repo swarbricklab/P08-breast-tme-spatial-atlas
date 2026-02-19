@@ -1,0 +1,6 @@
+outs:
+- md5: 82f82ba701cf8236e660396d635081d9.dir
+  size: 466749413
+  nfiles: 99
+  hash: md5
+  path: 02_cell_type_mapping
