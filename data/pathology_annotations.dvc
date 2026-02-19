@@ -1,0 +1,6 @@
+outs:
+- md5: 43974fbfd4a3ca3b734cf2c9a207003b.dir
+  size: 11923017
+  nfiles: 33
+  hash: md5
+  path: pathology_annotations
