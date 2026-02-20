@@ -140,7 +140,6 @@ threshold_adj = str(threshold).split('.')[-1]
 
 # Decide whether to use the expanded groups
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', resolution, f'threshold_{threshold_adj}',)
-
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
@@ -157,8 +156,7 @@ adata_dict['square_016um'].obs[group_key] = TLS_results[group_key_source]
 
 # --- Also load the HEV TLS classifications
 
-TLS_group_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}', 'HEV_TLS_classification',
-                             'csv_files')
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '03b_calculate_HEV_TLS_distance', 'square_016um', f'threshold_{threshold_adj}', 'csv_files')
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
 # Read in the results & add to anndata
@@ -179,8 +177,8 @@ color_dict_HEV = {
 
 # --- Load the reworked annotations
 
-annotation_dir = os.path.join(project_dir, 'results', 'path_annotations', 'square_008um', 'reworked_annotations', 'csv_files')
-filename = f'{sample_id}_reworked_annotations_one_layer.csv'
+annotation_dir = os.path.join(project_dir, 'data', 'pathology_annotations', 'visium_hd')
+filename = f'{sample_id}_pathology_annotations.csv'
 
 annotation_key = 'path_anno'
 
