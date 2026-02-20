@@ -41,10 +41,12 @@ parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
+
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -61,15 +63,17 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 
+
 # --- Get some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -93,7 +97,7 @@ resolutions = ['square_016um', 'square_008um']
 adata_dict = {}
 
 for resolution in resolutions:
-    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -135,28 +139,19 @@ threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
 # Decide whether to use the expanded groups
-expanded = True
-
-TLS_group_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', resolution, f'threshold_{threshold_adj}',)
-
-if expanded:
-    TLS_group_dir = os.path.join(TLS_group_dir, 'expanded_groups')
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', resolution, f'threshold_{threshold_adj}',)
 
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
 # Read in the results & add to anndata
-score_of_i = 'HEV_filtered'
+score_of_i = 'HEVs'
 TLS_file_name = f'{sample_id}_{score_of_i}_groups.csv'
 TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
 
 group_key = 'group_too_small_removed'
-
-if expanded:
-    group_key_source = 'expanded_groups'
-else:
-    group_key_source = group_key
+group_key_source = 'expanded_groups'
 
 adata_dict['square_016um'].obs[group_key] = TLS_results[group_key_source]
 
@@ -759,14 +754,13 @@ plt.suptitle(f'{sample_id} ({subtype}) - HEV location - pathology annotations vs
 # --- Save the output
 
 # Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model')
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '04_assess_HEV_pathology_annotations')
 os.makedirs(qc_dir, exist_ok=True)
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}',
-                       'pathology_annotations',)
+out_dir = os.path.join(qc_dir)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots

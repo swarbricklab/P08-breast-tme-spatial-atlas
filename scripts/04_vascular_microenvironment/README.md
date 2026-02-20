@@ -11,7 +11,7 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
   - `02b_expand_HEV_groups.py`: Apply the "seed-and-expand" algorithm to include neighboring bins with lower HEV scores into discrete vascular structures.
   - `03a_identify_TLS_areas.py`: Segment and group continuous TLS regions.
   - `03b_calculate_HEV_TLS_distance.py`: Calculate distances from segmented HEVs to TLS areas to classify them as "TLS-associated" or "stromal HEV-like".
-  - `04_assess_pathology_annotation_per_HEV_group.py`: Map HEV locations against pathologist-annotated tissue compartments.
+  - `04_assess_HEV_pathology_annotations.py`: Map HEV locations against pathologist-annotated tissue compartments.
 
 - **02_identify_all_vasculature/** 
   Classification of the broader tumor vascular network.
