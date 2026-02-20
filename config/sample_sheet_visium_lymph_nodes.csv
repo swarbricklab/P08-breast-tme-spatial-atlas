@@ -1,0 +1,8 @@
+donor_id,tissue_id,section_id,data_type,tissue_type,slide_size
+P12,P12_LN,P12_LN_Vis,Visium,Lymph node,11 mm
+P25,P25_LN,P25_LN_Vis,Visium,Lymph node,11 mm
+P26,P26_LN,P26_LN_Vis,Visium,Lymph node,11 mm
+P27,P27_LN,P27_LN_Vis,Visium,Lymph node,11 mm
+P28,P28_LN,P28_LN_Vis,Visium,Lymph node,11 mm
+P29,P29_LN,P29_LN_Vis,Visium,Lymph node,11 mm
+P32,P32_LN,P32_LN_Vis,Visium,Lymph node,11 mm
