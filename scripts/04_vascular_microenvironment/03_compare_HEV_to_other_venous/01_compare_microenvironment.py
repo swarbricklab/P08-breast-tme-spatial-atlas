@@ -50,6 +50,7 @@ parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -66,19 +67,18 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_model', '05_HEV_analysis', '04_cellular_composition',))
+sys.path.append(os.path.join(project_dir, 'scripts', '04_vascular_microenvironment'))
 import plotting_functions
 
 
 # --- Get some info from the sample sheet
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -102,7 +102,7 @@ resolutions = ['square_016um', 'square_008um']
 adata_dict = {}
 
 for resolution in resolutions:
-    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -164,8 +164,7 @@ threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                             f'threshold_{threshold_adj}', 'other_vessels', 'classify_vessels', 'csv_files')
+TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
@@ -182,9 +181,7 @@ adata_dict[base_res].obs['vessel_class'] = collapsed_col
 
 # --- And load the distance calculations
 
-dist_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}',
-                       'other_vessels', 'distance_calculations', 'square_008um', 'csv_files')
-
+dist_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '03_calculate_distances', 'square_008um', 'csv_files')
 most_recent = find_most_recent(dist_dir)
 
 distance_dict = {}
@@ -197,10 +194,10 @@ for cell_type in endothelial:
     adata_dict[base_res].obs[f'dist_{cell_type}'] = distance_df['nearest_016um_dist_um']
 
 
-# --- Load the reworked pathology annotations
+# --- Load the pathology annotations
 
-annotation_dir = os.path.join(project_dir, 'results', 'path_annotations', 'square_008um', 'reworked_annotations', 'csv_files')
-filename = f'{sample_id}_reworked_annotations_one_layer.csv'
+annotation_dir = os.path.join(project_dir, 'data', 'pathology_annotations', 'visium_hd')
+filename = f'{sample_id}_pathology_annotations.csv'
 
 annotation_key = 'path_anno'
 
@@ -214,8 +211,7 @@ adata_dict['square_008um'].obs[annotation_key] = annotations
 endo_of_interest = 'Endothelial ACKR1'
 out_name = endo_of_interest.split(' ')[-1]
 
-TLS_group_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                       f'threshold_{threshold_adj}', 'other_vessels', 'vessel_HEV_overlap', 'csv_files')
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels', 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
@@ -654,194 +650,14 @@ for n, ax in enumerate(axs):
 plt.suptitle(f'{sample_id} ({subtype}) - Pathology annotations across vessel distance bins stratified by overlap HEV (min_pct_spots >{min_overlap}) (threshold={threshold}, bin_size={bin_size}, max_distance={max_distance})', y=1.15, fontweight='bold', x=0.5)
 
 
-# --- Plot 4: Heatmap to easily visualize enrichment
-
-# Function to format heatmap
-# Prepare for plotting
-sc.set_figure_params(fontsize=10)
-# Disable the grid
-plt.rcParams['axes.grid'] = False
-
-# sns.set_style("ticks")
-
-# Also make a rowcolors df
-row_colors_df = pd.DataFrame(index=plot_order)
-row_colors_df['annotation'] = row_colors_df.index.map(color_dict_patho)
-
-cbar_pad = 8
-dend_ratio = 0.2
-
-# Plot per vessel type
-
-for cell_type in group_types:
-
-    # Extract the composition df
-    composition = composition_dict[cell_type]
-
-    # Drop any rows with sum 0
-    composition = composition.loc[:, composition.sum(axis=0) != 0]
-
-    # Skip if not enough data for clustering
-    if composition.T.shape[0] < 2:
-        print(f"Skipping clustermap for {cell_type}: insufficient data (only {composition.T.shape[0]} rows)")
-        continue
-
-    # Make heatmap
-    g = sns.clustermap(composition.T, row_cluster=True, col_cluster=False, cmap='RdBu_r', linewidths=0.5, figsize=(4, 4), annot=False,
-                colors_ratio=(0.01, 0.1), linecolor='white', xticklabels=True, yticklabels=True, fmt='g', z_score=0, center=0, row_colors=row_colors_df,
-                dendrogram_ratio=(dend_ratio, 0.2))
-
-    axs = plotting_functions.beautify_heatmap(g, row_colors=True, col_colors=False, cbar_title='z score', label_size=10, fontsize_title=11, title=f'{endo_of_interest}\n{cell_type} HEV',
-                        cbar_pad=cbar_pad, cbar_height_square=5, cbar_width_square=0.6, space_per_square=0.05)
-
-    heatmap_ax = g.ax_heatmap
-
-    # Add labels
-    heatmap_ax.set_xlabel('Distance (µm)')
-
-    # Calculate the midpoint to position the title
-    title_x = (heatmap_ax.get_position().x0 + heatmap_ax.get_position().x1)/2
-    title_y = heatmap_ax.get_position().y1 + 0.2
-
-    # Extract the row dendrogram linkage matrix
-    linkage_matrix = g.dendrogram_row.linkage
-
-    # Set a threshold to cut the dendrogram and form clusters
-    threshold_dend = 3
-
-    clusters = sch.fcluster(linkage_matrix, threshold_dend, criterion='distance')
-
-    # Find the row indices where clusters change
-    cluster_order = g.dendrogram_row.reordered_ind  # Get row order after clustering
-    sorted_clusters = [clusters[i] for i in cluster_order]
-    change_indices = [i for i in range(1, len(sorted_clusters)) if sorted_clusters[i] != sorted_clusters[i - 1]]
-
-    # Draw dotted lines at cluster boundaries
-    for idx in change_indices:
-        g.ax_heatmap.axhline(idx, color='black', linestyle='--', alpha=0.7, linewidth=1)
-        g.ax_row_colors.axhline(idx, color='black', linestyle='--', alpha=0.7, linewidth=1)
-
-    plt.suptitle(f'{sample_id} ({subtype}) - {cell_type} pathology annotations vs distance (threshold_dend={threshold_dend})', y=title_y, x=title_x, fontweight='bold')
-
-
-    # --- Plot 5: Same as above but with dot sizes indicating proportion
-    # Bc sometimes a cell type can seem to have a significant distribution but the proportions are actually very low
-
-    # Going to make a dotplot on top
-
-    # Make the heatmap
-    g = sns.clustermap(composition.T, row_cluster=True, col_cluster=False, cmap='RdBu_r', linewidths=0.5, figsize=(4, 4), annot=False,
-                colors_ratio=(0.01, 0.1), linecolor='white', xticklabels=True, yticklabels=True, fmt='g', z_score=0, center=0, row_colors=row_colors_df,
-                dendrogram_ratio=(dend_ratio, 0.2))
-
-    axs = plotting_functions.beautify_heatmap(g, row_colors=True, col_colors=False, cbar_title='z score', label_size=10, fontsize_title=11, title=f'{endo_of_interest}\n{cell_type} HEV',
-                        cbar_pad=cbar_pad, cbar_height_square=5, cbar_width_square=0.6, space_per_square=0.05)
-
-    heatmap_ax = g.ax_heatmap
-
-    # Make the outline a bit thicker
-    for spine in heatmap_ax.spines.values():
-        spine.set_linewidth(1)  # Change to your preferred thickness
-        spine.set_visible(True)  # Change to your preferred thickness
-
-    # Add labels
-    heatmap_ax.set_xlabel('Distance (µm)')
-
-    # Calculate the midpoint to position the title
-    title_x = (heatmap_ax.get_position().x0 + heatmap_ax.get_position().x1)/2
-    title_y = heatmap_ax.get_position().y1 + 0.2
-
-    # Extract the row dendrogram linkage matrix
-    linkage_matrix = g.dendrogram_row.linkage
-
-    # Set a threshold to cut the dendrogram and form clusters
-    clusters = sch.fcluster(linkage_matrix, threshold_dend, criterion='distance')
-
-    # Find the row indices where clusters change
-    cluster_order = g.dendrogram_row.reordered_ind  # Get row order after clustering
-    sorted_clusters = [clusters[i] for i in cluster_order]
-    change_indices = [i for i in range(1, len(sorted_clusters)) if sorted_clusters[i] != sorted_clusters[i - 1]]
-
-    # Draw dotted lines at cluster boundaries
-    for idx in change_indices:
-        g.ax_heatmap.axhline(idx, color='black', linestyle='--', alpha=0.7, linewidth=1)
-        g.ax_row_colors.axhline(idx, color='black', linestyle='--', alpha=0.7, linewidth=1)
-
-    # Extract the transformed DataFrame (going to use this for the dotplot)
-    zscore_df = pd.DataFrame(g.data2d)
-
-    # Reset index to turn 'distance_bin' into a column
-    long_df = composition.reset_index()
-
-    # Reshape into long form using pd.melt
-    long_df = pd.melt(long_df, id_vars=[f'dist_bin_{cell_type}'], 
-                    value_vars=long_df.columns[1:], 
-                    var_name='cell_type', value_name='proportion')
-
-    long_df['cell_type'].unique()
-
-    # Same for the zscore df
-    z_long_df = pd.melt(zscore_df.T.reset_index(), id_vars=[f'dist_bin_{cell_type}'], 
-                    value_vars=zscore_df.T.reset_index().columns[1:], 
-                    var_name='cell_type', value_name='z_score')
-
-    # Now, merge with the z-score DataFrame
-    plot_df = pd.merge(long_df, z_long_df, on=[f'dist_bin_{cell_type}', 'cell_type'], how='left')
-
-    # Create a new ax for the dotplot
-    heatmap_pos = heatmap_ax.get_position()
-    
-    fig = plt.gcf()
-    dp_ax = fig.add_axes([heatmap_pos.x0, heatmap_pos.y0, heatmap_pos.width, heatmap_pos.height])
-
-    # Extract labels for correct order
-    xticklabels = [label.get_text() for label in heatmap_ax.get_xticklabels()]
-    yticklabels = [label.get_text() for label in heatmap_ax.get_yticklabels()]
-
-    # Sort df for correct order
-    plot_df[f'dist_bin_{cell_type}'] = pd.Categorical(plot_df[f'dist_bin_{cell_type}'], ordered=True, categories=xticklabels)
-    plot_df['cell_type'] = pd.Categorical(plot_df['cell_type'], ordered=True, categories=yticklabels)
-
-    # Extract vmax & vmin
-    vmin, vmax = g.ax_cbar.get_ylim()
-
-    # Set equal
-    vmin = abs(vmin)
-    if vmin > vmax:
-        vmax = vmin
-        vmin = -vmin
-    else:
-        vmin = -vmax
-
-    plotting_functions.seaborn_dotplot(plot_df, dotplot_ax=dp_ax, x=f'dist_bin_{cell_type}', y='cell_type', hue='z_score', size='proportion', vmin=vmin, vmax=vmax, 
-                    midpoint=0, cmap='RdBu_r',)
-
-    # Disable labels
-    dp_ax.set_xticks([])
-    dp_ax.set_yticks([])
-
-    # Make limits equal
-    dp_ax.set_xlim([lim - 0.5 for lim in heatmap_ax.get_xlim()])
-    dp_ax.set_ylim([lim - 0.5 for lim in heatmap_ax.get_ylim()])
-
-    # Draw dotted lines at cluster boundaries
-    for idx in change_indices:
-        dp_ax.axhline(idx-0.5, color='black', linestyle='--', alpha=0.7, linewidth=1)
-
-    legend3 = plotting_functions.add_size_legend(dotplot_ax=dp_ax, target_ax=g.ax_cbar, size_title='Proportion')
-
-    plt.suptitle(f'{sample_id} ({subtype}) - {cell_type} pathology annotations vs distance (threshold_dend={threshold_dend})', y=title_y, x=title_x, fontweight='bold')
-
-
 # --- Save output
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '03_compare_HEV_to_other_venous', '01_compare_microenvironment')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}', 'other_vessels',
-                       'HEV_vs_non_HEV', out_name, 'pathology_vs_distance')
+out_dir = os.path.join(qc_dir)
 
 os.makedirs(out_dir, exist_ok=True)
 
