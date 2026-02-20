@@ -31,3 +31,10 @@ P29,P29,Primary tumor,TNBC
 P30,P30,Primary tumor,TNBC
 P31,P31,Primary tumor,TNBC
 P32,P32,Primary tumor,TNBC
+P12,P12_LN,Lymph node,NA
+P25,P25_LN,Lymph node,NA
+P26,P26_LN,Lymph node,NA
+P27,P27_LN,Lymph node,NA
+P28,P28_LN,Lymph node,NA
+P29,P29_LN,Lymph node,NA
+P32,P32_LN,Lymph node,NA
