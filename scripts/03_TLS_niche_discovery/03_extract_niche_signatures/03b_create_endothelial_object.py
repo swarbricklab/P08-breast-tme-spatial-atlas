@@ -2,8 +2,6 @@
 
 # --- Aim
 # Aggregate and integrate endothelial-high spots across all samples into a unified object.
-# Perform dimensionality reduction, clustering, and subtype annotation for comparative spatial analysis.
-# Visualize endothelial classifications and QC metrics for downstream HEV signature refinement.
 
 # --- Define environment
 # env: spatial-pilot
@@ -253,6 +251,8 @@ save_multi_image(os.path.join(out_dir_plots, filename))
 
 plt.close('all')
 
+# Set fontsize
+sc.set_figure_params(fontsize=10)
 
 # --- Extract a single adata and subset to just the endothelial-high spots
 
@@ -272,224 +272,6 @@ color_lut = pd.read_csv(os.path.join(color_dir, color_file))
 color_lut = color_lut.set_index('subtype')
 
 subtype_colors = list(color_lut.reindex(sorted_subtypes)['color'])
-
-
-# --- PCA + UMAP
-
-# seed for reproducibility
-seed = 42
-
-# Get highly variable genes
-sc.pp.highly_variable_genes(all_adata, flavor="seurat", n_top_genes=2000, layer=use_layer)
-
-n_comps = 50
-
-# create a new object
-pca_obj = ad.AnnData(all_adata.layers['scaled'])
-pca_obj.var = all_adata.var
-sc.tl.pca(pca_obj, n_comps = n_comps, zero_center = True, svd_solver='arpack', random_state = seed, return_info = True, use_highly_variable = True)
-
-all_adata.uns['pca'] = pca_obj.uns['pca']
-all_adata.obsm['X_pca'] = pca_obj.obsm['X_pca']
-all_adata.varm['PCs'] = pca_obj.varm['PCs']
-
-# Adjust the PCs with harmony
-sce.pp.harmony_integrate(all_adata, 'sample_id')
-
-# Assign the new PCs to the standard slot
-all_adata.obsm['X_pca'] = all_adata.obsm['X_pca_harmony']
-
-# neighbourhood graph
-n_pcs=30
-
-sc.pp.neighbors(all_adata, n_pcs=n_pcs, random_state=seed)
-
-# calculate umap
-sc.tl.umap(all_adata, random_state=seed)
-
-# Leiden clustering
-resolution = 1
-
-sc.tl.leiden(all_adata, key_added='leiden', resolution=resolution)
-
-
-# --- Plot 1: Variance ratio
-
-sc.set_figure_params(scanpy=True, fontsize=8)
-
-sc.pl.pca_variance_ratio(all_adata, n_pcs=n_comps, log=True)
-plt.suptitle(f'All samples - PCA variance (n_comps={n_comps}, n_pcs={n_pcs}) - Endothelial groups', y=1.1, fontweight='bold')
-
-
-# --- Plot 2: Plot the genes driving each PC
-
-sc.set_figure_params(scanpy=True, fontsize=10)
-
-# Note: this doesn't work with the SCT data because you can't save the PCs
-if use_layer == 'log_norm':
-    dimensions_to_check=10
-    plt.rcParams['figure.figsize']=(5, 5)
-    sc.pl.pca_loadings(all_adata, components = range(1, dimensions_to_check+1, 1), n_points = 10)
-    plt.suptitle(f'All samples - PCA loadings (top 10) - Use data: {use_layer} endothelial groups', y=1, fontweight='bold')
-
-
-# --- Plot 3: Plot qc metrics in UMAP
-
-plt.rcParams["figure.figsize"] = (4, 4)
-
-to_plot = ['sample_id', 'donor_id', 'batch', 'subtype', classification_key, 'leiden']
-
-# Make donor id type string for correct plotting
-all_adata.obs['donor_id'] = all_adata.obs['donor_id'].astype('category')
-
-# Order the subtypes
-all_adata.obs['subtype'] = all_adata.obs['subtype'].astype(pd.CategoricalDtype(categories=sorted_subtypes, ordered=True))
-
-# Also include the batch
-# Create an empty dictionary to store the indices
-batch_dict = {}
-
-# Iterate over unique categories
-for category in sample_lut['batch'].unique():
-    key = category.replace('SciLife_FFPE_', '')
-    # Get the indices for each category and convert them to a list
-    indices = sample_lut.index[sample_lut['batch'] == category].tolist()
-    for index in indices:
-        if 'Xe1' in index:
-            key = 'xenium_visium'
-            if key in batch_dict:
-                batch_dict[key].append(index)
-            else:
-                batch_dict[key] = [index]
-        else:
-            if key in batch_dict:
-                batch_dict[key].append(index)
-            else:
-                batch_dict[key] = [index]
-
-def assign_category(row):
-    for category, indices in batch_dict.items():
-        if row['sample_id'] in indices:
-            return category
-    return ''
-
-all_adata.obs['batch'] = all_adata.obs.apply(assign_category, axis=1)
-
-
-# Make plots
-ncols = 3
-nrows = math.ceil((len(to_plot))/ncols)
-
-plt.figure(figsize=(6*ncols, 4*nrows))
-
-for n, plot in enumerate(to_plot):
-    # add a new subplot iteratively
-    ax = plt.subplot(nrows, ncols, n + 1)
-    if plot == 'subtype':
-        palette = subtype_colors
-    else:
-        palette = None
-    if plot == classification_key:
-        palette = color_dict
-    sc.pl.umap(all_adata, color=plot, ax=ax, palette=palette)
-    ax.set_title(ax.get_title(), fontweight='bold')
-
-plt.suptitle(f'All samples - UMAP qc metrics - (use_layer={use_layer}, leiden_resolution={resolution})', y=1.1, fontweight='bold')
-
-plt.tight_layout()
-
-
-# --- Plot 5: Plot clusters spatially
-
-sc.set_figure_params(scanpy=True, fontsize=20)
-
-# Add the clustering results to the original adata_dict
-for sample in adata_dict:
-    adata_sub = all_adata[all_adata.obs['sample_id'] == sample]
-    adata_dict[sample].obs['leiden'] = adata_sub.obs['leiden']
-
-leiden_clusters = list(all_adata.obs['leiden'].cat.categories)
-
-# Extract colors
-if len(leiden_clusters) < 21:
-    color_list = sc_palettes.default_20[:len(leiden_clusters)]
-else:
-    color_list = sc_palettes.godsnot_102[:len(leiden_clusters)]
-
-# Set up for plotting
-if len(adata_dict.keys()) < 5:
-        ncols = len(adata_dict.keys())
-else:
-    ncols = 5
-
-# Plotting
-nrows = math.ceil((len(adata_dict.keys()))/ncols)
-
-plt.figure(figsize=(8*ncols, 7*nrows))
-
-for n, sample in enumerate(list_all_samples):
-    # add a new subplot iteratively
-    ax = plt.subplot(nrows, ncols, n + 1)
-    # Extract colors
-    clusters = list(adata_dict[sample].obs['leiden'].dropna().unique())
-    # Extract the numbers and convert them to integers
-    numbers = [int(num_str) for num_str in clusters]
-    # Sort the numbers
-    sorted_numbers = sorted(numbers)
-    # Extract items corresponding to the indices
-    palette = [color_list[i] for i in sorted_numbers]
-    # filter df and plot ticker on the new subplot axis
-    subtype = subtype_dict[sample]
-    sc.pl.spatial(adata_dict[sample], color='leiden', size=spot_size[sample], ax=ax, bw=False, alpha_img=0.5, palette=palette,
-        crop_coord=coords[sample], title=f'{sample} ({subtype})', vmin=0)
-    ax.set_title(ax.get_title(), fontweight='bold')
-    legend = ax.get_legend()
-    # Increase the size of the markers in the legend
-    for handle in legend.legend_handles:
-        handle.set_sizes([100]) 
-
-plt.suptitle(f'All samples - leiden clusters (resolution={resolution}) endothelial groups groups spatial', y=1, fontweight='bold')
-
-
-# --- Extract marker genes
-
-rank_genes_key = 'rank_genes_leiden'
-
-# Remove clusters with a single spot
-single_spot_clusters = all_adata.obs['leiden'].value_counts()[all_adata.obs['leiden'].value_counts() == 1].index
-
-single_spot_clusters = list(single_spot_clusters.unique())
-
-all_adata.obs['leiden_2'] = all_adata.obs['leiden']
-all_adata.obs['leiden_2'] = np.where(all_adata.obs['leiden_2'].isin(single_spot_clusters), None, all_adata.obs['leiden_2'])
-
-sc.tl.rank_genes_groups(all_adata, 'leiden_2', use_raw = False, layer=use_layer, method='wilcoxon', key_added=rank_genes_key,
-                        pts=True)
-sc.tl.dendrogram(all_adata, 'leiden_2')
-
-
-# --- Plot 7: Dot plots for top 20 genes per cluster
-
-sc.set_figure_params(scanpy=True, fontsize=12)
-
-sc.pl.rank_genes_groups_dotplot(all_adata, n_genes=20, groupby='leiden_2', key=rank_genes_key, layer=use_layer)
-
-plt.suptitle(f'All samples - leiden clusters TLS groups (top 20 genes per cluster (use_layer={use_layer})', y=1.1, fontweight='bold')
-
-
-# --- Plot 8: 1 vs rest plots
-
-sc.pl.rank_genes_groups(all_adata, n_genes=25, groupby='leiden_2', key=rank_genes_key, layer=use_layer)
-
-plt.suptitle(f'All samples - leiden clusters TLS groups (1 vs rest plots, 25 genes (use_layer={use_layer})', y=1.1, fontweight='bold')
-
-
-# --- Save plots so far
-
-filename = f'All_samples_endothelial_groups_umap.pdf'
-save_multi_image(os.path.join(out_dir_plots, filename))
-
-plt.close('all')
 
 
 # --- Now calculate LFC for genes in HEV score
@@ -587,46 +369,8 @@ plt.suptitle(f'All samples - marker genes endothelial-high & HEV cluster spots (
 filename = f'All_samples_endothelial_vs_HEV_genes.pdf'
 save_multi_image(os.path.join(out_dir_plots, filename))
 
-# Save the clustering
 out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
-clusters_df = all_adata.obs[['sample_id', 'donor_id', 'subtype', 'leiden', classification_key]]
-
-clusters_df.to_csv(os.path.join(out_dir_csv, f'All_samples_leiden_clusters.csv'))
-
-# Also save the differential genes
-
-rank_genes_keys = ['rank_genes_leiden']
-
-for rank_genes_key in rank_genes_keys:
-
-    dfs = []
-
-    result = all_adata.uns[rank_genes_key]
-    groups = result['names'].dtype.names
-    reference = result['params']['reference']
-
-    # Iterate through the groups
-    for group in groups:
-        # Create a DataFrame for the current group
-        df = pd.DataFrame({
-            'group': group,
-            'reference': reference,
-            'genes': result['names'][group],
-            'pvals': result['pvals'][group],
-            'logfoldchanges': result['logfoldchanges'][group],
-            'pts': result['pts'][group],
-            'pvals_adj': result['pvals_adj'][group],
-            'z-score': result['scores'][group]
-        })
-        # Append the DataFrame to the list
-        dfs.append(df)
-
-    # Concatenate the DataFrames from all groups into one DataFrame
-    final_df = pd.concat(dfs, ignore_index=True)
-
-    filename = f'All_samples_{rank_genes_key}.csv'
-    final_df.to_csv(os.path.join(out_dir_csv, filename), index=False)
 
 # Save genes & whether they had pos or neg LFC
 lfc = pd.DataFrame(lfc)
@@ -646,7 +390,7 @@ filename = f'All_samples_HEV_vs_endothelial_positive_LFC.csv'
 merged_df.to_csv(os.path.join(out_dir_csv, filename), index=False)
 
 # Save the whole object as well to have all the umap stuff
-ad.AnnData.write(all_adata, filename=os.path.join(out_dir_csv, f"All_samples_endothelial_umap.h5ad"))
+ad.AnnData.write(all_adata, filename=os.path.join(out_dir_csv, f"All_samples_endothelial_object.h5ad"))
 
 
 # --- Finish

@@ -85,7 +85,7 @@ for sample in sample_list:
 # -- Load data
 # Load the integrated anndata object
 
-harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_score', 'create_endothelial_object')
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'create_endothelial_object')
 
 # Function to find the most recent results
 def find_most_recent(dir):
@@ -109,12 +109,12 @@ def find_most_recent(dir):
         print("No valid directories found.")
     return most_recent_dir_path
 
-filename = 'All_samples_endothelial_umap.h5ad'
+filename = 'All_samples_endothelial_object.h5ad'
 
 most_recent = find_most_recent(harmony_dir)
 
 # Load the adata containing results
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', filename))
+adata = ad.read_h5ad(os.path.join(most_recent, 'csv_files', filename))
 
 use_data = 'log_norm'
 use_layer = 'log_norm'
@@ -173,7 +173,7 @@ final_df_sub = final_df_sub[final_df_sub['pct_expressing_rest'] < max_expressed_
 
 # --- Plot 1: Dot plots for top 30 genes per cluster - separated by cluster
 
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', 'filter_HEV_score',)
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'filter_HEV_signature',)
 today = date.today().strftime("%Y%m%d")
 out_dir_plots = os.path.join(base_results, today, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
@@ -181,7 +181,7 @@ os.makedirs(out_dir_plots, exist_ok=True)
 # Slash to be only the top x per cluster
 # Keep only the first x rows for each group
 
-num_tops = [20, 25, 30, 50, 100]
+num_tops = [50]
 
 for num_top in num_tops:
     top_df = final_df_sub.head(num_top)
@@ -200,14 +200,14 @@ for num_top in num_tops:
         top_ax.set_title(f'Top {num_top} genes HEVs (post filtering)', fontweight='bold', fontsize=9.5)
         plt.suptitle(f'All samples - top genes HEV after filtering based on expression (top {num_top} genes (by LFC) (use_data={use_data}, min_expressed={min_expressed}, max_expressed_rest={max_expressed_rest}))', y=1, fontweight='bold')
     # Save plots
-    filename = f'All_samples_TLS_umap_marker_genes_top_{num_top}_LFC_filtered.pdf'
+    filename = f'HEV_signature_top_{num_top}_LFC_filtered.pdf'
     save_multi_image(os.path.join(out_dir_plots, filename))
     plt.close('all')
 
 
 # --- Save some csv files
 
-out_dir_csv = os.path.join(out_dir_plots, today, 'csv_files')
+out_dir_csv = os.path.join(base_results, today, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 filename = 'hevs_filtering_documentation.csv'
