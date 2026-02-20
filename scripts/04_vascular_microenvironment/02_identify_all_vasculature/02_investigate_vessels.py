@@ -38,19 +38,17 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
+
 parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-# Required
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
-
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV", default=None)
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
 parser.add_argument("--min_spots", help="Minimal spots per gene", type=int)
-
 args = vars(parser.parse_args())
 
 
@@ -62,19 +60,18 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_model', '05_HEV_analysis', '04_cellular_composition',))
+sys.path.append(os.path.join(project_dir, 'scripts', '04_vascular_microenvironment'))
 import plotting_functions
 
 
 # --- Get some info from the sample sheet
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -95,7 +92,7 @@ use_data = 'log_norm'
 # Need both the 48 & 16 res
 resolution = 'square_016um'
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -105,18 +102,11 @@ coords = auto_crop_scanpy(adata, border_size=0.1)
 
 # --- Load decon results
 
-decon_resolution = resolution
+decon_level = 'minor'
 
-resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
-resolution_numbers = int(resolution_numbers)
+decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', resolution,)
 
-decon_level = 'subset'
-ncells = 3
-
-decon_dir = os.path.join(project_dir, 'resources', 'deconvolution', 'cell2location', f'{decon_level}_level', sample_id, decon_resolution,
-                         f'n_cells_{ncells}', 'model_output')
-
-decon_file = 'q05_cell_abundance_w_sf.csv'
+decon_file = f'{sample_id}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
 
 decon_res = pd.read_csv(os.path.join(decon_dir, decon_file), index_col=0)
 
@@ -165,13 +155,8 @@ def find_most_recent(dir):
         print("No valid directories found.")
     return most_recent_dir_path
 
-# Find most recent results
-threshold = 0.5
-threshold_adj = str(threshold).split('.')[-1]
-
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                             f'threshold_{threshold_adj}', 'other_vessels', 'classify_vessels', 'csv_files')
+TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
@@ -191,26 +176,21 @@ adata.obs['vessel_class'] = collapsed_col
 # Decide whether to use the expanded groups
 expanded = True
 
-TLS_group_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', resolution, f'threshold_{threshold_adj}',)
+threshold_hev = 0.5
+threshold_hev_adj = str(threshold_hev).split('.')[-1]
 
-if expanded:
-    TLS_group_dir = os.path.join(TLS_group_dir, 'expanded_groups')
-
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', 'square_016um', f'threshold_{threshold_hev_adj}')
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
 # Read in the results & add to anndata
-score_of_i = 'HEV_filtered'
+score_of_i = 'HEVs'
 TLS_file_name = f'{sample_id}_{score_of_i}_groups.csv'
 TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
 
 group_key = 'group_too_small_removed'
-
-if expanded:
-    group_key_source = 'expanded_groups'
-else:
-    group_key_source = group_key
+group_key_source = 'expanded_groups'
 
 adata.obs['HEV_groups'] = TLS_results[group_key_source]
 
@@ -570,143 +550,14 @@ plt.suptitle(f'{sample_id} ({subtype}) - Overlap vessel groups with HEVs',
              y=1.2, x=0.5, fontweight='bold')
 
 
-# --- Find PVLs per group
-
-summary = {}
-
-# Only consider PVLs
-df_selected = decon_res[PVL_classes]
-
-for col in endothelial:
-    group_map = vessel_classes[col].dropna()
-    # Join group labels with cell type counts
-    merged = df_selected.join(group_map.rename('group'), how='inner')
-    # Group by group label and sum selected cell type counts
-    group_sums = merged.groupby('group').sum()
-    summary[col] = group_sums
-
-renamed_dfs = []
-
-for col_name, df in summary.items():
-    # Add prefix to index (group names)
-    df_renamed = df.copy()
-    df_renamed.index = [f"{col_name}-{group}" for group in df.index]
-    renamed_dfs.append(df_renamed)
-
-# Concatenate all into a single DataFrame
-merged = pd.concat(renamed_dfs)
-
-
-# --- Make col colors df
-
-# First make a metadata df
-metadata_df = merged.copy()
-metadata_df['endothelial_type'] = metadata_df.index.str.split('-').str[0]
-
-metadata_df = metadata_df[['endothelial_type']]
-
-# And add HEV overlap
-metadata_df['HEV_overlap'] = group_counts_df['HEV_overlap']
-
-# Also add vessel size
-metadata_df['vessel_size'] = group_counts_df['count']
-
-# Generate a col colors df
-col_colors = metadata_df.copy()
-col_colors['endothelial_type'] = col_colors['endothelial_type'].replace(color_dict)
-
-color_dict[True] = 'indigo'
-color_dict[False] = 'lightgray'
-
-col_colors['HEV_overlap'] = col_colors['HEV_overlap'].replace(color_dict)
-
-# Generate a cmap for the vessel sizes
-# Normalize the values to [0, 1]
-vmin = metadata_df['vessel_size'].min() 
-vmax = metadata_df['vessel_size'].quantile(0.9)  # 99th percentile
-norm = colors.Normalize(vmin=vmin, vmax=vmax)
-
-# Choose a colormap (e.g., "viridis", "coolwarm", "plasma", etc.)
-cmap = plt.colormaps['Reds']
-
-# Map the values to RGBA colors
-col_colors['vessel_size'] = col_colors['vessel_size'].map(lambda x: cmap(norm(x)))
-
-# Define 2 evenly spaced values between vmin and vmax
-mid_values = np.linspace(vmin, vmax, 5)[1:-1]  # This gives 2 evenly spaced values
-mid_values = np.round(mid_values).astype(int)  # Round and convert to integer
-
-# Combine min, mid-values, and max (ensure they are integers)
-legend_values = [int(vmin)] + list(mid_values) + [int(vmax)]  # Ensure all are integers
-legend_values = legend_values[::-1]
-
-# Format labels and get corresponding colors
-legend_labels = [f"{val}" for val in legend_values]  # No decimal places
-legend_colors = [cmap(norm(val)) for val in legend_values]
-
-# Create legend handles (colored boxes)
-legend_handles = [mpatches.Patch(facecolor=color, label=label, edgecolor='black', linewidth=0.8) 
-                  for color, label in zip(legend_colors, legend_labels)]
-
-
-# --- Plot 2: Heatmap showing dominant PVL
-
-# Disable the grid
-plt.rcParams['axes.grid'] = False
-
-# Make heatmap
-g = sns.clustermap(merged.T, row_cluster=True, col_cluster=True, cmap='viridis', linewidths=0, figsize=(4, 4), annot=False,
-            colors_ratio=(0.01, 0.1), xticklabels=True, yticklabels=True, fmt='g', row_colors=None,
-            col_colors=col_colors, rasterized=True,
-            dendrogram_ratio=(0.2, 0.2), z_score=1)
-
-axs = plotting_functions.beautify_heatmap(g, row_colors=False, col_colors=True, cbar_title='z score\n(column)', label_size=10, fontsize_title=11, title='',
-                    cbar_pad=10.5, cbar_height_square=len(PVL_classes), cbar_width_square=0.6, space_per_square=0.05, width_to_height_ratio=0.05,
-                    colors_div=1)
-
-# Adjust dendrograms
-plotting_functions.adjust_dendrograms(g, num_square=3, title=f'{sample_id}\nEndothelial - PVL associations')
-
-# Add some lines separating clusters
-dend_thresh=1.5
-plotting_functions.cut_dendrogram_and_draw_lines(g, axis='col', threshold_dend=dend_thresh, color='white', linewidth=1, linestyle='--', alpha=1)
-
-# Remove the xticks
-heatmap_ax = g.ax_heatmap
-heatmap_ax.set_xticks([])
-
-# Add the discrete color legend
-legend1 = g.ax_cbar.legend(handles=legend_handles, title="vessel_size", frameon=False, alignment='left', handlelength=0.7,
-                    loc='center left', bbox_to_anchor=(4, 0.5), labelspacing=0)  # adjust position
-legend1.get_title().set_fontweight('bold')
-
-# Add legends
-legend2 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=[True, False], color_lut=color_dict, title='HEV_overlap', 
-                                        y_offset=1, x_offset=4, loc='lower left')
-
-legend3 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=endothelial, color_lut=color_dict, title='endothelial_type', 
-                                        y_offset=1.8, x_offset=4, loc='lower left')
-
-g.ax_cbar.add_artist(legend1)
-g.ax_cbar.add_artist(legend2)
-
-# Calculate the midpoint to position the title
-top_ax = g.ax_col_dendrogram
-title_x = (top_ax.get_position().x0 + top_ax.get_position().x1)/2
-title_y = top_ax.get_position().y1 + 0.2
-
-plt.suptitle(f'{sample_id} ({subtype}) - PVL association per vessel type (decon_level={decon_level}, z_score=col, dend_thresh={dend_thresh})', y=title_y, x=title_x, fontweight='bold')
-
-
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}', 'other_vessels',
-                       'vessel_HEV_overlap')
+out_dir = os.path.join(qc_dir)
 
 os.makedirs(out_dir, exist_ok=True)
 
@@ -725,9 +576,6 @@ save_multi_image(os.path.join(out_dir_plots, filename))
 # And save the dfs
 filename = f'{sample_id}_vessel_HEV_overlap.csv'
 group_counts_df.to_csv(os.path.join(out_dir_csv, filename), index=True)
-
-filename = f'{sample_id}_PVL_counts_per_vessel.csv'
-merged.to_csv(os.path.join(out_dir_csv, filename), index=True)
 
 # And save the overlap df
 filename = f'{sample_id}_vessel_HEV_overlap_spot_level.csv'
