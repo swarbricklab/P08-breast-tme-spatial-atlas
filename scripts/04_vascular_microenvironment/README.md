@@ -12,6 +12,7 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
   - `03a_identify_TLS_areas.py`: Segment and group continuous TLS regions.
   - `03b_calculate_HEV_TLS_distance.py`: Calculate distances from segmented HEVs to TLS areas to classify them as "TLS-associated" or "stromal HEV-like".
   - `04_assess_HEV_pathology_annotations.py`: Map HEV locations against pathologist-annotated tissue compartments.
+  - `05_calculate_all_HEV_distances.py`: For each HEV, calculate the distance to surrounding spots to analyze cellular composition across distance. Outputs per-spot distance metrics and summary plots for spatial analysis.
 
 - **02_identify_all_vasculature/** 
   Classification of the broader tumor vascular network.
@@ -30,7 +31,7 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
   Ligand-receptor (L-R) interaction analysis within the vascular microenvironment. *(Generates data for **Table S11** and Figure 4)*.
   - `01_run_LR_analysis_stlearn.py`: Execute `stLearn` to identify significant L-R co-expression in HEV-localized (0 µm) and HEV-perivascular (25 µm) neighborhoods.
   - `02_analyze_LR_all.py`: Aggregate interaction results across samples, calculating directional signaling vectors (e.g., Perivascular → HEV) and identifying TLS-enriched pathways.
-  - `03_check_composition_LTB_LTBR_bins.py`: Deconstruct the cellular composition of spatial bins sending LTB signals to endothelial LTBR (e.g., cDC2 enrichment).
+  - `03_check_composition_LTB_signaling_bins.py`: Deconstruct the cellular composition of spatial bins sending LTB signals to endothelial LTBR (e.g., cDC2 enrichment).
 
 ## Workflow Overview
 
