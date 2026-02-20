@@ -176,7 +176,7 @@ today = date.today()
 today = today.strftime("%Y%m%d")
 
 threshold_adj = str(threshold).split('.')[-1]
-out_dir = os.path.join(qc_dir)
+out_dir = os.path.join(qc_dir, target_res)
 
 os.makedirs(out_dir, exist_ok=True)
 
