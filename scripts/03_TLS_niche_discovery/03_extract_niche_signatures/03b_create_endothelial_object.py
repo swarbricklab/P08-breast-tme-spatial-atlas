@@ -95,8 +95,9 @@ adata_dict = {}
 for sample in sample_list:
     adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample}.h5ad'))
 
-# Add some info for plotting
+use_layer = 'log_norm'
 
+# Add some info for plotting
 for sample in sample_list:
     adata_dict[sample].obs['sample_id'] = sample
     adata_dict[sample].obs['subtype'] = subtype_dict[sample]
@@ -129,11 +130,7 @@ for sample in adata_dict.keys():
 
 # --- Load the endothelial high spots
 
-# Define threshold
-threshold = 0.5
-threshold_adj = str(threshold).split('.')[-1]
-
-class_res_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'HEV_score_v2', 'try_to_improve_HEV_score', 'per_sample')
+class_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'identify_endothelial_high',)
 
 # Function to find the most recent results
 def find_most_recent(dir):
@@ -181,13 +178,13 @@ color_dict = {
 # --- Prepare for saving
 
 # Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model')
+qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'create_endothelial_object',)
 os.makedirs(qc_dir, exist_ok=True)
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'HEV_score_v2', 'try_to_improve_HEV_score', 'all_samples', today)
+out_dir = os.path.join(qc_dir, today)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
@@ -257,7 +254,7 @@ save_multi_image(os.path.join(out_dir_plots, filename))
 plt.close('all')
 
 
-# --- Extract a single adata and subset to just the B cell zone spots
+# --- Extract a single adata and subset to just the endothelial-high spots
 
 # Convert to adata list & concatenate
 adata_list = list(adata_dict.values())
@@ -329,11 +326,11 @@ plt.suptitle(f'All samples - PCA variance (n_comps={n_comps}, n_pcs={n_pcs}) - E
 sc.set_figure_params(scanpy=True, fontsize=10)
 
 # Note: this doesn't work with the SCT data because you can't save the PCs
-if use_data == 'log_norm':
+if use_layer == 'log_norm':
     dimensions_to_check=10
     plt.rcParams['figure.figsize']=(5, 5)
     sc.pl.pca_loadings(all_adata, components = range(1, dimensions_to_check+1, 1), n_points = 10)
-    plt.suptitle(f'All samples - PCA loadings (top 10) - Use data: {use_data} endothelial groups', y=1, fontweight='bold')
+    plt.suptitle(f'All samples - PCA loadings (top 10) - Use data: {use_layer} endothelial groups', y=1, fontweight='bold')
 
 
 # --- Plot 3: Plot qc metrics in UMAP
@@ -397,7 +394,7 @@ for n, plot in enumerate(to_plot):
     sc.pl.umap(all_adata, color=plot, ax=ax, palette=palette)
     ax.set_title(ax.get_title(), fontweight='bold')
 
-plt.suptitle(f'All samples - UMAP qc metrics - (use_data={use_data}, leiden_resolution={resolution})', y=1.1, fontweight='bold')
+plt.suptitle(f'All samples - UMAP qc metrics - (use_layer={use_layer}, leiden_resolution={resolution})', y=1.1, fontweight='bold')
 
 plt.tight_layout()
 
@@ -451,7 +448,7 @@ for n, sample in enumerate(list_all_samples):
     for handle in legend.legend_handles:
         handle.set_sizes([100]) 
 
-plt.suptitle(f'All samples - leiden clusters (resolution={resolution}) endothelial groups groups spatial (threshold={threshold})', y=1, fontweight='bold')
+plt.suptitle(f'All samples - leiden clusters (resolution={resolution}) endothelial groups groups spatial', y=1, fontweight='bold')
 
 
 # --- Extract marker genes
@@ -477,14 +474,14 @@ sc.set_figure_params(scanpy=True, fontsize=12)
 
 sc.pl.rank_genes_groups_dotplot(all_adata, n_genes=20, groupby='leiden_2', key=rank_genes_key, layer=use_layer)
 
-plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}), top 20 genes per cluster (use_data={use_data})', y=1.1, fontweight='bold')
+plt.suptitle(f'All samples - leiden clusters TLS groups (top 20 genes per cluster (use_layer={use_layer})', y=1.1, fontweight='bold')
 
 
 # --- Plot 8: 1 vs rest plots
 
 sc.pl.rank_genes_groups(all_adata, n_genes=25, groupby='leiden_2', key=rank_genes_key, layer=use_layer)
 
-plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}) 1 vs rest plots, 25 genes (use_data={use_data})', y=1.1, fontweight='bold')
+plt.suptitle(f'All samples - leiden clusters TLS groups (1 vs rest plots, 25 genes (use_layer={use_layer})', y=1.1, fontweight='bold')
 
 
 # --- Save plots so far
@@ -498,12 +495,8 @@ plt.close('all')
 # --- Now calculate LFC for genes in HEV score
 
 # Go back to the unfiltered gene list
-# gene_dir = os.path.join(project_dir, 'resources', 'gene_lists')
-# filename = 'other_scores/HEV_score.csv'
-threshold_TLS = 0.01
-threshold_adj_TLS = str(threshold_TLS).split('.')[-1]
-
-harmony_dir = os.path.join(project_dir, 'results', 'TLS_model', 'TLS_plots_all_samples', 'gene_expression', f'threshold_{threshold_adj_TLS}', 'umap', 'harmony_integration')
+# Bc we want to filter against vascular background rather than TLS background
+harmony_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
 
 gene_dir = find_most_recent(harmony_dir)
 
@@ -512,8 +505,20 @@ filename = 'csv_files/All_samples_leiden_clusters_DEGS.csv'
 gene_table = pd.read_csv(os.path.join(gene_dir, filename))
 
 # Filter for just the HEV genes
-HEV_cluster = 4
-gene_table = gene_table[gene_table['group'] == HEV_cluster]
+# Find the HEV cluster based on markers
+hev_markers = ['CCL21', 'ACKR1']
+# Find the cluster with these markers in top 20 genes
+hev_cluster = None
+for cluster in gene_table['group'].unique():
+    cluster_genes = gene_table[gene_table['group'] == cluster]['genes'].tolist()[:20]
+    if all(marker in cluster_genes for marker in hev_markers):
+        hev_cluster = cluster
+        break
+
+print(f'HEV cluster: {hev_cluster}')
+print(f'HEV cluster genes: {gene_table[gene_table["group"] == hev_cluster]["genes"].tolist()[:20]}')
+
+gene_table = gene_table[gene_table['group'] == hev_cluster]
 
 # Filter for p value & LFC
 gene_table = gene_table[gene_table['pvals_adj'] < 0.05]
@@ -537,22 +542,22 @@ cut = 100
 if cut > len(gene_list):
     cut = len(gene_list)
 
-dp = sc.pl.dotplot(all_adata, var_names=gene_list[:cut], groupby=[classification_key], layer=use_data, swap_axes=False, 
+dp = sc.pl.dotplot(all_adata, var_names=gene_list[:cut], groupby=[classification_key], layer=use_layer, swap_axes=False, 
                 return_fig=True, )
 dp.add_totals().style(dot_edge_color='black', dot_edge_lw=0.5, cmap='Reds',).show()
 
-plt.suptitle(f'All samples - marker genes endothelial-high & HEV cluster spots (threshold={threshold}, top {cut})', y=1.1, fontweight='bold', x=0.5)
+plt.suptitle(f'All samples - marker genes endothelial-high & HEV cluster spots (top {cut})', y=1.1, fontweight='bold', x=0.5)
 
 
-# --- Try to calculate LFCs to filter
+# --- Calculate LFCs to filter
 
 # Subset the data for each group
 adata_A = all_adata[all_adata.obs['endo_sub'] == 'Endothelial-high']
 adata_B = all_adata[all_adata.obs['endo_sub'] == 'HEV']
 
 # Compute mean expression per group
-mean_A = np.mean(adata_A[:, gene_list].to_df(layer=use_data), axis=0)
-mean_B = np.mean(adata_B[:, gene_list].to_df(layer=use_data), axis=0)
+mean_A = np.mean(adata_A[:, gene_list].to_df(layer=use_layer), axis=0)
+mean_B = np.mean(adata_B[:, gene_list].to_df(layer=use_layer), axis=0)
 
 # Compute log2 fold change
 lfc = np.log2((mean_B) / (mean_A))
@@ -570,11 +575,11 @@ for key, gene_list in gene_dict.items():
         cut = len(gene_list)
     gene_dict[key] = gene_list[:cut]
 
-dp = sc.pl.dotplot(all_adata, var_names=gene_dict, groupby=['endo_sub'], layer=use_data, swap_axes=False, 
+dp = sc.pl.dotplot(all_adata, var_names=gene_dict, groupby=['endo_sub'], layer=use_layer, swap_axes=False, 
                 return_fig=True, )
 dp.add_totals().style(dot_edge_color='black', dot_edge_lw=0.5, cmap='Reds',).show()
 
-plt.suptitle(f'All samples - marker genes endothelial-high & HEV cluster spots (threshold={threshold}, top {cut} per category)', y=1.1, fontweight='bold', x=0.5)
+plt.suptitle(f'All samples - marker genes endothelial-high & HEV cluster spots (top {cut} per category)', y=1.1, fontweight='bold', x=0.5)
 
 
 # --- Save output

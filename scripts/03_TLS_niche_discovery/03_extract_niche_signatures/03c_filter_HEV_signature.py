@@ -85,7 +85,7 @@ for sample in sample_list:
 # -- Load data
 # Load the integrated anndata object
 
-harmony_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'HEV_score_v2', 'try_to_improve_HEV_score', 'all_samples')
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_score', 'create_endothelial_object')
 
 # Function to find the most recent results
 def find_most_recent(dir):
@@ -173,13 +173,9 @@ final_df_sub = final_df_sub[final_df_sub['pct_expressing_rest'] < max_expressed_
 
 # --- Plot 1: Dot plots for top 30 genes per cluster - separated by cluster
 
-os.makedirs(out_dir_plots, exist_ok=True)
-
-# Prepare for saving in results/03_TLS_niche_discovery/03_extract_niche_signatures
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures')
-os.makedirs(base_results, exist_ok=True)
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', 'filter_HEV_score',)
 today = date.today().strftime("%Y%m%d")
-out_dir_plots = os.path.join(base_results, 'filter_HEV_score', 'plots', today)
+out_dir_plots = os.path.join(base_results, today, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Slash to be only the top x per cluster
@@ -211,19 +207,16 @@ for num_top in num_tops:
 
 # --- Save some csv files
 
+out_dir_csv = os.path.join(out_dir_plots, today, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
-# Prepare for saving csvs in results/03_TLS_niche_discovery/03_extract_niche_signatures
-out_dir_csv = os.path.join(base_results, 'filter_HEV_score', 'csv_files', today)
-os.makedirs(out_dir_csv, exist_ok=True)
-
-filename = 'All_samples_HEV_vs_endothelial_positive_LFC_pct_expressing.csv'
+filename = 'hevs_filtering_documentation.csv'
 final_df.to_csv(os.path.join(out_dir_csv, filename), index=False)
 final_df = pd.read_csv(os.path.join(out_dir_csv, filename))
 
 # Also save filtered list
 top_genes = final_df_sub
-filename = f'All_samples_HEV_vs_endothelial_positive_LFC_expression_filtered.csv'
+filename = 'hevs_filtered_endothelial_genes.csv'
 top_genes.to_csv(os.path.join(out_dir_csv, filename), index=False)
 
 

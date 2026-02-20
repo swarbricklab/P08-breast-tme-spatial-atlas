@@ -579,7 +579,7 @@ base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '0
 os.makedirs(base_results, exist_ok=True)
 
 # Save the filtered gene list
-out_file = os.path.join(base_results, 'germinal_center_filtered_epithelial.csv')
+out_file = os.path.join(base_results, 'germinal_center_filtered_epithelial_genes.csv')
 top_genes_table.to_csv(out_file, index=False)
 
 # Save the gene table with the reason for filtering
