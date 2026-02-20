@@ -550,33 +550,6 @@ plt.suptitle(f'{sample_id} ({subtype}) - Overlap vessel groups with HEVs',
              y=1.2, x=0.5, fontweight='bold')
 
 
-# --- Find PVLs per group
-
-summary = {}
-
-# Only consider PVLs
-df_selected = decon_res[PVL_classes]
-
-for col in endothelial:
-    group_map = vessel_classes[col].dropna()
-    # Join group labels with cell type counts
-    merged = df_selected.join(group_map.rename('group'), how='inner')
-    # Group by group label and sum selected cell type counts
-    group_sums = merged.groupby('group').sum()
-    summary[col] = group_sums
-
-renamed_dfs = []
-
-for col_name, df in summary.items():
-    # Add prefix to index (group names)
-    df_renamed = df.copy()
-    df_renamed.index = [f"{col_name}-{group}" for group in df.index]
-    renamed_dfs.append(df_renamed)
-
-# Concatenate all into a single DataFrame
-merged = pd.concat(renamed_dfs)
-
-
 # --- Save the output
 
 qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels')
@@ -603,10 +576,6 @@ save_multi_image(os.path.join(out_dir_plots, filename))
 # And save the dfs
 filename = f'{sample_id}_vessel_HEV_overlap.csv'
 group_counts_df.to_csv(os.path.join(out_dir_csv, filename), index=True)
-
-# Save PVL counts
-filename = f'{sample_id}_PVL_counts_per_vessel.csv'
-merged.to_csv(os.path.join(out_dir_csv, filename), index=True)
 
 # And save the overlap df
 filename = f'{sample_id}_vessel_HEV_overlap_spot_level.csv'
