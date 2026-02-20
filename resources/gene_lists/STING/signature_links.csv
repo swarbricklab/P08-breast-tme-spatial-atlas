@@ -1,0 +1,16 @@
+signature,link,n_genes_total,n_genes_in_panel
+REACTOME_STING_MEDIATED_INDUCTION_OF_HOST_IMMUNE_RESPONSES,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/REACTOME_STING_MEDIATED_INDUCTION_OF_HOST_IMMUNE_RESPONSES.html,16,12
+HALLMARK_INTERFERON_ALPHA_RESPONSE,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/HALLMARK_INTERFERON_ALPHA_RESPONSE.html,97,48
+GOBP_CGAS_STING_SIGNALING_PATHWAY,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GOBP_CGAS_STING_SIGNALING_PATHWAY.html,27,15
+ISHIKAWA_STING_SIGNALING,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/ISHIKAWA_STING_SIGNALING.html,9,6
+KEGG_MEDICUS_REFERENCE_CGAS_STING_SIGNALING_PATHWAY,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/KEGG_MEDICUS_REFERENCE_CGAS_STING_SIGNALING_PATHWAY.html,18,10
+WP_STING_PATHWAY_IN_KAWASAKILIKE_DISEASE_AND_COVID19,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/WP_STING_PATHWAY_IN_KAWASAKILIKE_DISEASE_AND_COVID19.html,21,16
+GAVISH_3CA_METAPROGRAM_ENDOTHELIAL_INTERFERON,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GAVISH_3CA_METAPROGRAM_ENDOTHELIAL_INTERFERON.html,50,24
+GOBP_CELLULAR_RESPONSE_TO_INTERFERON_ALPHA,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GOBP_CELLULAR_RESPONSE_TO_INTERFERON_ALPHA.html,11,8
+GOBP_CELLULAR_RESPONSE_TO_INTERFERON_BETA,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GOBP_CELLULAR_RESPONSE_TO_INTERFERON_BETA.html,29,18
+GOBP_INTERFERON_ALPHA_PRODUCTION,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GOBP_INTERFERON_ALPHA_PRODUCTION.html,32,23
+GOBP_INTERFERON_BETA_PRODUCTION,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GOBP_INTERFERON_BETA_PRODUCTION.html,63,32
+GOBP_RESPONSE_TO_TYPE_I_INTERFERON,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GOBP_RESPONSE_TO_TYPE_I_INTERFERON.html,92,53
+GOBP_TYPE_I_INTERFERON_PRODUCTION,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/GOBP_TYPE_I_INTERFERON_PRODUCTION.html,131,68
+REACTOME_INTERFERON_ALPHA_BETA_SIGNALING,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/REACTOME_INTERFERON_ALPHA_BETA_SIGNALING.html,78,39
+ZHANG_INTERFERON_RESPONSE,https://www.gsea-msigdb.org/gsea/msigdb/human/geneset/ZHANG_INTERFERON_RESPONSE,24,13
