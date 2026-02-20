@@ -46,6 +46,7 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -59,12 +60,13 @@ print(f'Samples in python: {sample_list}')
 
 
 # --- Extract some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 
@@ -111,8 +113,7 @@ threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 bin_size = 25  # um
 
-lr_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', resolution,
-                        f'threshold_{threshold_adj}', 'LR_analysis', 'HEV_level', f'{bin_size}um_bin', 'csv_files')
+lr_dir = os.path.join(project_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', resolution, f'threshold_{threshold_adj}', f'{bin_size}um_bin', 'csv_files')
 
 most_recent_dir_path = find_most_recent(lr_dir)
 
@@ -132,12 +133,10 @@ resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
 resolution_numbers = int(resolution_numbers)
 
 decon_level = 'subset'
-ncells = 3
+decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
 
 for sample in sample_list:
-    decon_dir = os.path.join(project_dir, 'resources', 'deconvolution', 'cell2location', f'{decon_level}_level', sample, decon_resolution,
-                            f'n_cells_{ncells}', 'model_output')
-    decon_file = 'q05_cell_abundance_w_sf.csv'
+    decon_file = f'{sample}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
     decon_res = pd.read_csv(os.path.join(decon_dir, decon_file), index_col=0)
     # Convert to proportions within each spot
     decon_res = decon_res.div(decon_res.sum(axis=1), axis=0)
@@ -148,8 +147,7 @@ for sample in sample_list:
 # --- Also load the revisited spot labels & add to adata
 # These distinguish whether a nearby spot is nearby to TLS_HEV or non_TLS_HEV
 
-lr_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                        f'threshold_{threshold_adj}', 'LR_analysis', 'HEV_level', f'{bin_size}um_bin', 'LR_gene_expression', 'csv_files')
+lr_dir = os.path.join(project_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', resolution, f'threshold_{threshold_adj}', f'{bin_size}um_bin', 'csv_files')
 
 most_recent_dir_path = find_most_recent(lr_dir)
 
@@ -687,7 +685,7 @@ plt.suptitle(f'All samples - Cell type composition of spots sending {lr_adj} sig
 
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '03_check_composition_LTB_signaling_bins')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
