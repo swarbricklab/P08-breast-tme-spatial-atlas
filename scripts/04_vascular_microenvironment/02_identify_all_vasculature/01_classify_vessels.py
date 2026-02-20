@@ -39,19 +39,17 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
+
 parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-# Required
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
-
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV", default=None)
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
 parser.add_argument("--min_spots", help="Minimal spots per gene", type=int)
-
 args = vars(parser.parse_args())
 
 
@@ -63,18 +61,18 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_model', '05_HEV_analysis', '04_cellular_composition',))
+sys.path.append(os.path.join(project_dir, 'scripts', '04_vascular_microenvironment'))
 import plotting_functions
 
+
 # --- Get some info from the sample sheet
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -92,10 +90,10 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 # --- Load the adata object
 
 use_data = 'log_norm'
-# Need both the 48 & 16 res
+# Use 16um resolution
 resolution = 'square_016um'
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -111,12 +109,10 @@ resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
 resolution_numbers = int(resolution_numbers)
 
 decon_level = 'minor'
-ncells = 3
 
-decon_dir = os.path.join(project_dir, 'resources', 'deconvolution', 'cell2location', f'{decon_level}_level', sample_id, decon_resolution,
-                         f'n_cells_{ncells}', 'model_output')
+decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
 
-decon_file = 'q05_cell_abundance_w_sf.csv'
+decon_file = f'{sample_id}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
 
 decon_res = pd.read_csv(os.path.join(decon_dir, decon_file), index_col=0)
 
@@ -151,7 +147,7 @@ for n, cell_type in enumerate(endothelial):
                 cmap='magma', ax=ax, vmin=0, vmax='p99.2')
     ax.set_title(ax.get_title(), fontweight='bold')
 
-plt.suptitle(f'{sample_id} ({subtype}) - Endothelial decon results (decon_level={decon_level}, decon_res={decon_resolution}, ncells={ncells})', 
+plt.suptitle(f'{sample_id} ({subtype}) - Endothelial decon results (decon_level={decon_level}, decon_res={decon_resolution})', 
              y=1.1, x=0.5, fontweight='bold')
 
 
@@ -177,7 +173,7 @@ for n, cell_type in enumerate(endothelial):
                 cmap='magma', ax=ax, vmax=vmax)
     ax.set_title(ax.get_title(), fontweight='bold')
 
-plt.suptitle(f'{sample_id} ({subtype}) - Endothelial decon results normalized from 0-1 (decon_level={decon_level}, decon_res={decon_resolution}, ncells={ncells}, vmax={vmax})', 
+plt.suptitle(f'{sample_id} ({subtype}) - Endothelial decon results normalized from 0-1 (decon_level={decon_level}, decon_res={decon_resolution}, vmax={vmax})', 
              y=1.1, x=0.5, fontweight='bold')
 
 
@@ -268,7 +264,7 @@ for i, label in enumerate(endothelial):
     cbar.ax.yaxis.set_label_coords(1.05, 1.05)
     cbar.ax.tick_params(labelsize=15)
 
-plt.suptitle(f'{sample_id} ({subtype}) - Endothelial decon results normalized from 0-1 (decon_level={decon_level}, decon_res={decon_resolution}, ncells={ncells}, vmax={vmax})', 
+plt.suptitle(f'{sample_id} ({subtype}) - Endothelial decon results normalized from 0-1 (decon_level={decon_level}, decon_res={decon_resolution}, vmax={vmax})', 
              y=1.1, x=0.5, fontweight='bold')
 
 
@@ -902,17 +898,12 @@ plt.suptitle(f'{sample_id} ({subtype}) - Grouping overview (high_thresh={high_th
 
 # --- Save the output
 
-threshold = 0.5
-threshold_adj = str(threshold).split('.')[-1]
-
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}', 'other_vessels',
-                       'classify_vessels')
-
+out_dir = os.path.join(qc_dir)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
