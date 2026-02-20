@@ -58,26 +58,24 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 
-# --- Make compatible with lymph node samples
-
-run_lymph_node = False
-
-
 # --- Get some info from the sample sheet
 # Use sample_sheet argument if provided, else default
 if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
     sample_dir = os.path.join(project_dir, 'config')
-    if run_lymph_node:
-        sample_sheet_file = 'sample_sheet_lymph_nodes.csv'
-    else:
-        sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_file = 'sample_sheet.csv'
     sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
+
+# Check if tissue_type is Lymph node
+tissue_type = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'tissue_type'].values[0]
+run_lymph_node = False
+if tissue_type == 'Lymph node':
+    run_lymph_node = True
 
 
 # --- Also get some tissue metadata
@@ -159,6 +157,9 @@ threshold_adj = str(threshold).split('.')[-1]
 
 TLS_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high', f'threshold_{threshold_adj}', 'csv_files')
 
+if run_lymph_node:
+    TLS_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high', f'threshold_{threshold_adj}', 'lymph_nodes', 'csv_files')
+
 # Find most recent results
 subdirs = [d for d in os.listdir(TLS_group_dir) if os.path.isdir(os.path.join(TLS_group_dir, d))]
 
@@ -184,9 +185,7 @@ TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), ind
 adata.obs[TLS_results.columns] = TLS_results
 
 
-# --- Define some genes
-
-# -- Load the genes from a file
+# --- Load the genes from a file
 
 gene_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '04_final_niche_signature_files')
 
@@ -335,6 +334,9 @@ for score_name, filename in clusters_of_i.items():
 
     # Put in a timestamped folder to avoid overwriting older plots
     qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '01_score_signatures')
+
+    if run_lymph_node:
+        qc_dir = os.path.join(qc_dir, 'lymph_nodes')
 
     os.makedirs(qc_dir, exist_ok=True)
 

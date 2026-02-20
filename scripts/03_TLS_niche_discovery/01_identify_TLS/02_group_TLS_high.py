@@ -71,6 +71,12 @@ sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
 
+# Check if tissue_type is Lymph node
+tissue_type = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'tissue_type'].values[0]
+run_lymph_node = False
+if tissue_type == 'Lymph node':
+    run_lymph_node = True
+
 
 # --- Also get some tissue metadata
 
@@ -103,6 +109,9 @@ else:
 # --- Load TLS results
 
 TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
+
+if run_lymph_node:
+    TLS_res_dir = os.path.join(TLS_res_dir, 'lymph_nodes')
 
 # Find most recent results
 subdirs = [d for d in os.listdir(TLS_res_dir) if os.path.isdir(os.path.join(TLS_res_dir, d))]
@@ -353,6 +362,10 @@ threshold_adj = str(threshold).split('.')[-1]
 
 out_dir = os.path.join(qc_dir, f'threshold_{threshold_adj}')
 os.makedirs(out_dir, exist_ok=True)
+
+if run_lymph_node:
+    out_dir = os.path.join(out_dir, 'lymph_nodes')
+    os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
 out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)

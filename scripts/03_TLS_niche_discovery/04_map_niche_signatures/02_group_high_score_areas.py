@@ -74,15 +74,18 @@ if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
     sample_dir = os.path.join(project_dir, 'config')
-    if run_lymph_node:
-        sample_sheet_file = 'sample_sheet_lymph_nodes.csv'
-    else:
-        sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_file = 'sample_sheet.csv'
     sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
+
+# Check if tissue_type is Lymph node
+tissue_type = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'tissue_type'].values[0]
+run_lymph_node = False
+if tissue_type == 'Lymph node':
+    run_lymph_node = True
 
 
 # --- Also get some tissue metadata
@@ -101,12 +104,7 @@ else:
 
 # --- Load the adata object
 
-use_data = 'log_norm'
-
-if run_lymph_node:
-    adata = ad.read_h5ad(os.path.join(project_dir, 'data', 'lymph_node_anndata_objects', use_data, f'{sample_id}_{use_data}.h5ad'))
-else:
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -149,7 +147,7 @@ def find_most_recent(dir):
     return most_recent_dir_path
 
 # Find most recent results
-TLS_res_dir = os.path.join(res_dir, 'TLS_model')
+TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
 if run_lymph_node:
     TLS_res_dir = os.path.join(TLS_res_dir, 'lymph_nodes')
@@ -165,42 +163,45 @@ adata.obs[TLS_model_key] = TLS_results
 # --- Make script compatible with multiple scores
 
 clusters_of_i = {
-    'GC': 'germinal_center_scoring/GC_score_filtered_genes/GC_score_filtered_genes.csv',
+    'GC': 'germinal_center_filtered_epithelial_genes.csv',
+    'B_cell_zone': 'b_cell_zone_top_genes_filtered.csv',
+    'T_cell_zone': 't_cell_zone_top_genes_filtered.csv',
 }
 
 for score_name, filename in clusters_of_i.items():
 
-    if score_name == 'GC':
-        out_name = 'GC_score_filtered'
-    else:
-        out_name = f'{score_name}_score'
+    out_name = f'{score_name}_score'
 
-    # --- Also load the GC scores
+    # --- Load the score results
+
+    score_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '01_score_signatures')
 
     if run_lymph_node:
-        GC_res_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'lymph_nodes', out_name, 'per_sample',
-                                'csv_files')
-    else:
-        GC_res_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', out_name, 'per_sample',
-                                'csv_files')
+        score_res_dir = os.path.join(score_res_dir, 'lymph_nodes')
 
-    most_recent_dir_path = find_most_recent(GC_res_dir)
+    score_res_dir = os.path.join(score_res_dir, out_name)
+
+    most_recent_dir_path = find_most_recent(score_res_dir)
 
     # Read results and add to adata
-    GC_file_name = f'{sample_id}_{out_name}.csv'
-    GC_results = pd.read_csv(os.path.join(most_recent_dir_path, GC_file_name), index_col=0)
+    score_file_name = f'{sample_id}_{out_name}.csv'
+    score_results = pd.read_csv(os.path.join(most_recent_dir_path, 'csv_files', score_file_name), index_col=0)
 
     top_gene = 20
 
-    GC_key = f'{score_name}_score_{top_gene}'
+    score_key = f'{score_name}_score_{top_gene}'
 
-    adata.obs[GC_key] = GC_results[GC_key]
+    adata.obs[score_key] = score_results[score_key]
 
 
     # --- Prepare for saving the plots
 
     # Put in a timestamped folder to avoid overwriting older plots
-    qc_dir = os.path.join(res_dir, 'TLS_model')
+    qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '02_group_high_score_areas')
+
+    if run_lymph_node:
+        qc_dir = os.path.join(qc_dir, 'lymph_nodes')
+
     os.makedirs(qc_dir, exist_ok=True)
 
     today = date.today()
@@ -222,10 +223,11 @@ for score_name, filename in clusters_of_i.items():
 
     cmap_adj.set_under(color='lightgray', alpha=0.4)
 
-    # Also define a threshold for selecting GC-high spots
+    # Also define a threshold for selecting high scoring spots
     threshold = 0.7
-    # Subset anndata to GC score above threshold
-    adata_sub = adata[adata.obs[GC_key] > threshold]
+    
+    # Subset anndata to high scoring spots above threshold
+    adata_sub = adata[adata.obs[score_key] > threshold]
 
     # Plotting
     sc.set_figure_params(fontsize=16)
@@ -238,9 +240,9 @@ for score_name, filename in clusters_of_i.items():
     # TLS model results
     sc.pl.spatial(adata, color='TLS_model', size=spot_size, cmap=cmap_adj, bw=False, alpha_img=1, crop_coord=coords, title=f'TLS score', vmin=0, ax=axs[0])
 
-    # GC score results
+    # High scoring spots
     vmax = None
-    sc.pl.spatial(adata, color=GC_key, size=spot_size, cmap=cmap_adj, bw=False, alpha_img=1, crop_coord=coords, title=f'{score_name} score (vmax={vmax})', vmin=0, vmax=vmax, ax=axs[1])
+    sc.pl.spatial(adata, color=score_key, size=spot_size, cmap=cmap_adj, bw=False, alpha_img=1, crop_coord=coords, title=f'{score_name} score (vmax={vmax})', vmin=0, vmax=vmax, ax=axs[1])
 
     # Spots above threshold
     adata_sub.obs['in_tissue'] = adata_sub.obs['in_tissue'].astype('category')
@@ -250,7 +252,7 @@ for score_name, filename in clusters_of_i.items():
     # Remove the legend
     axs[2].get_legend().set_visible(False)
 
-    plt.suptitle(f'{sample_id} ({subtype}) - TLS score + {score_name} score + {score_name}-high spots (GC_key={GC_key})', y=1.05, fontweight='bold', x=0.5)
+    plt.suptitle(f'{sample_id} ({subtype}) - TLS score + {score_name} score + {score_name}-high spots (score_key={score_key})', y=1.05, fontweight='bold', x=0.5)
 
 
     # --- If there are no spots over the threshold: need to stop here
@@ -259,33 +261,26 @@ for score_name, filename in clusters_of_i.items():
     threshold_adj = str(threshold).split('.')[-1]
 
     # Prepare for saving
-    if run_lymph_node:
-        out_dir = os.path.join(qc_dir, 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'lymph_nodes', out_name, 'per_sample', f'threshold_{threshold_adj}')
-    else:
-        out_dir = os.path.join(qc_dir, 'gene_expression_plots', 'potential_GC_genes', 'scoring', out_name, 'per_sample', f'threshold_{threshold_adj}')
-
+    out_dir = os.path.join(qc_dir, out_name, today)
     os.makedirs(out_dir, exist_ok=True)
 
     # Save plots
-    out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)
+    out_dir_plots = os.path.join(out_dir, 'plots', 'groups')
     os.makedirs(out_dir_plots, exist_ok=True)
 
     # Also save the groupings as a .csv
-    out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+    out_dir_csv = os.path.join(out_dir, 'csv_files')
     os.makedirs(out_dir_csv, exist_ok=True)
 
     # -- Some settings for grouping
-    # Decide whether want to sever groups connected by a single edge
-    sever_groups = False 
 
     # Set the smallest allowable group size
     min_spots = 1
 
     # Save in a dict
     settings = {'score_threshold': threshold,
-                'sever_groups': sever_groups,
                 'min_spots': min_spots,
-                'GC_key': GC_key,
+                'score_key': score_key,
                 }
 
     time_to_stop = False
@@ -299,7 +294,7 @@ for score_name, filename in clusters_of_i.items():
     if time_to_stop:
         filename = f'{sample_id}_{score_name}_groups.pdf'
         save_multi_image(os.path.join(out_dir_plots, filename))
-        to_save_df = adata_sub.obs[['TLS_model', GC_key]]
+        to_save_df = adata_sub.obs[['TLS_model', score_key]]
         to_save_df['group'] = ''
         to_save_df['group_too_small'] = ''
         to_save_df['group_too_small_removed'] = ''
@@ -405,7 +400,7 @@ for score_name, filename in clusters_of_i.items():
         if is_length_one:
             filename = f'{sample_id}_{score_name}_groups.pdf'
             save_multi_image(os.path.join(out_dir_plots, filename))
-            to_save_df = adata_sub.obs[['TLS_model', GC_key, 'group']]
+            to_save_df = adata_sub.obs[['TLS_model', gc_key, 'group']]
             to_save_df['groups_severed'] = ''
             to_save_df['group_too_small'] = ''
             to_save_df['group_too_small_removed'] = ''
@@ -482,36 +477,6 @@ for score_name, filename in clusters_of_i.items():
                                     single_edge_neighbors.append([spot_index, neighbor_index])
         return single_edge_neighbors
 
-    # Cut groups connected by single edge (optional)
-    if sever_groups:
-
-        # Find the single-edge neighbors
-        single_edge_neighbors = identify_single_edge_neighbors(list_of_lists, connected_groups)
-
-        # Now make it seem like these pairs aren't neighbors
-        updated_connected_groups = connected_groups.copy()
-
-        for pair in single_edge_neighbors:
-            # For each pair of single-edge neighbors: make it seem like these are not neighbors
-            index = pair[0]
-            neighbor = pair[1]
-            # Remove the neighbor for this index
-            updated_neighbors = [num for num in connected_groups[index] if num != neighbor]
-            updated_connected_groups[index] = updated_neighbors
-
-        # Extract new groups
-        group_key = 'groups_severed'
-        extract_neighbor_groups(updated_connected_groups, obs_key=group_key)
-
-
-        # --- Plot 4: Plot the grouping of high GC spots
-
-        sc.set_figure_params(fontsize=12, figsize=(6,6))
-
-        sc.pl.spatial(adata_sub, color=group_key, size=spot_size, bw=False, alpha_img=1, crop_coord=coords, title=f'{sample_id} - groups of spots >{threshold}', )
-
-        plt.suptitle(f'{sample_id} ({subtype}) - grouping of spots with {score_name} score >{threshold}) - single-edge connections removed', y=1.05, fontweight='bold', x=0.5)
-
 
     # --- Only keep groups with a minimum number of spots 
 
@@ -553,40 +518,38 @@ for score_name, filename in clusters_of_i.items():
         # Check whether there are any groups of length 1
         if any(len(sublist) == 1 for sublist in list_of_lists):
             
-            int_score_name = 'B_cell_zone'
-            int_out_name = f'{int_score_name}_score'
+            bcell_name = 'B_cell_zone'
+            bcell_out_name = f'{bcell_name}_score'
             
             # Load the intermediate TLS score
             if run_lymph_node:
-                GC_res_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'lymph_nodes', int_out_name, 'per_sample',
-                                        'csv_files')
+                GC_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '01_score_signatures', 'lymph_nodes', bcell_out_name)
             else:
-                GC_res_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', int_out_name, 'per_sample',
-                                        'csv_files')
+                GC_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '01_score_signatures', bcell_out_name)
 
             most_recent_dir_path = find_most_recent(GC_res_dir)
 
             # Read results and add to adata
-            GC_file_name = f'{sample_id}_{int_out_name}.csv'
-            GC_results = pd.read_csv(os.path.join(most_recent_dir_path, GC_file_name), index_col=0)
-            int_TLS_key = f'{int_score_name}_score_{top_gene}'
+            GC_file_name = f'{sample_id}_{bcell_out_name}.csv'
+            GC_results = pd.read_csv(os.path.join(most_recent_dir_path, 'csv_files', GC_file_name), index_col=0)
+            int_TLS_key = f'{bcell_name}_score_{top_gene}'
             adata_sub.obs[int_TLS_key] = GC_results[int_TLS_key]
             
             # Find single-spot groups & check intermediate TLS score for these
             value_counts = adata_sub.obs['group_too_small'].value_counts()
             items_only_once = value_counts[value_counts == 1].index.tolist()
 
-            # Set intermediate TLS threshold
-            int_TLS_threshold = 0.6
-            filtered_items = list(adata_sub.obs[(adata_sub.obs['group_too_small'].isin(items_only_once)) & (adata_sub.obs[int_TLS_key] > int_TLS_threshold)]['group_too_small'].unique())
+            # Set B cell score threshold for single-spot groups
+            bcell_threshold = 0.6
+            filtered_items = list(adata_sub.obs[(adata_sub.obs['group_too_small'].isin(items_only_once)) & (adata_sub.obs[int_TLS_key] > bcell_threshold)]['group_too_small'].unique())
 
             # Remove groups that don't meet the TLS score threshold
             for group in items_only_once:
                 if not group in filtered_items:
-                    adata_sub.obs['group_too_small'] = np.where(adata_sub.obs['group_too_small'] == group, 'TLS_score_too_low', adata_sub.obs['group_too_small'])
+                    adata_sub.obs['group_too_small'] = np.where(adata_sub.obs['group_too_small'] == group, 'Bcell_score_too_low', adata_sub.obs['group_too_small'])
 
             temp_df = adata_sub.obs[['group_too_small']]
-            temp_df = temp_df[temp_df['group_too_small'] != 'TLS_score_too_low']
+            temp_df = temp_df[temp_df['group_too_small'] != 'Bcell_score_too_low']
 
             # Update group names based on size
             group_counts = temp_df['group_too_small'].value_counts()
@@ -595,11 +558,11 @@ for score_name, filename in clusters_of_i.items():
 
             temp_df['group_too_small'] = temp_df['group_too_small'].map(group_map)
             adata_sub.obs['group_too_small'] = adata_sub.obs['group_too_small'].map(group_map)
-            adata_sub.obs['group_too_small'] = adata_sub.obs['group_too_small'].fillna('TLS_score_too_low')
+            adata_sub.obs['group_too_small'] = adata_sub.obs['group_too_small'].fillna('Bcell_score_too_low')
             adata_sub.obs['group_too_small_removed'] = temp_df['group_too_small']
             
             # Record threshold in settings
-            settings['int_TLS_score_threshold'] = int_TLS_threshold
+            settings['bcell_score_threshold'] = bcell_threshold
 
 
     # --- Plot 5: Groups after removing small groups
@@ -622,8 +585,8 @@ for score_name, filename in clusters_of_i.items():
         # Do not annotate groups that are too small or don't have a TLS score high enough
         if too_small_value in all_groups:
             all_groups.remove(too_small_value)
-        if 'TLS_score_too_low' in all_groups:
-            all_groups.remove('TLS_score_too_low')
+        if 'Bcell_score_too_low' in all_groups:
+            all_groups.remove('Bcell_score_too_low')
         for group in all_groups:
             adata_tmp = adata_sub[adata_sub.obs[group_key] == group]
             coords_tmp = auto_crop_scanpy(adata_tmp)
@@ -652,7 +615,7 @@ for score_name, filename in clusters_of_i.items():
     plt.close('all')
 
     # And save the groupings as a csv
-    to_save_df = adata_sub.obs[['TLS_model', GC_key, 'group', 'group_too_small', 'group_too_small_removed']]
+    to_save_df = adata_sub.obs[['TLS_model', score_key, 'group', 'group_too_small', 'group_too_small_removed']]
 
     filename = f'{sample_id}_{score_name}_groups.csv'
     to_save_df.to_csv(os.path.join(out_dir_csv, filename))

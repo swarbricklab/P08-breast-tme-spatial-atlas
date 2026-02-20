@@ -57,6 +57,12 @@ else:
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 
+# Check if tissue_type is Lymph node
+tissue_type = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'tissue_type'].values[0]
+run_lymph_node = False
+if tissue_type == 'Lymph node':
+    run_lymph_node = True
+
 
 # --- Load the adata object
 
@@ -145,6 +151,10 @@ to_score_df = pd.DataFrame.from_dict(to_score, orient='index').T
 
 # Output to results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model/<date>
 base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
+
+if run_lymph_node:
+    base_results = os.path.join(base_results, 'lymph_nodes')
+
 today = date.today().strftime("%Y%m%d")
 out_dir = os.path.join(base_results, today)
 os.makedirs(out_dir, exist_ok=True)
