@@ -1,0 +1,51 @@
+miniatlas_subset,miniatlas_minor,miniatlas_major,lineage,miniatlas_cycling,miniatlas_subset_short
+B cells Memory,B cells Memory,B-cells,Immune,B cells,B cells Memory
+B cells Naive,B cells Naive,B-cells,Immune,B cells,B cells Naive
+CAFs MSC iCAF-like s1,CAFs MSC iCAF-like,CAFs,Stromal,CAFs,iCAF s1
+CAFs MSC iCAF-like s2,CAFs MSC iCAF-like,CAFs,Stromal,CAFs,iCAF s2
+CAFs myCAF like s4,CAFs myCAF-like,CAFs,Stromal,CAFs,myCAF s4
+CAFs myCAF like s5,CAFs myCAF-like,CAFs,Stromal,CAFs,myCAF s5
+CAFs Transitioning s3,,CAFs,Stromal,CAFs,CAFs Transitioning s3
+Cancer Basal SC,Cancer Basal SC,Cancer Epithelial,Epithelial,Cancer,Cancer Basal
+Cancer Cycling,Cancer Cycling,Cancer Epithelial,Epithelial,Cycling,Cancer Cycling
+Cancer Her2 SC,Cancer Her2 SC,Cancer Epithelial,Epithelial,Cancer,Cancer Her2
+Cancer LumA SC,Cancer LumA SC,Cancer Epithelial,Epithelial,Cancer,Cancer LumA
+Cancer LumB SC,Cancer LumB SC,Cancer Epithelial,Epithelial,Cancer,Cancer LumB
+Cycling PVL,Cycling PVL,PVL,Stromal,Cycling,PVL Cycling
+Cycling_Myeloid,Cycling Myeloid,Myeloid,Immune,Cycling,Myeloid Cycling
+Cycling_Myeloid,Cycling_Myeloid,Myeloid,Immune,Cycling,Myeloid Cycling
+Endothelial ACKR1,Endothelial ACKR1,Endothelial,Stromal,Endothelial,Endothelial ACKR1
+Endothelial CXCL12,Endothelial CXCL12,Endothelial,Stromal,Endothelial,Endothelial CXCL12
+Endothelial Lymphatic LYVE1,Endothelial Lymphatic LYVE1,Endothelial,Stromal,Endothelial,Lymphatic LYVE1
+Endothelial RGS5,Endothelial RGS5,Endothelial,Stromal,Endothelial,Endothelial RGS5
+Luminal Progenitors,Luminal Progenitors,Normal Epithelial,Epithelial,Normal,Luminal Progenitors
+Mature Luminal,Mature Luminal,Normal Epithelial,Epithelial,Normal,Mature Luminal
+Myeloid_c0_DC_LAMP3,DCs,Myeloid,Immune,Myeloid,LAMP3+ DC
+Myeloid_c1_LAM1_FABP5,Macrophage,Myeloid,Immune,Myeloid,LAM1 FABP5
+Myeloid_c10_Macrophage_1_EGR1,Macrophage,Myeloid,Immune,Myeloid,Macrophage EGR1
+Myeloid_c11_cDC2_CD1C,DCs,Myeloid,Immune,Myeloid,cDC2 CD1C
+Myeloid_c12_Monocyte_1_IL1B,Monocyte,Myeloid,Immune,Myeloid,Monocyte IL1B
+Myeloid_c2_LAM2_APOE,Macrophage,Myeloid,Immune,Myeloid,LAM2 APOE
+Myeloid_c3_cDC1_CLEC9A,DCs,Myeloid,Immune,Myeloid,cDC1 CLEC9A
+Myeloid_c4_DCs_pDC_IRF7,DCs,Myeloid,Immune,Myeloid,pDC IRF7
+Myeloid_c5_Macrophage_3_SIGLEC1,Macrophage,Myeloid,Immune,Myeloid,Macrophage SIGLEC1
+Myeloid_c7_Monocyte_3_FCGR3A,Monocyte,Myeloid,Immune,Myeloid,Monocyte FCGR3A
+Myeloid_c8_Monocyte_2_S100A9,Monocyte,Myeloid,Immune,Myeloid,Monocyte S100A9
+Myeloid_c9_Macrophage_2_CXCL10,Macrophage,Myeloid,Immune,Myeloid,Macrophage CXCL10
+Myoepithelial,Myoepithelial,Normal Epithelial,Epithelial,Normal,Myoepithelial
+Plasmablasts,Plasmablasts,Plasmablasts,Immune,Plasmablasts,Plasmablasts
+PVL Differentiated s3,PVL Differentiated,PVL,Stromal,PVLs,dPVL s3
+PVL Immature s1,PVL Immature,PVL,Stromal,PVLs,imPVL s1
+PVL_Immature s2,PVL Immature,PVL,Stromal,PVLs,imPVL s2
+T_cells_c0_CD4+_CCR7,T cells CD4+,T-cells,Immune,T cells + ILCs,T cells CD4+ CCR7
+T_cells_c1_CD4+_IL7R,T cells CD4+,T-cells,Immune,T cells + ILCs,T cells CD4+ IL7R
+T_cells_c10_NKT_cells_FCGR3A,NKT cells,T-cells,Immune,T cells + ILCs,NKT cells FCGR3A
+T_cells_c11_MKI67,Cycling T-cells,T-cells,Immune,Cycling,T cells cycling
+T_cells_c2_CD4+_T-regs_FOXP3,T cells CD4+,T-cells,Immune,T cells + ILCs,T-regs CD4+ FOXP3
+T_cells_c3_CD4+_Tfh_CXCL13,T cells CD4+,T-cells,Immune,T cells + ILCs,Tfh CD4+ CXCL13
+T_cells_c4_CD8+_ZFP36,T cells CD8+,T-cells,Immune,T cells + ILCs,T cells CD8+ ZFP36
+T_cells_c5_CD8+_GZMK,T cells CD8+,T-cells,Immune,T cells + ILCs,T cells CD8+ GZMK
+T_cells_c6_IFIT1,,T-cells,Immune,T cells + ILCs,T cells IFIT1
+T_cells_c7_CD8+_IFNG,T cells CD8+,T-cells,Immune,T cells + ILCs,T cells CD8+ IFNG
+T_cells_c8_CD8+_LAG3,T cells CD8+,T-cells,Immune,T cells + ILCs,T cells CD8+ LAG3
+T_cells_c9_NK_cells_AREG,NK cells,T-cells,Immune,T cells + ILCs,NK cells AREG
