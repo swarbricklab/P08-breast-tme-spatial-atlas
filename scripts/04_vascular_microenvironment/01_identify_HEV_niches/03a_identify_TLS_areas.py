@@ -44,10 +44,12 @@ parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
+
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -64,15 +66,17 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 
+
 # --- Get some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -92,7 +96,7 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 use_data = 'log_norm'
 resolution = 'square_048um'
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -102,7 +106,7 @@ coords = auto_crop_scanpy(adata, border_size=0.1)
 coord_squidpy = auto_crop(adata, border_size=0.1)
 
 
-# --- Load TLS results
+# --- Function to find the most recent results
 
 # Function to find the most recent results
 def find_most_recent(dir):
@@ -126,39 +130,23 @@ def find_most_recent(dir):
         print("No valid directories found.")
     return most_recent_dir_path
 
-# Find most recent results
-TLS_res_dir = os.path.join(res_dir, 'TLS_model', resolution)
-
-most_recent_dir_path = find_most_recent(TLS_res_dir)
-
-TLS_file_name = f'{sample_id}_TLS_model.csv'
-TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
-TLS_model_key = 'TLS_model'
-adata.obs[TLS_model_key] = TLS_results
-
 
 # --- Make groups based on a combination of scores
 
 clusters_of_i = {
-    # 'GC': 'germinal_center_scoring/GC_score_v2.csv',
-    'intermediate_TLS': 'other_scores/intermediate_TLS_score.csv',
-    'T_cell_zone': 'other_scores/T_cell_zone_score.csv',
-    # 'HEV': 'other_scores/HEV_score.csv',
-}
+    'B_cell_zone': 'b_cell_zone_top_genes_filtered.csv',
+    'T_cell_zone': 't_cell_zone_top_genes_filtered.csv',
+}    
 
 score_keys = []
 
 for score_name, filename in clusters_of_i.items():
-    if score_name == 'GC':
-        out_name = 'GC_score_v2'
-    else:
-        out_name = f'{score_name}_score'
-    GC_res_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', out_name, 'per_sample', resolution,
-                            'csv_files')
+    out_name = f'{score_name}_score'
+    GC_res_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', out_name, resolution)
     most_recent_dir_path = find_most_recent(GC_res_dir)
     # Read results and add to adata
     GC_file_name = f'{sample_id}_{out_name}.csv'
-    GC_results = pd.read_csv(os.path.join(most_recent_dir_path, GC_file_name), index_col=0)
+    GC_results = pd.read_csv(os.path.join(most_recent_dir_path, 'csv_files', GC_file_name), index_col=0)
     # Choose number of genes used for scoring
     top_gene = 20
     GC_key = f'{score_name}_score_{top_gene}'
@@ -189,8 +177,7 @@ def create_colormap(R, G, B):
 
 # Define some colors per score
 color_dict = {
-    'GC': mpl.colors.cnames["cyan"],
-    'intermediate_TLS': mpl.colors.cnames["cornflowerblue"],
+    'B_cell_zone': mpl.colors.cnames["cornflowerblue"],
     'T_cell_zone': mpl.colors.cnames["crimson"],
 }
 
@@ -210,7 +197,7 @@ for score_name in clusters_of_i:
 # --- Prepare for saving the plots
 
 # Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model')
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '03a_identify_TLS_areas')
 os.makedirs(qc_dir, exist_ok=True)
 
 today = date.today()
@@ -219,7 +206,7 @@ today = today.strftime("%Y%m%d")
 
 # --- Prepare for grouping: figure out which spots above threshold
 
-# Also define a threshold for selecting GC-high spots
+# Also define a threshold for selecting high scoring spots
 threshold = 0.5
 
 adata.obs['above_thresh'] = adata.obs[score_keys].gt(threshold).any(axis=1)
@@ -230,36 +217,17 @@ adata_sub = adata[adata.obs['above_thresh'] == True]
 
 # --- Plot 1: Plot the TLS model score + spots above a certain threshold
 
-# Define custom colormap for plotting TLS model results
-# Set everything under certain threshold as the lowest color of a color map
-
-cmap = "YlOrRd"
-color_list = mcp.gen_color(cmap=cmap, n=11)
-color_list_extracted = ['lightgray'] + color_list[2:]
-
-n_bins = 100
-cmap_name = 'my_list'
-cmap_adj = LinearSegmentedColormap.from_list(cmap_name, color_list_extracted, N=n_bins)
-cmap_adj.set_under(color='lightgray', alpha=0.4)
-
-
 # Plotting
 sc.set_figure_params(fontsize=20)
 
 nrows = 1
-ncols = 3
+ncols = 2
 
 fig, axs = plt.subplots(nrows, ncols, figsize=(8*ncols, 6.5*nrows))
 
-# TLS model results
-sc.pl.spatial(adata, color='TLS_model', cmap=cmap_adj, bw=False, alpha_img=1, crop_coord=coords, title=f'{sample_id} ({subtype})\nTLS score', vmin=0, 
-              vmax=0.05, ax=axs[0])
-
-
 # Spots above threshold
-sc.pl.spatial(adata, color='above_thresh', groups=[True], bw=False, alpha_img=0.7, crop_coord=coords, title=f'{sample_id} ({subtype})\nTLS zone score > {threshold}', ax=axs[1],
+sc.pl.spatial(adata, color='above_thresh', groups=[True], bw=False, alpha_img=0.7, crop_coord=coords, title=f'{sample_id} ({subtype})\nTLS zone score > {threshold}', ax=axs[0],
               legend_loc=None, palette=['#1f77b4'])
-
 
 # score results
 vmax = 0.8
@@ -276,8 +244,7 @@ for n, score_name in enumerate(score_names_r):
         alpha_img = 0
     cmap = cmap_dict[score_name]
     sc.pl.spatial(adata, color=f'{score_name}_score_{top_gene}', alpha_img=alpha_img, cmap=cmap,
-        crop_coord=coords, title=f'{sample_id} ({subtype})\nTLS zones', ax=axs[2], vmin=0, vmax=vmax, colorbar_loc=None,)
-
+        crop_coord=coords, title=f'{sample_id} ({subtype})\nTLS zones', ax=axs[1], vmin=0, vmax=vmax, colorbar_loc=None,)
 
 # Add colorbars per score
 for i, (label, cmap) in enumerate(cmap_dict.items()):
@@ -286,7 +253,7 @@ for i, (label, cmap) in enumerate(cmap_dict.items()):
     mid_y = 0.5
     num_cbars = len(cmap_dict)
     y_pos = mid_y + (i - (num_cbars - 1) / 2) * spacing  # Distribute around the midpoint
-    cbar_ax = axs[2].inset_axes([1.1, y_pos, 0.3, 0.05])
+    cbar_ax = axs[1].inset_axes([1.1, y_pos, 0.3, 0.05])
     cbar = fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), 
                         cax=cbar_ax, orientation='horizontal')
     cbar.ax.set_ylabel(f'{label}_score', rotation=0, ha='left', va='center', fontsize=18)
@@ -294,7 +261,7 @@ for i, (label, cmap) in enumerate(cmap_dict.items()):
     cbar.ax.yaxis.set_label_coords(1.05, 1.05)
     cbar.ax.tick_params(labelsize=15)
 
-plt.suptitle(f'{sample_id} ({subtype}) - TLS score + TLS_zone scores (top_gene={top_gene}, threshold={threshold}, resolution={resolution})', y=1.1, fontweight='bold', x=0.5)
+plt.suptitle(f'{sample_id} ({subtype}) - TLS_zone scores (top_gene={top_gene}, threshold={threshold}, resolution={resolution})', y=1.1, fontweight='bold', x=0.5)
 
 
 # --- Define groups of neighboring spots
@@ -482,8 +449,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - grouping of spots with TLS zone score >
 
 # --- Save everything so far
 
-threshold_adj = str(threshold).split('.')[-1]
-out_dir = os.path.join(qc_dir, 'other_signatures', 'TLS_zones', 'per_sample', resolution, f'threshold_{threshold_adj}',)
+out_dir = os.path.join(qc_dir, resolution,)
 
 os.makedirs(out_dir, exist_ok=True)
 
@@ -502,7 +468,7 @@ save_multi_image(os.path.join(out_dir_plots, filename))
 plt.close('all')
 
 # And save the groupings as a csv
-to_save_df = adata_sub.obs[['TLS_model'] + score_keys + ['group', 'group_too_small', 'group_too_small_removed']]
+to_save_df = adata_sub.obs[score_keys + ['group', 'group_too_small', 'group_too_small_removed']]
 
 filename = f'{sample_id}_TLS_zones_groups.csv'
 to_save_df.to_csv(os.path.join(out_dir_csv, filename))
