@@ -1,0 +1,33 @@
+donor_id,tissue_id,tissue_type,clinical_subtype
+P01,P01,Primary tumor,Luminal A
+P02,P02,Primary tumor,Luminal A
+P03,P03,Primary tumor,Luminal A
+P04,P04,Primary tumor,Luminal A
+P05,P05,Primary tumor,Luminal A
+P06,P06,Primary tumor,Luminal A
+P07,P07,Primary tumor,Luminal A
+P08,P08,Primary tumor,Luminal B (ER+)
+P09,P09,Primary tumor,Luminal B (ER+)
+P10,P10,Primary tumor,Luminal B (ER+)
+P11,P11,Primary tumor,Luminal B (ER+)
+P12,P12,Primary tumor,Luminal B (ER+)
+P13,P13,Primary tumor,Luminal B (ER+)
+P14,P14,Primary tumor,Luminal B (ER+)
+P15,P15,Primary tumor,Luminal B (ER+)
+P16,P16,Primary tumor,Luminal B (ER+)
+P17,P17,Primary tumor,Luminal B (HER2+)
+P18,P18,Primary tumor,Luminal B (HER2+)
+P19,P19,Primary tumor,Luminal B (HER2+)
+P20,P20,Primary tumor,Luminal B (HER2+)
+P21,P21,Primary tumor,Luminal B (HER2+)
+P22,P22,Primary tumor,HER2+
+P23,P23,Primary tumor,HER2+
+P24,P24,Primary tumor,HER2+
+P25,P25,Primary tumor,HER2+
+P26,P26,Primary tumor,TNBC
+P27,P27,Primary tumor,TNBC
+P28,P28,Primary tumor,TNBC
+P29,P29,Primary tumor,TNBC
+P30,P30,Primary tumor,TNBC
+P31,P31,Primary tumor,TNBC
+P32,P32,Primary tumor,TNBC

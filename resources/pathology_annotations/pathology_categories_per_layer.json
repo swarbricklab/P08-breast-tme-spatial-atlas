@@ -1,0 +1,4 @@
+{"epithelial": ["invasive", "in_situ", "benign", "normal"], 
+"immune": ["tls", "aggregate", "lymphocytes_present"], 
+"stroma": ["desmoplastic", "fibrous", "adipose"], 
+"additional_features": ["blood_vessel", "lvi", "calcification", "duct_secretion", "nerve", "necrosis", "haemorrhage"]}

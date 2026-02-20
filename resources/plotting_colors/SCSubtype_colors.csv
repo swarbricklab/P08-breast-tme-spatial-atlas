@@ -1,0 +1,12 @@
+subtype,SCSubtype_class,color,color_adj,subtype_alt
+TNBC,basal,#ED2024,#ef4547,TNBC
+Basal,basal,#ED2024,#ef4547,TNBC
+HER2+,HER2,#FFA1B7,#f7b1c3,HER2+
+Luminal A,LumA,#2A2D7C,#444ea1,
+Luminal B,LumB,#6FCCDD,#9edae6,
+Luminal B (ER+),LumB,#6FCCDD,#abdfe9,ER+
+Luminal B (HER2+),LumB,#B371DB,#af8abf,
+,cycling,#FBB040,,
+lymph_node,,#FBB040,#c19dc9,
+Lymph node,,#FBB040,#c19dc9,
+Normal,Normal,#FBB040,#FBB040,
