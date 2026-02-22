@@ -142,17 +142,18 @@ tifffile.imwrite(
     cropped_data,
 )
 
-
 # Load John's QuPath module
+# -- Optional: convert the cropped .tif to pyramidal .ome.tif format
+# Instructions here: https://www.10xgenomics.com/support/software/xenium-explorer/latest/tutorials/xe-image-file-conversion
 
-cmd = (
-    "export MODULEPATH=/g/data/a56/software/modules:$MODULEPATH; "
-    "module load QuPath; "
-    f"cd {image_dir}/cropped_images; "
-    f"ndpi2ome {filename}.tif {filename}.ome.tif"
-)
+# cmd = (
+#     "export MODULEPATH=/g/data/a56/software/modules:$MODULEPATH; "
+#     "module load QuPath; "
+#     f"cd {image_dir}/cropped_images; "
+#     f"ndpi2ome {filename}.tif {filename}.ome.tif"
+# )
 
-subprocess.run(cmd, shell=True, check=True)
+# subprocess.run(cmd, shell=True, check=True)
 
 
 # --- Now also crop the hires & lowres images in the object
