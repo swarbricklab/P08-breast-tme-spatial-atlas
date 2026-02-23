@@ -1,0 +1,27 @@
+name: spatial-pilot
+
+channels:
+  - conda-forge
+  - bioconda
+  - pypi
+
+dependencies:
+  - python
+  - anndata
+  - arpack
+  - conda
+  - git
+  - mamba
+  - numpy
+  - pandas
+  - rpy2
+  - scanpy
+  - seaborn
+  - setuptools
+  - squidpy
+  - stlearn
+  - pip
+  - pip:
+    - mycolorpy
+    - upsetplot
+    - harmonypy

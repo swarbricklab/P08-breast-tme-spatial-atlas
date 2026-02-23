@@ -1,0 +1,11 @@
+name: spatdat
+
+channels:
+  - conda-forge
+  - bioconda
+  - pypi
+
+dependencies:
+  - pip
+  - pip:
+      - "spatialdata[extra]"
