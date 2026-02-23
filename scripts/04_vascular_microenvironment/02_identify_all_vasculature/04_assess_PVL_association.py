@@ -40,11 +40,13 @@ mpl.rcParams['pdf.fonttype'] = 42
 parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+
 # Required
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -61,19 +63,18 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_model', '05_HEV_analysis', '04_cellular_composition',))
+sys.path.append(os.path.join(project_dir, 'scripts', '04_vascular_microenvironment'))
 import plotting_functions
 
 
 # --- Get some info from the sample sheet
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -102,7 +103,7 @@ if decon_resolution not in resolutions:
 adata_dict = {}
 
 for resolution in resolutions:
-    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -179,8 +180,7 @@ threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                             f'threshold_{threshold_adj}', 'other_vessels', 'classify_vessels', 'csv_files')
+TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
@@ -198,15 +198,9 @@ adata_dict[base_res].obs['vessel_class'] = collapsed_col
 resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
 resolution_numbers = int(resolution_numbers)
 
-if decon_resolution == 'square_048um':
-    ncells = 20
-elif decon_resolution == 'square_016um':
-    ncells = 3
+decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
 
-decon_dir = os.path.join(project_dir, 'resources', 'deconvolution', 'cell2location', f'{decon_level}_level', sample_id, decon_resolution,
-                         f'n_cells_{ncells}', 'model_output')
-
-decon_file = 'q05_cell_abundance_w_sf.csv'
+decon_file = f'{sample_id}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
 
 decon_res = pd.read_csv(os.path.join(decon_dir, decon_file), index_col=0)
 
@@ -216,9 +210,7 @@ adata_dict[decon_resolution].obs[PVL_classes] = decon_res[PVL_classes]
 
 # --- And load the distance calculations
 
-dist_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}',
-                       'other_vessels', 'distance_calculations', decon_resolution, 'csv_files')
-
+dist_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '03_calculate_distances', decon_resolution, 'csv_files')
 most_recent = find_most_recent(dist_dir)
 
 distance_dict = {}
@@ -607,13 +599,12 @@ plt.suptitle(f'{sample_id} ({subtype}) - PVL composition across distance bins - 
 
 # --- Save output
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '04_assess_PVL_association')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}', 'other_vessels',
-                       'cellular_composition', f'{decon_resolution}', 'PVL_only', f'composition_{decon_level}')
+out_dir = os.path.join(qc_dir)
 
 os.makedirs(out_dir, exist_ok=True)
 

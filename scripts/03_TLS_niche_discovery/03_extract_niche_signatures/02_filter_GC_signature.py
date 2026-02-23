@@ -35,6 +35,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+
 parser.add_argument("-s", "--samples",
     nargs="*",  # 0 or more values expected => creates a list
     type=str,
@@ -43,6 +44,7 @@ parser.add_argument("-r", "--res_dir",
                     help="Path to results directory (optional)")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files") # Not necessary for this script
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -59,13 +61,15 @@ print(f'Samples in python: {sample_list}')
 
 use_layer = 'log_norm'
 
-
 # --- Extract some info from the sample sheet
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 
@@ -87,17 +91,15 @@ subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
 
 epithelial_annotations = {}
 
-annotation_dir_base = os.path.join(project_dir, 'resources', 'path_annotations')
+annotation_dir = os.path.join(project_dir, 'data', 'pathology_annotations', 'visium')
 
 for sample in sample_list:
-    external_id = sample_lut.loc[sample, 'external_id']
-    joined_id = f'{external_id}-{sample}'
-    annotation_dir = os.path.join(annotation_dir_base, joined_id)
-    if os.path.exists(annotation_dir):
-        annotation_files = os.listdir(annotation_dir)
-        epithelial_file = [file for file in annotation_files if 'epithelial' in file.lower()][0]
-        if os.path.exists(os.path.join(annotation_dir, epithelial_file)):
-            epithelial_annotations[sample] = pd.read_csv(os.path.join(annotation_dir, epithelial_file), index_col=0)
+    annotation_file = f'{sample}_pathology_annotations.csv'
+    annotation_path = os.path.join(annotation_dir, annotation_file)
+    if os.path.exists(annotation_path):
+        annotations = pd.read_csv(annotation_path, index_col=0)
+        if 'epithelial' in annotations.columns:
+            epithelial_annotations[sample] = annotations['epithelial']
 
 
 # --- Load data
@@ -108,11 +110,8 @@ subtype_key = 'subtype'
 sample_id_key = 'sample_id'
 
 # Load only samples with epithelial annotations
-
 for sample in epithelial_annotations:
-    external_id = sample_lut.loc[sample, 'external_id']
-    joined_id = f'{external_id}-{sample}'
-    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, use_layer, f'{joined_id}_{use_layer}.h5ad'))
+    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample}.h5ad'))
     # Add subtype to obs for easier splitting
     adata_dict[sample].obs[subtype_key] = subtype_dict[sample]
     # Also add sample id for easier splitting
@@ -121,85 +120,19 @@ for sample in epithelial_annotations:
     adata_dict[sample].obs['epithelial'] = epithelial_annotations[sample]
 
 
-# --- Order based on unique sample ID
-
-ordered_keys = adata_dict.keys()
-ordered_keys = sorted(ordered_keys)
-
-
-# --- Load the reworked annotations
-# Summarized by major category
-
-path_layer = 'epithelial'
-
-reworked_anno_dir = os.path.join(project_dir, 'results', 'path_annotations', 'reworked_annotations',)
-
-for sample in epithelial_annotations:
-    sample_anno_dir = os.path.join(reworked_anno_dir, sample, 'csv_files', 'reworked_annotations_per_layer')
-    if os.path.exists(sample_anno_dir):
-        external_id = sample_lut.loc[sample, 'external_id']
-        filename = f'{sample}-{external_id}_{path_layer}_reworked.csv'
-        path_to_file = os.path.join(sample_anno_dir, filename)
-        if os.path.exists(path_to_file):
-            print(f'Found reworked annotations for {sample}')
-            reworked_anno = pd.read_csv(path_to_file, index_col=0)
-            adata_dict[sample].obs[f'{path_layer}_subset'] = reworked_anno
-        else:
-            adata_dict[sample].obs[f'{path_layer}_subset'] = None
-
-
-# Also load the way the raw annotations were categorized into major categories
-# Function to merge dictionaries of lists without duplicates and sort each list
-def merge_and_sort_dictionaries(dicts):
-    merged_dict = {}
-    for d in dicts:
-        for key, value in d.items():
-            if key not in merged_dict:
-                merged_dict[key] = []
-            # Append unique values to the list
-            merged_dict[key].extend([v for v in value if v not in merged_dict[key]])
-    # Sort each list alphabetically ignoring capitalization
-    for key in merged_dict:
-        merged_dict[key] = sorted(merged_dict[key], key=str.lower)
-    return merged_dict
-
-# Load all JSON files
-dicts = []
-
-for sample in epithelial_annotations:
-    sample_anno_dir = os.path.join(reworked_anno_dir, sample, 'csv_files', 'reworked_annotations_per_layer')
-    if os.path.exists(sample_anno_dir):
-        filename = f'{sample}_reworked_annotations_all_layers.json'
-        path_to_file = os.path.join(sample_anno_dir, filename)
-        if os.path.exists(path_to_file):
-            with open(path_to_file, 'r') as json_file:
-                data = json.load(json_file)
-                if path_layer in data:
-                    dicts.append(data[path_layer])
-
-# Merge extracted dictionaries
-merged_dict = merge_and_sort_dictionaries(dicts)
-
 # Sort the keys based on the master dictionary for reworking annotations
 # Load the desired categories per layer (to get the desired order)
-filename = 'desired_categories_per_layer.json'
-path_to_file = os.path.join(annotation_dir_base, filename)
+filename = 'pathology_categories_per_layer.json'
+path_to_file = os.path.join(project_dir, 'resources', 'pathology_annotations', filename)
 
 with open(path_to_file, 'r') as json_file:
                 annotations_of_interest_dict = json.load(json_file)
 
+path_layer = 'epithelial'
 sorted_keys = annotations_of_interest_dict[path_layer]
 
 # Add _mixed and _other categories
 sorted_keys += [f'{path_layer}_mixed', f'{path_layer}_other']
-
-# Sort the dictionary
-ordered_major_cat_dict = {key: merged_dict[key] for key in sorted_keys if key in merged_dict}
-
-# Add any remaining keys that were not in key_order
-# There shouldn't be any but just to capture mistakes
-remaining_keys = {key: merged_dict[key] for key in merged_dict if key not in sorted_keys}
-ordered_major_cat_dict.update(remaining_keys)
 
 
 # --- Convert to adata list & concatenate (easier for plotting)
@@ -214,8 +147,7 @@ del adata_list
 # --- Prepare for plotting
 
 # Split the adatas by subtype for plotting
-
-all_subtypes = set(subtype_dict.values())
+all_subtypes = all_adata.obs[subtype_key].unique().tolist()
 
 # Define a desired order for plotting the subtypes
 subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
@@ -231,8 +163,8 @@ ncols = len(sorted_subtypes)
 
 # --- Load the GC gene list
 
-gene_dir = os.path.join(project_dir, 'resources', 'gene_lists', 'germinal_center_scoring')
-gene_file = 'GC_score_v2.csv'
+gene_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
+gene_file = 'germinal_center_top_genes_filtered.csv'
 
 gene_table = pd.read_csv(os.path.join(gene_dir, gene_file))
 
@@ -244,7 +176,7 @@ else:
 # Remove any potential nan values
 gene_list = [x for x in gene_list if isinstance(x, str) or not np.isnan(x)]
 
-# Limit to 50 genes
+# Limit to 100 genes
 top = 100
 if len(gene_list) > top:
     list_for_plot = gene_list[:top]
@@ -278,6 +210,8 @@ def plot_gc_dotplot(adata_per_subtype_sub, sorted_subtypes, sample_id_key, gene_
     nrows = len(sorted_subtypes)
     sc.set_figure_params(fontsize=10)
     fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(5, 5))
+    if ncols == 1:
+        axs = np.array(axs).reshape(-1)
     main_axs = []
     count_bar_axs = []
     for n, subtype in enumerate(sorted_subtypes):
@@ -358,12 +292,12 @@ def plot_gc_dotplot(adata_per_subtype_sub, sorted_subtypes, sample_id_key, gene_
 annotation = 'invasive'
 
 # Subset adata to be just the spots of interest
-all_adata_sub = all_adata[all_adata.obs['epithelial_subset'] == annotation]
+all_adata_sub = all_adata[all_adata.obs[path_layer] == annotation]
 
 # Also subset the adata per subtype
 adata_per_subtype_sub = {}
 for subtype in adata_per_subtype:
-    adata_per_subtype_sub[subtype] = adata_per_subtype[subtype][adata_per_subtype[subtype].obs['epithelial_subset'] == annotation]
+    adata_per_subtype_sub[subtype] = adata_per_subtype[subtype][adata_per_subtype[subtype].obs[path_layer] == annotation]
 
 # Set parameters for plot
 space_per_dot = 0.04
@@ -381,6 +315,7 @@ plot_gc_dotplot(
     subtitle=f'All samples - gene expression GC score in spots annotated as {annotation} (use_layer={use_layer}, vmax={vmax})',
 )
 
+plt.savefig('test.pdf', bbox_inches='tight')
 
 # --- Plot 1b: Same as above but for the top 50 genes
 
@@ -403,7 +338,7 @@ for sample in epithelial_annotations:
     print(f'Processing sample {sample}')
     adata = adata_dict[sample]
     # Subset to invasive spots
-    adata_sub = adata[adata.obs['epithelial_subset'] == annotation]
+    adata_sub = adata[adata.obs[path_layer] == annotation]
     # Get the expression DataFrame for the selected genes
     expr_df = adata_sub.to_df(layer=use_layer)[gene_list]
     # Calculate percent expressing (fraction > 0) for each gene
@@ -518,9 +453,9 @@ filtered_genes_table = gene_table[gene_table['reason_discarded_invasive'].notna(
 # --- Plot 3a: Plot all genes showing which ones were filtered out
 
 fig, axs = plot_gc_dotplot(
-    adata_per_subtype_sub, sorted_subtypes, sample_id_key, gene_list, color_lut,
+    adata_per_subtype_sub, sorted_subtypes, sample_id_key, gene_list[:max_genes], color_lut,
     vmax=vmax, space_per_dot=space_per_dot, yspace=yspace, alpha=alpha,
-    title=f'GC score - genes after filtering (n={len(filtered_genes)}/{len(gene_list)})',
+    title=f'GC score - genes after filtering (filtered genes highlighted in red)',
     subtitle=f'All samples - gene expression GC score in spots annotated as {annotation} (use_layer={use_layer}, vmax={vmax}, mean_exp_threshold={mean_exp_threshold}, pct_expressing_threshold={pct_expressing_threshold}, min_samples={min_samples})',
 )
 
@@ -594,14 +529,13 @@ for idx in filtered_indices:
 
 axs[-1].set_xticklabels(xtick_labels)
 
-plt.savefig('test.pdf', bbox_inches='tight')
 
 # --- Plot 3c: Same as above but for the top 100 genes
 
 top = 100
 list_for_plot = gene_list[:top]
 
-# Calculate what percentage was filtered out in the top 50 genes
+# Calculate what percentage was filtered out in the top 100 genes
 n_filtered = sum(filtered_genes_table['genes'].isin(list_for_plot))
 
 fig, axs = plot_gc_dotplot(
@@ -639,33 +573,28 @@ for idx in filtered_indices:
 axs[-1].set_xticklabels(xtick_labels)
 
 
-# --- Save the output
+# --- Save the output to results/03_TLS_niche_discovery/03_extract_niche_signatures
 
-out_dir = os.path.join(gene_dir, 'GC_score_filtered_genes')
-os.makedirs(out_dir, exist_ok=True)
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '02_filter_GC_signature')
+os.makedirs(base_results, exist_ok=True)
 
-out_file = os.path.join(out_dir, f'GC_score_filtered_genes.csv')
+# Save the filtered gene list
+out_file = os.path.join(base_results, 'germinal_center_filtered_epithelial_genes.csv')
 top_genes_table.to_csv(out_file, index=False)
 
-out_file = os.path.join(out_dir, f'GC_score_filtered_genes_all.csv')
+# Save the gene table with the reason for filtering
+out_file = os.path.join(base_results, 'germinal_center_filtering_documentation.csv')
 gene_table.to_csv(out_file, index=False)
 
-#  Also save the plots
-# Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'GC_score_filtering')
-os.makedirs(qc_dir, exist_ok=True)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir = os.path.join(qc_dir, 'filter_GC_score', 'plots', today)
-os.makedirs(out_dir, exist_ok=True)
-
+# Also save the plots
+today = date.today().strftime("%Y%m%d")
+plot_dir = os.path.join(base_results, 'plots', today)
+os.makedirs(plot_dir, exist_ok=True)
 filename = 'All_samples_GC_score_filtering.pdf'
-save_multi_image(os.path.join(out_dir, filename))
+save_multi_image(os.path.join(plot_dir, filename))
 
 # Also save the values per sample
-out_dir_csv = os.path.join(qc_dir, 'filter_GC_score', 'csv_files', today)
+out_dir_csv = os.path.join(base_results, 'csv_files', today)
 os.makedirs(out_dir_csv, exist_ok=True)
 
 filename = 'All_samples_mean_pct_expressing_per_gene.csv'

@@ -1,0 +1,5 @@
+endothelial_type,annotation,color,color_name
+Endothelial ACKR1,venous,#0000ff,blue
+Endothelial CXCL12,arterial,#ff0000,red
+Endothelial Lymphatic LYVE1,lymphatic,#89b305,limegreen
+Endothelial RGS5,capillary,#9400d3,darkviolet

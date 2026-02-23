@@ -21,8 +21,6 @@ from datetime import date
 
 # --- Argparse arguments
 
-# --- Argparse arguments
-
 parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -31,6 +29,7 @@ parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -49,19 +48,25 @@ project_dir=args["project_dir"]
 
 # --- Extract some info from the sample sheet
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_path = os.path.join(sample_dir, 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 
-joined_id = f'{external_id}-{sample_id}'
+# Check if tissue_type is Lymph node
+tissue_type = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'tissue_type'].values[0]
+run_lymph_node = False
+if tissue_type == 'Lymph node':
+    run_lymph_node = True
 
 
 # --- Load the adata object
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{joined_id}_log_norm.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 
 # --- Load the coefficient file from andersson 2021
@@ -144,14 +149,14 @@ to_score_df = pd.DataFrame.from_dict(to_score, orient='index').T
 
 # --- Save the plots
 
-# Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model')
-os.makedirs(qc_dir, exist_ok=True)
+# Output to results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model/<date>
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
-today = date.today()
-today = today.strftime("%Y%m%d")
+if run_lymph_node:
+    base_results = os.path.join(base_results, 'lymph_nodes')
 
-out_dir = os.path.join(qc_dir, today)
+today = date.today().strftime("%Y%m%d")
+out_dir = os.path.join(base_results, today)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save the TLS model output as a dataframe
@@ -159,7 +164,5 @@ TLS_model_result = adata.obs['TLS_model']
 filename = f'{sample_id}_TLS_model.csv'
 TLS_model_result.to_csv(os.path.join(out_dir, filename), index=True)
 
-# Also save the pandas dataframe as a csv file (to be able to check which genes were used in each sample)
-to_score_df.to_csv(os.path.join(out_dir, f'{sample_id}_genes_used.csv'), index=False)
 
 print("Script succesfully completed")

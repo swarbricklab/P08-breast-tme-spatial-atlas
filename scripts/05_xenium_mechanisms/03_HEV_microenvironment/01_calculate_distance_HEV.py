@@ -41,11 +41,12 @@ parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
+
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
-
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
 parser.add_argument("--min_spots", help="Minimal spots per gene", type=int)
@@ -62,13 +63,15 @@ project_dir=args["project_dir"]
 
 
 # --- Get some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -85,17 +88,7 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 
 # --- Load data
 
-image_available = False
-spot_size=20
-
-# First check if file with images exists
-if not os.path.exists(os.path.join(h5ad_dir, 'with_images', f'{sample_id}_with_image.h5ad')):
-    # If it doesn't exist, just load log norm adata
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample_id}_log_norm.h5ad'))
-else:
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'with_images', f'{sample_id}_with_image.h5ad'))
-    image_available = True
-    spot_size = adata.uns['spatial'][sample_id]['scalefactors']['spot_diameter_fullres']
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coordinates for optimal presentation
@@ -127,7 +120,7 @@ def find_most_recent(dir):
     else:
         print("No valid directories found.")
 
-hev_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'per_sample', 'define_regions', )
+hev_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
 most_recent = find_most_recent(hev_dir)
 
 hev_file = f'{sample_id}_HEV_niches_cell_to_niche.csv'
@@ -148,7 +141,7 @@ adata.obs['HEV_in_TLS'] = adata.obs['niche_id'].map(near_tls_dict)
 
 # --- Also load the TLS annotations
 
-tls_dir = os.path.join(res_dir, 'TLS_analysis', 'TLS_regions', 'per_sample', 'csv_files')
+tls_dir = os.path.join(res_dir, '05_xenium_mechanisms', '01_identify_TLS_regions', 'csv_files')
 
 tls_file = f'{sample_id}_cell_TLS_annotations.csv'
 
@@ -158,7 +151,7 @@ adata.obs['in_TLS'] = tmp_df['in_TLS']
 
 # --- Prepare for saving
 
-out_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'per_sample', 'calculate_distance')
+out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '03_HEV_microenvironment', '01_calculate_distance')
 
 today = datetime.now().strftime('%Y%m%d')
 out_dir_plots = os.path.join(out_dir, today, 'plots')
@@ -182,7 +175,7 @@ ax = axs[n]
 
 # Create an emtpy adata to speed things up
 adata_sub = adata[[]].copy()
-sc.pl.spatial(adata_sub, color=None, spot_size=spot_size, title=f'{sample_id} ({subtype})',
+sc.pl.spatial(adata_sub, color=None, title=f'{sample_id} ({subtype})',
             crop_coord=crop_coord, ax=ax, na_in_legend=False, show=False)
 
 ax.set_title(ax.get_title(), fontweight='bold')
@@ -194,9 +187,9 @@ ax = axs[n]
 
 # Subset adata to only spots in niches
 adata_sub = adata[adata.obs['niche_id'].notna()]
-sc.pl.spatial(adata_sub, color='niche_id', spot_size=spot_size, title=f'HEV niches', palette=['blue'],
+sc.pl.spatial(adata_sub, color='niche_id', title=f'HEV niches', palette=['blue'],
             crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
-            alpha_img=0.5)
+            alpha_img=0.5, size=0.5)
 
 ax.set_title(ax.get_title(), fontweight='bold')
 
@@ -207,14 +200,14 @@ ax = axs[n]
 # Subset adata to only TLS spots
 adata_sub = adata[adata.obs['in_TLS'] == True]
 adata_sub.obs['in_TLS'] = adata_sub.obs['in_TLS'].astype('category')
-sc.pl.spatial(adata_sub, color='in_TLS', spot_size=spot_size, title=f'HEV niches in TLS', palette=['cornflowerblue'],
+sc.pl.spatial(adata_sub, color='in_TLS', title=f'HEV niches in TLS', palette=['cornflowerblue'],
             crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
-            alpha_img=0.7)
+            alpha_img=0.7, size=0.5)
 
 adata_sub = adata[adata.obs['niche_id'].notna()]
-sc.pl.spatial(adata_sub, color='niche_id', spot_size=spot_size, title=f'HEV + TLS niches', palette=['blue'],
+sc.pl.spatial(adata_sub, color='niche_id', title=f'HEV + TLS niches', palette=['blue'],
             crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
-            alpha_img=0)       
+            alpha_img=0, size=0.5)       
 
 ax.set_title(ax.get_title(), fontweight='bold')
 
@@ -316,7 +309,7 @@ ax = axs[n]
 
 # Create an emtpy adata to speed things up
 adata_sub = adata[[]].copy()
-sc.pl.spatial(adata_sub, color=None, spot_size=spot_size, title=f'{sample_id} ({subtype})',
+sc.pl.spatial(adata_sub, color=None, size=0.5, title=f'{sample_id} ({subtype})',
             crop_coord=crop_coord, ax=ax, na_in_legend=False, show=False)
 
 ax.set_title(ax.get_title(), fontweight='bold')
@@ -326,7 +319,7 @@ ax.set_title(ax.get_title(), fontweight='bold')
 n = 1
 ax = axs[n]
 
-sc.pl.spatial(adata, color='dist_to_HEV_um', spot_size=spot_size, title=f'Distance to HEV', cmap='viridis',
+sc.pl.spatial(adata, color='dist_to_HEV_um', size=0.5, title=f'Distance to HEV', cmap='viridis',
             crop_coord=crop_coord, ax=ax,
             alpha_img=0.5, vmax=400)
 
@@ -339,13 +332,13 @@ ax = axs[n]
 
 # Subset adata to only TLS spots
 adata_sub = adata[adata.obs['in_TLS'] == True]
-sc.pl.spatial(adata_sub, color='dist_to_HEV_um', spot_size=spot_size, title=f'Distance to HEV (in TLS)', cmap='viridis',
+sc.pl.spatial(adata_sub, color='dist_to_HEV_um', size=0.5, title=f'Distance to HEV (in TLS)', cmap='viridis',
             crop_coord=crop_coord, ax=ax,
             alpha_img=0.5, vmax=400)
 
 # Plot the HEVs on top
 adata_sub = adata[adata.obs['niche_id'].notna()]
-sc.pl.spatial(adata_sub, color='niche_id', spot_size=spot_size, title=f'Distance to HEV (in TLS)', palette=['cornflowerblue'],
+sc.pl.spatial(adata_sub, color='niche_id', size=0.5, title=f'Distance to HEV (in TLS)', palette=['cornflowerblue'],
             crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
             alpha_img=0)
 
@@ -386,12 +379,12 @@ ax = axs[n]
 # Subset adata to only TLS spots
 adata_sub = adata[adata.obs['in_TLS'] == True]
 adata_sub.obs['in_TLS'] = adata_sub.obs['in_TLS'].astype('category')
-sc.pl.spatial(adata_sub, color='in_TLS', spot_size=spot_size, title=f'HEV niches in TLS', palette=['cornflowerblue'],
+sc.pl.spatial(adata_sub, color='in_TLS', size=0.5, title=f'HEV niches in TLS', palette=['cornflowerblue'],
             crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
             alpha_img=0.7)
 
 adata_sub = adata[adata.obs['niche_id'].notna()]
-sc.pl.spatial(adata_sub, color='niche_id', spot_size=spot_size, title=f'HEV + TLS niches', palette=['blue'],
+sc.pl.spatial(adata_sub, color='niche_id', size=0.5, title=f'HEV + TLS niches', palette=['blue'],
             crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
             alpha_img=0)       
 
@@ -403,7 +396,7 @@ ax.set_title(ax.get_title(), fontweight='bold')
 n = 1
 ax = axs[n]
 
-sc.pl.spatial(adata, color='dist_to_HEV_close_to_TLS_um', spot_size=spot_size, title=f'Distance to HEV\n(close to TLS)', cmap='viridis',
+sc.pl.spatial(adata, color='dist_to_HEV_close_to_TLS_um', size=0.5, title=f'Distance to HEV\n(close to TLS)', cmap='viridis',
             crop_coord=crop_coord, ax=ax,
             alpha_img=0.5, vmax=400)
 
@@ -415,7 +408,7 @@ ax.set_title(ax.get_title(), fontweight='bold')
 n = 2
 ax = axs[n]
 
-sc.pl.spatial(adata, color='dist_to_HEV_not_close_to_TLS_um', spot_size=spot_size, title=f'Distance to HEV\n(far from TLS)', cmap='viridis',
+sc.pl.spatial(adata, color='dist_to_HEV_not_close_to_TLS_um', size=0.5, title=f'Distance to HEV\n(far from TLS)', cmap='viridis',
             crop_coord=crop_coord, ax=ax,
             alpha_img=0.5, vmax=400)
 

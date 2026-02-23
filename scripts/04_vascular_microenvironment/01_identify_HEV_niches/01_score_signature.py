@@ -30,10 +30,12 @@ parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
+
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -50,13 +52,16 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 
-# --- Extract some info from the sample sheet
+# --- Get some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -83,7 +88,7 @@ for resolution in resolutions:
 
     # --- Load anndata
 
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'log_norm', f'{sample_id}_log_norm.h5ad'))
+    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
     # Calculate crop coords for optimal presentation
     coords = auto_crop(adata, border_size=0.1)
@@ -92,15 +97,15 @@ for resolution in resolutions:
     # --- Assess multiple scores
 
     clusters_of_i = {
-        'GC': 'germinal_center_scoring/GC_score_filtered_genes/GC_score_filtered_genes.csv',
-        'B_cell_zone': 'other_scores/B_cell_zone_score.csv',
-        'T_cell_zone': 'other_scores/T_cell_zone_score.csv',
-        'HEV_filtered': 'other_scores/HEV_vs_endothelial_positive_LFC_filtered.csv',
+        'GC': 'germinal_center_filtered_epithelial_genes.csv',
+        'B_cell_zone': 'b_cell_zone_top_genes_filtered.csv',
+        'T_cell_zone': 't_cell_zone_top_genes_filtered.csv',
+        'HEVs': 'hevs_filtered_endothelial_genes.csv'
     }
 
     # -- Load the genes from a file
 
-    gene_dir = os.path.join(project_dir, 'resources', 'gene_lists', 'benchmarking_cohort_signatures')
+    gene_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '04_final_niche_signature_files')
 
     for score_name, filename in clusters_of_i.items():
 
@@ -130,7 +135,7 @@ for resolution in resolutions:
         # --- Test different cutoffs
 
         # How many genes is optimal?
-        cutoffs = [10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100]
+        cutoffs = [20, 50, 100]
 
         all_genes = [value for sublist in gene_dict.values() for value in sublist]
 
@@ -198,18 +203,15 @@ for resolution in resolutions:
 
         # --- Save the results
 
-        if score_name == 'GC':
-            out_name = 'GC_score_v2'
-        else:
-            out_name = f'{score_name}_score'
+        out_name = f'{score_name}_score'
 
         today = date.today()
         today = today.strftime("%Y%m%d")
 
-        qc_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', out_name)
+        qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', out_name)
         os.makedirs(qc_dir, exist_ok=True)
 
-        out_dir = os.path.join(qc_dir, 'per_sample', resolution, 'plots', today)
+        out_dir = os.path.join(qc_dir, resolution, today, 'plots')
         os.makedirs(out_dir, exist_ok=True)
 
         filename = f'{sample_id}_{out_name}_{resolution}.pdf'
@@ -219,7 +221,7 @@ for resolution in resolutions:
         plt.close('all')
 
         # Also save the scores + which genes were used
-        out_dir_csv = os.path.join(qc_dir, 'per_sample', resolution, 'csv_files', today)
+        out_dir_csv = os.path.join(qc_dir, resolution, today, 'csv_files')
         os.makedirs(out_dir_csv, exist_ok=True)
 
         score_keys = [f'{score_name}_score_' + str(item) for item in cutoffs]

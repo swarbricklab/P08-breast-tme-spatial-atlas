@@ -40,10 +40,12 @@ parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
+
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -61,14 +63,15 @@ project_dir=args["project_dir"]
 
 
 # --- Get some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -92,7 +95,7 @@ resolutions = ['square_048um', 'square_016um']
 adata_dict = {}
 
 for resolution in resolutions:
-    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -131,12 +134,12 @@ def find_most_recent(dir):
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
-TLS_group_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', resolution, f'threshold_{threshold_adj}', 'csv_files')
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02a_group_HEV_bins', resolution, f'threshold_{threshold_adj}', 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
 # Read in the results & add to anndata
-score_of_i = 'HEV_filtered'
+score_of_i = 'HEVs'
 TLS_file_name = f'{sample_id}_{score_of_i}_groups.csv'
 TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
 
@@ -149,31 +152,27 @@ adata_dict['square_016um'].obs[group_key] = TLS_results[group_key]
 # --- And load the scoring results
 
 clusters_of_i = {
-    'intermediate_TLS': 'other_scores/intermediate_TLS_score.csv',
-    'T_cell_zone': 'other_scores/T_cell_zone_score.csv',
-    'HEV_filtered': 'other_scores/HEV_vs_endothelial_positive_LFC_filtered.csv',
+    'B_cell_zone': 'b_cell_zone_top_genes_filtered.csv',
+    'T_cell_zone': 't_cell_zone_top_genes_filtered.csv',
+    'HEVs': 'hevs_filtered_endothelial_genes.csv'
 }
 
 # Define the TLS zone names
-TLS_zone_names = ['T_cell_zone', 'intermediate_TLS']
+TLS_zone_names = ['T_cell_zone', 'B_cell_zone']
 
 score_keys_dict = {}
 
 for score_name, filename in clusters_of_i.items():
-    if score_name == 'GC':
-        out_name = 'GC_score_v2'
-    else:
-        out_name = f'{score_name}_score'
+    out_name = f'{score_name}_score'
     if score_name in TLS_zone_names:
         resolution = 'square_048um'
     else:
         resolution = 'square_016um'
-    GC_res_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', out_name, 'per_sample', resolution,
-                            'csv_files')
+    GC_res_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', out_name, resolution)
     most_recent_dir_path = find_most_recent(GC_res_dir)
     # Read results and add to adata
     GC_file_name = f'{sample_id}_{out_name}.csv'
-    GC_results = pd.read_csv(os.path.join(most_recent_dir_path, GC_file_name), index_col=0)
+    GC_results = pd.read_csv(os.path.join(most_recent_dir_path, 'csv_files', GC_file_name), index_col=0)
     # Choose number of genes used for scoring
     top_gene = 20
     GC_key = f'{score_name}_score_{top_gene}'
@@ -202,9 +201,9 @@ def create_colormap(R, G, B):
 # Define some colors per score
 color_dict = {
     'GC': mpl.colors.cnames["cyan"],
-    'intermediate_TLS': mpl.colors.cnames["cornflowerblue"],
+    'B_cell_zone': mpl.colors.cnames["cornflowerblue"],
     'T_cell_zone': mpl.colors.cnames["crimson"],
-    'HEV_filtered': mpl.colors.cnames["indigo"],    
+    'HEVs': mpl.colors.cnames["indigo"],    
 }
 
 color_dict_rgb = {}
@@ -586,7 +585,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - HEV groups expanded to >{lower_thresh} 
 
 # --- Save output
 
-qc_dir = os.path.join(res_dir, 'TLS_model')
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups')
 
 threshold_adj = str(threshold).split('.')[-1]
 lower_thresh_adj = str(lower_thresh).split('.')[-1]
@@ -594,7 +593,7 @@ lower_thresh_adj = str(lower_thresh).split('.')[-1]
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', resolution, f'threshold_{threshold_adj}', 'expanded_groups',)
+out_dir = os.path.join(qc_dir, resolution, f'threshold_{threshold_adj}')
 
 os.makedirs(out_dir, exist_ok=True)
 

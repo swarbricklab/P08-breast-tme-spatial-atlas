@@ -41,6 +41,7 @@ parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -59,16 +60,23 @@ project_dir=args["project_dir"]
 
 # --- Get some info from the sample sheet
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_path = os.path.join(sample_dir, 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 slide_size = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_size'].values[0]
 
-joined_id = f'{external_id}-{sample_id}'
+# Check if tissue_type is Lymph node
+tissue_type = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'tissue_type'].values[0]
+run_lymph_node = False
+if tissue_type == 'Lymph node':
+    run_lymph_node = True
+
 
 # --- Also get some tissue metadata
 
@@ -82,9 +90,7 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 
 # --- Load the adata object
 
-use_data = 'log_norm'
-
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'raw', f'{joined_id}_raw.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -102,7 +108,10 @@ else:
 
 # --- Load TLS results
 
-TLS_res_dir = os.path.join(res_dir, 'TLS_model')
+TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
+
+if run_lymph_node:
+    TLS_res_dir = os.path.join(TLS_res_dir, 'lymph_nodes')
 
 # Find most recent results
 subdirs = [d for d in os.listdir(TLS_res_dir) if os.path.isdir(os.path.join(TLS_res_dir, d))]
@@ -116,8 +125,6 @@ for subdir in subdirs:
         valid_subdirs.append(subdir)
     except ValueError:
         pass
-
-# Sort the valid subdirectories by date and get the most recent one
 if valid_subdirs:
     most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
     most_recent_dir_path = os.path.join(TLS_res_dir, most_recent_dir)
@@ -134,14 +141,11 @@ adata.obs['TLS_model'] = TLS_results
 
 # --- Prepare for saving the plots
 
-# Put in a timestamped folder to avoid overwriting older plots
-qc_dir = os.path.join(res_dir, 'TLS_model')
+# Output to results/03_TLS_niche_discovery/01_identify_TLS/
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high')
+today = date.today().strftime("%Y%m%d")
+qc_dir = base_results
 os.makedirs(qc_dir, exist_ok=True)
-
-os.chdir(qc_dir)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
 
 
 # --- Plot 1: Plot the TLS model score + spots above a certain threshold
@@ -191,7 +195,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - TLS score + TLS-high spots', y=1.05, fo
 threshold_adj = str(threshold).split('.')[-1]
 
 if len(adata_sub) == 0 or len(adata_sub) == 1:
-    out_dir = os.path.join(qc_dir, 'TLS_plots_per_sample', f'threshold_{threshold_adj}')
+    out_dir = os.path.join(qc_dir, f'threshold_{threshold_adj}')
     os.makedirs(out_dir, exist_ok=True)
     # Save plots
     out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)
@@ -356,8 +360,12 @@ plt.suptitle(f'{sample_id} ({subtype}) - grouping of spots with TLS score >{thre
 
 threshold_adj = str(threshold).split('.')[-1]
 
-out_dir = os.path.join(qc_dir, 'TLS_plots_per_sample', f'threshold_{threshold_adj}')
+out_dir = os.path.join(qc_dir, f'threshold_{threshold_adj}')
 os.makedirs(out_dir, exist_ok=True)
+
+if run_lymph_node:
+    out_dir = os.path.join(out_dir, 'lymph_nodes')
+    os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
 out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)

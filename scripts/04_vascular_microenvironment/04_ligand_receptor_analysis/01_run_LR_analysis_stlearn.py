@@ -34,7 +34,6 @@ sc.settings.verbosity = 3
 
 mpl.rcParams['pdf.fonttype'] = 42
 
-# --- Argparse arguments
 
 parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -44,6 +43,7 @@ parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -61,14 +61,13 @@ project_dir=args["project_dir"]
 
 
 # --- Get some info from the sample sheet
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_hd.csv')
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -86,10 +85,9 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 # --- Load the adata object
 
 use_data = 'log_norm'
-# Need both the 48 & 16 res
 resolution = 'square_016um'
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, resolution, use_data, f'{sample_id}_{use_data}.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coords for optimal presentation
@@ -134,29 +132,19 @@ def find_most_recent(dir):
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
-# Decide whether to use the expanded groups
-expanded = True
-
-TLS_group_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', resolution, f'threshold_{threshold_adj}',)
-
-if expanded:
-    TLS_group_dir = os.path.join(TLS_group_dir, 'expanded_groups')
-
+# Use the expanded groups
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', resolution, f'threshold_{threshold_adj}',)
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
 # Read in the results & add to anndata
-score_of_i = 'HEV_filtered'
+score_of_i = 'HEVs'
 TLS_file_name = f'{sample_id}_{score_of_i}_groups.csv'
 TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
 
 group_key = 'group_too_small_removed'
-
-if expanded:
-    group_key_source = 'expanded_groups'
-else:
-    group_key_source = group_key
+group_key_source = 'expanded_groups'
 
 adata.obs[group_key] = TLS_results[group_key_source]
 
@@ -164,9 +152,7 @@ adata.obs[group_key] = TLS_results[group_key_source]
 # --- Also load the HEV distance calculations
 
 decon_resolution = resolution
-
-dist_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}', 'cellular_composition',
-                       'all_HEVs', f'decon_res_{decon_resolution}', 'HEV_distances', 'csv_files')
+dist_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '01_identify_HEV_niches', '05_calculate_all_HEV_distances', decon_resolution, 'csv_files')
 
 most_recent = find_most_recent(dist_dir)
 dist_file = f'{sample_id}_HEV_distances_all_spots.csv'
@@ -200,42 +186,15 @@ spot_dict = create_spot_dict(distance_df, 'HEV_group', distance_col)
 
 class_key = 'HEV_classification'
 
-base_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}')
-TLS_group_dir = os.path.join(base_dir, 'HEV_TLS_classification', 'csv_files')
+base_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '01_identify_HEV_niches', '03b_calculate_HEV_TLS_distance', resolution, f'threshold_{threshold_adj}',)
+TLS_group_dir = os.path.join(base_dir, 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 filename = f'{sample_id}_HEV_closest_TLS_distance_classifications.csv'
 
 HEV_TLS_class_df = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
 
-# Also load the pathology classifications
-TLS_group_dir = os.path.join(base_dir, 'pathology_annotations', 'csv_files')
-
-most_recent_dir_path = find_most_recent(TLS_group_dir)
-filename = f'{sample_id}_dominant_pathology_per_HEV_group.csv'
-
-HEV_path_df = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
-
-# Also load T-B group
-TLS_group_dir = os.path.join(base_dir, 'HEV_TLS_zone_classification', 'csv_files')
-
-most_recent_dir_path = find_most_recent(TLS_group_dir)
-filename = f'{sample_id}_HEV_closest_TLS_zone_distance_classifications.csv'
-
-HEV_TLS_zone = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
-
-# Extract a single df with labels of interest
-HEV_TLS_class_df['dominant_pathology'] = HEV_path_df['dominant_pathology']
-HEV_TLS_class_df['HEV_T_B_classification'] = HEV_TLS_zone['HEV_T_B_classification']
-
-# Add to pathology & T-B zone classifications to the adata object
-# Create a mapping dict
-mapping = HEV_TLS_class_df['dominant_pathology'].to_dict()
-adata.obs['dominant_pathology'] = adata.obs[group_key].map(mapping)
-mapping = HEV_TLS_class_df['HEV_T_B_classification'].to_dict()
-adata.obs['HEV_T_B_classification'] = adata.obs[group_key].map(mapping)
-mapping = HEV_TLS_class_df['dominant_pathology'].to_dict()
-adata.obs['dominant_pathology'] = adata.obs[group_key].map(mapping)
+# Add to adata
 mapping = HEV_TLS_class_df[class_key].to_dict()
 adata.obs[class_key] = adata.obs[group_key].map(mapping)
 
@@ -244,54 +203,10 @@ adata.obs[class_key] = adata.obs[group_key].map(mapping)
 
 # Define some colors
 color_dict_HEV = {
-    'non_TLS': 'lightgray',
+    'non_TLS': 'cornflowerblue',
     'peri_TLS': 'darkorange',
     'intra_TLS': 'indigo',
-    'T_cell_zone_adjacent': 'darkred',
-    'B_cell_zone_adjacent': 'darkblue',
 }
-
-# Some colors for the pathology annotations
-annotation_labels = {
-    'epithelial': ['invasive', 'in_situ', 'benign', 'normal'],
-    'immune': ['lymphocytes'],
-    'stroma': ['stroma_fibrous', 'stroma_adipose'],
-    'additional_features': ['necrosis', 'blood_vessel', 'LVI']
-}
-
-# Get some colors
-all_colors = sc_palettes.default_20
-
-# Remove red to be more colorblind-friendly
-del all_colors[3] 
-
-# Extract all pathology categories
-all_cats = list(HEV_TLS_class_df['dominant_pathology'].dropna().unique())
-
-top_cat_colors = {}
-for n, cat in enumerate(annotation_labels):
-    top_cat_colors[cat] = all_colors[n]
-
-# Get some color variations of the original colors (so variations of the same annotation are a similar color)
-color_dict_path = {}
-
-# And also define a plot order
-plot_order = []
-
-for top_cat, labels in annotation_labels.items():
-    base_color = top_cat_colors[top_cat]
-    # Check how many of the labels are found in the object
-    num_cols = len(labels)
-    # Get the matching items
-    matching_items = [item for item in labels if item in set(all_cats)]
-    plot_order += matching_items
-    if num_cols > 4:
-        step_size=0.1
-    else:
-        step_size=0.2
-    variations = generate_color_variations(base_color, num_cols, step_size=step_size)
-    for n, item in enumerate(labels):
-        color_dict_path[item] = variations[n]
 
 
 # --- Plot 1: Spatial plots of HEVs & HEV classifications for sanity
@@ -299,7 +214,7 @@ for top_cat, labels in annotation_labels.items():
 # Plotting
 sc.set_figure_params(fontsize=15)
 
-ncols = 4
+ncols = 2
 nrows = 1
 
 fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(7*ncols, 5*nrows))
@@ -316,19 +231,6 @@ sc.pl.spatial(adata_sub, color=group_key, bw=False, alpha_img=0.5, crop_coord=co
 
 ax.set_title(ax.get_title(), fontweight='bold')
 
-# -- Then plot pathology annotation
-n+=1
-ax = axs[n]
-
-adata_sub = adata[adata.obs['dominant_pathology'].notna()]
-
-sc.pl.spatial(adata_sub, color='dominant_pathology', bw=False, alpha_img=0.5, crop_coord=coords, 
-            title=f'{sample_id} ({subtype})\nPathology annotations',
-            palette=color_dict_path, ax=ax,)
-
-ax.set_title(ax.get_title(), fontweight='bold')
-
-
 # -- Then plot TLS distance classification
 n+=1
 ax = axs[n]
@@ -337,19 +239,6 @@ adata_sub = adata[adata.obs[class_key].notna()]
 
 sc.pl.spatial(adata_sub, color=class_key, bw=False, alpha_img=0.5, crop_coord=coords, 
             title=f'{sample_id} ({subtype})\nTLS distance classification',
-            palette=color_dict_HEV, ax=ax,)
-
-ax.set_title(ax.get_title(), fontweight='bold')
-
-
-# -- Then plot T / B zone classification
-n+=1
-ax = axs[n]
-
-adata_sub = adata[adata.obs['HEV_T_B_classification'].notna()]
-
-sc.pl.spatial(adata_sub, color='HEV_T_B_classification', bw=False, alpha_img=0.5, crop_coord=coords, 
-            title=f'{sample_id} ({subtype})\nT/B classification',
             palette=color_dict_HEV, ax=ax,)
 
 ax.set_title(ax.get_title(), fontweight='bold')
@@ -742,14 +631,12 @@ plt.tight_layout()
 
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn',)
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', f'threshold_{threshold_adj}', 'LR_analysis',
-                       'HEV_level', f'{bin_size}um_bin')
-
+out_dir = os.path.join(qc_dir, f'{bin_size}um_bin')
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots

@@ -39,11 +39,13 @@ mpl.rcParams['pdf.fonttype'] = 42
 parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+
 # Required
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV", default=None)
 
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
@@ -60,15 +62,15 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 
+
 # --- Get some info from the sample sheet
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -97,7 +99,7 @@ if target_res not in resolutions:
 adata_dict = {}
 
 for resolution in resolutions:
-    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, resolution, 'raw', f'{sample_id}_raw.h5ad'))
+    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
 
 # --- Load miniatlas classifications
@@ -153,8 +155,7 @@ threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                             f'threshold_{threshold_adj}', 'other_vessels', 'classify_vessels', 'csv_files')
+TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
@@ -169,14 +170,13 @@ adata_dict[base_res].obs['vessel_class'] = collapsed_col
 
 # --- Prepare for saving
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '03_calculate_distances')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
 threshold_adj = str(threshold).split('.')[-1]
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'per_sample', base_res, f'threshold_{threshold_adj}', 'other_vessels', 
-                       'distance_calculations', target_res)
+out_dir = os.path.join(qc_dir, target_res)
 
 os.makedirs(out_dir, exist_ok=True)
 

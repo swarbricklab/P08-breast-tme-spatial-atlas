@@ -30,6 +30,7 @@ sc.settings.verbosity = 3
 parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+
 parser.add_argument("-s", "--samples",
     nargs="*",  # 0 or more values expected => creates a list
     type=str,
@@ -37,6 +38,7 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -50,10 +52,13 @@ print(f'Samples in python: {sample_list}')
 
 # --- Extract some info from the sample sheet
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 
@@ -80,7 +85,7 @@ for sample in sample_list:
 # -- Load data
 # Load the integrated anndata object
 
-harmony_dir = os.path.join(res_dir, 'TLS_model', 'gene_expression_plots', 'potential_GC_genes', 'scoring', 'HEV_score_v2', 'try_to_improve_HEV_score', 'all_samples')
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'create_endothelial_object')
 
 # Function to find the most recent results
 def find_most_recent(dir):
@@ -104,7 +109,7 @@ def find_most_recent(dir):
         print("No valid directories found.")
     return most_recent_dir_path
 
-filename = 'All_samples_endothelial_umap.h5ad'
+filename = 'All_samples_endothelial_object.h5ad'
 
 most_recent = find_most_recent(harmony_dir)
 
@@ -168,14 +173,15 @@ final_df_sub = final_df_sub[final_df_sub['pct_expressing_rest'] < max_expressed_
 
 # --- Plot 1: Dot plots for top 30 genes per cluster - separated by cluster
 
-# Prepare for saving
-out_dir_plots = os.path.join(most_recent, 'post_filtering')
+base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'filter_HEV_signature',)
+today = date.today().strftime("%Y%m%d")
+out_dir_plots = os.path.join(base_results, today, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Slash to be only the top x per cluster
 # Keep only the first x rows for each group
 
-num_tops = [20, 25, 30, 50, 100]
+num_tops = [50]
 
 for num_top in num_tops:
     top_df = final_df_sub.head(num_top)
@@ -194,24 +200,23 @@ for num_top in num_tops:
         top_ax.set_title(f'Top {num_top} genes HEVs (post filtering)', fontweight='bold', fontsize=9.5)
         plt.suptitle(f'All samples - top genes HEV after filtering based on expression (top {num_top} genes (by LFC) (use_data={use_data}, min_expressed={min_expressed}, max_expressed_rest={max_expressed_rest}))', y=1, fontweight='bold')
     # Save plots
-    filename = f'All_samples_TLS_umap_marker_genes_top_{num_top}_LFC_filtered.pdf'
+    filename = f'HEV_signature_top_{num_top}_LFC_filtered.pdf'
     save_multi_image(os.path.join(out_dir_plots, filename))
     plt.close('all')
 
 
 # --- Save some csv files
 
-# Prepare for saving
-out_dir_csv = os.path.join(out_dir_plots, 'csv_files')
+out_dir_csv = os.path.join(base_results, today, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
-filename = 'All_samples_HEV_vs_endothelial_positive_LFC_pct_expressing.csv'
+filename = 'hevs_filtering_documentation.csv'
 final_df.to_csv(os.path.join(out_dir_csv, filename), index=False)
 final_df = pd.read_csv(os.path.join(out_dir_csv, filename))
 
 # Also save filtered list
 top_genes = final_df_sub
-filename = f'All_samples_HEV_vs_endothelial_positive_LFC_expression_filtered.csv'
+filename = 'hevs_filtered_endothelial_genes.csv'
 top_genes.to_csv(os.path.join(out_dir_csv, filename), index=False)
 
 

@@ -53,6 +53,7 @@ parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
 parser.add_argument("--min_spots", help="Minimal spots per gene", type=int)
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -65,18 +66,21 @@ sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_analysis', '04_HEV_microenvironment',))
+sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms'))
 import plotting_functions
 
 
 # --- Get some info from the sample sheet
 
-# Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -93,17 +97,7 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 
 # --- Load data
 
-image_available = False
-spot_size=20
-
-# First check if file with images exists
-if not os.path.exists(os.path.join(h5ad_dir, 'with_images', f'{sample_id}_with_image.h5ad')):
-    # If it doesn't exist, just load log norm adata
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample_id}_log_norm.h5ad'))
-else:
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'with_images', f'{sample_id}_with_image.h5ad'))
-    image_available = True
-    spot_size = adata.uns['spatial'][sample_id]['scalefactors']['spot_diameter_fullres']
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coordinates for optimal presentation
@@ -135,7 +129,7 @@ def find_most_recent(dir):
     else:
         print("No valid directories found.")
 
-hev_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'per_sample', 'define_regions', )
+hev_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions',)
 most_recent = find_most_recent(hev_dir)
 
 hev_file = f'{sample_id}_HEV_niches_cell_to_niche.csv'
@@ -156,11 +150,11 @@ adata.obs['HEV_in_TLS'] = adata.obs['niche_id'].map(near_tls_dict)
 
 # --- Also load the TLS annotations
 
-tls_dir = os.path.join(res_dir, 'TLS_analysis', 'TLS_regions', 'per_sample', 'csv_files')
+tls_dir = os.path.join(res_dir, '05_xenium_mechanisms', '01_identify_TLS_regions',)
 
 tls_file = f'{sample_id}_cell_TLS_annotations.csv'
 
-tmp_df = pd.read_csv(os.path.join(tls_dir, tls_file), index_col=0)
+tmp_df = pd.read_csv(os.path.join(tls_dir, 'csv_files', tls_file), index_col=0)
 adata.obs['in_TLS'] = tmp_df['in_TLS']
 
 
@@ -169,22 +163,10 @@ adata.obs['in_TLS'] = tmp_df['in_TLS']
 # Decide which annotation levels to use
 level = 'subset'
 
-# Decide whether to use stepwise annotations
-stepwise = False
+annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 
-# If stepwise, add stepwise to minor & subset level names
-if stepwise:
-    level = f'{level}_stepwise'
-
-annotation_file = f'{sample_id}_pred_cell_types.csv'
-annotation_dir = os.path.join(project_dir, 'resources', 'annotation', 'tangram', sample_id,)
-
-if 'stepwise' in level:
-    annotation_dir = os.path.join(annotation_dir, 'step_wise_annotation')
-
-# Remove any stepwise part
-level_clean = level.replace('_stepwise', '')
-annotations = pd.read_csv(os.path.join(annotation_dir, f'{level_clean}_level', annotation_file), index_col=0)
+annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
 
 # Add to adata
 adata.obs[level] = annotations['pred_cell_type']
@@ -211,14 +193,14 @@ miniatlas_df = pd.read_csv(os.path.join(miniatlas_dir, miniatlas_file),)
 
 # For each cell type in the miniatlas at this level, check if it is in the color_dict
 # If not, get the corresponding major cell type and use its color
-for cell_type in miniatlas_df[f'miniatlas_{level_clean}'].unique():
+for cell_type in miniatlas_df[f'miniatlas_{level}'].unique():
     if cell_type not in color_dict.keys():
         # Check that the value is not nan
         if pd.isna(cell_type):
             continue
         print(f'Adding color for {cell_type}')
     # Get the corresponding major cell type
-    major_type = miniatlas_df[miniatlas_df[f'miniatlas_{level_clean}'] == cell_type][f'miniatlas_major'].values
+    major_type = miniatlas_df[miniatlas_df[f'miniatlas_{level}'] == cell_type][f'miniatlas_major'].values
     # Find which value is in the color_dict
     major_type_in_dict = [m for m in major_type if m in color_dict.keys()]
     if len(major_type_in_dict) > 0:
@@ -252,14 +234,10 @@ major_cell_types_sorted = sorted(major_cell_types, key=lambda x: (lineage_order.
 # --- For each HEV group, find barcodes of all cells within x um
 
 # Define max distance
-max_dists = [30, 50, 100, 150, 200, 300]
-
-# Decide whether to only consider cells inside TLSs
-# To see how HEV SPP1 expression might influence TLS composition
-only_in_TLS = False
+max_dists = [200]
 
 # Pick a gene of interest
-gene_of_interest = 'TMEM173'
+gene_of_interest = 'SPP1'
 
 for max_dist in max_dists:
 
@@ -277,7 +255,7 @@ for max_dist in max_dists:
 
     # Create an emtpy adata to speed things up
     adata_sub = adata[[]].copy()
-    sc.pl.spatial(adata_sub, color=None, spot_size=spot_size, title=f'{sample_id} ({subtype})',
+    sc.pl.spatial(adata_sub, color=None, size=0.5, title=f'{sample_id} ({subtype})',
                 crop_coord=crop_coord, ax=ax, na_in_legend=False, show=False)
 
     ax.set_title(ax.get_title(), fontweight='bold')
@@ -289,7 +267,7 @@ for max_dist in max_dists:
 
     # Subset adata to only spots in niches
     adata_sub = adata[adata.obs['niche_id'].notna()]
-    sc.pl.spatial(adata_sub, color='niche_id', spot_size=spot_size, title=f'HEV niches', palette=['blue'],
+    sc.pl.spatial(adata_sub, color='niche_id', size=0.5, title=f'HEV niches', palette=['blue'],
                 crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
                 alpha_img=0.5)
 
@@ -302,12 +280,12 @@ for max_dist in max_dists:
     # Subset adata to only TLS spots
     adata_sub = adata[adata.obs['in_TLS'] == True]
     adata_sub.obs['in_TLS'] = adata_sub.obs['in_TLS'].astype('category')
-    sc.pl.spatial(adata_sub, color='in_TLS', spot_size=spot_size, title=f'HEV niches in TLS', palette=['cornflowerblue'],
+    sc.pl.spatial(adata_sub, color='in_TLS', size=0.5, title=f'HEV niches in TLS', palette=['cornflowerblue'],
                 crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
                 alpha_img=0.7)
 
     adata_sub = adata[adata.obs['niche_id'].notna()]
-    sc.pl.spatial(adata_sub, color='niche_id', spot_size=spot_size, title=f'HEV + TLS niches', palette=['blue'],
+    sc.pl.spatial(adata_sub, color='niche_id', size=0.5, title=f'HEV + TLS niches', palette=['blue'],
                 crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
                 alpha_img=0)       
 
@@ -362,11 +340,6 @@ for max_dist in max_dists:
     # Add whether cell is inside TLS
     df['in_TLS'] = adata.obs['in_TLS']
 
-    # If only_in_TLS, subset df
-    if only_in_TLS:
-        # Filter non-HEV cells to only those inside TLS
-        df = df[(df['in_TLS'] == True) | (df['HEV_group'].notna())].copy()
-
     len(df['HEV_group'].unique())
 
     def find_cells_within_distance_min(df, group_key="HEV_group", x_col="x", y_col="y", max_distance=200):
@@ -414,11 +387,11 @@ for max_dist in max_dists:
         close_barcodes = df_results[df_results['HEV_group'] == hev_group]['cell_barcode']
         adata_sub = adata[close_barcodes]
         adata_sub.obs['cell_id'] = adata_sub.obs['cell_id'].astype('category')
-        sc.pl.spatial(adata_sub, color='cell_id', spot_size=spot_size, title=f'HEV niches in TLS', palette=['cornflowerblue'],
+        sc.pl.spatial(adata_sub, color='cell_id', size=0.5, title=f'HEV niches in TLS', palette=['cornflowerblue'],
                     crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
                     alpha_img=0.7)
         adata_sub = adata[adata.obs['niche_id'] == hev_group]
-        sc.pl.spatial(adata_sub, color='niche_id', spot_size=spot_size, title=f'HEV + TLS niches', palette=['blue'],
+        sc.pl.spatial(adata_sub, color='niche_id', size=0.5, title=f'HEV + TLS niches', palette=['blue'],
                     crop_coord=crop_coord, ax=ax, na_in_legend=False, legend_loc=None, show=False,
                     alpha_img=0)
         ax.set_title(f'{hev_group}\nCells within {max_dist} µm', fontweight='bold')
@@ -428,7 +401,7 @@ for max_dist in max_dists:
         ax.set_xlabel('')
         ax.set_ylabel('')
 
-    plt.suptitle(f'{sample_id} ({subtype}) - Cells within {max_dist} µm of HEV niches (only_in_TLS={only_in_TLS})', y=1.05, fontweight='bold')
+    plt.suptitle(f'{sample_id} ({subtype}) - Cells within {max_dist} µm of HEV niches', y=1.05, fontweight='bold')
 
 
     # --- Calculate total number of cells within 100 um for each HEV group
@@ -588,44 +561,33 @@ for max_dist in max_dists:
     # Add a main title
     title_x = axs_grid_cleaned[0][0].get_position().x0 + (axs_grid_cleaned[0][-1].get_position().x1 - axs_grid_cleaned[0][0].get_position().x0) / 2
     title_y = axs_grid_cleaned[0][0].get_position().y1 + 0.1
-    plt.suptitle(f'{sample_id} ({subtype}) - Correlation between HEV {gene_of_interest} expression (ACKR1+ endothelial) and cell type abundance (within {max_dist} µm of HEV, stepwise={stepwise}, only_in_TLS={only_in_TLS})', x=title_x, y=title_y, fontweight='bold')
+    plt.suptitle(f'{sample_id} ({subtype}) - Correlation between HEV {gene_of_interest} expression (ACKR1+ endothelial) and cell type abundance (within {max_dist} µm of HEV)', x=title_x, y=title_y, fontweight='bold')
 
 
-    # --- Position legend function
+    # --- Save the output
 
-    # Position legend function
-    def position_legend(axs):
-        """
-        Given an array (or list) of axes, find the rightmost right_edge and the highest top_edge
-        in figure coordinates, for robust legend placement.
-        Returns (max_right_edge, max_top_edge)
-        """
-        # Accept a single axis as well
-        if not isinstance(axs, (list, np.ndarray)):
-            axs = [axs]
-        fig = axs[0].figure
-        fig.canvas.draw()
-        right_edges = []
-        top_edges = []
-        left_edges = []
-        bottom_edges = []
-        for ax in axs:
-            bbox = ax.get_tightbbox(fig.canvas.get_renderer())
-            inv_trans = fig.transFigure.inverted()
-            bbox_fig = inv_trans.transform(bbox)
-            # bbox_fig[0] = (x0, y0) = bottom left; bbox_fig[1] = (x1, y1) = top right
-            left_edges.append(bbox_fig[0][0])
-            bottom_edges.append(bbox_fig[0][1])
-            right_edges.append(bbox_fig[1][0])
-            top_edges.append(bbox_fig[1][1])  # y1 is the top in figure coordinates
-        max_right_edge = max(right_edges)
-        max_top_edge = max(top_edges)
-        max_left_edge = max(left_edges)
-        max_bottom_edge = max(bottom_edges)
-        return max_right_edge, max_top_edge, max_left_edge, max_bottom_edge
+    out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '06_cellular_enrichment', f'{gene_of_interest}_vs_cell_abundance')
+    out_dir = os.path.join(out_dir, f'maxdist_{max_dist}um')
 
+    today = datetime.now().strftime('%Y%m%d')
+    out_dir_plots = os.path.join(out_dir, today, 'plots')
+    os.makedirs(out_dir_plots, exist_ok=True)
 
-    # --- Plot 5: Plot pearson corr as dotplot
+    out_dir_csv = os.path.join(out_dir, today, 'csv_files')
+    os.makedirs(out_dir_csv, exist_ok=True)
+
+    # Save plots
+    filename = f'{sample_id}_HEV_{gene_of_interest}_vs_cell_abundance.pdf'
+
+    save_multi_image(os.path.join(out_dir_plots, filename))
+    plt.close('all')
+
+    # And save the dfs
+    filename = f'{sample_id}_HEV_{gene_of_interest}_and_cell_proportions.csv'
+    spp1_avg.to_csv(os.path.join(out_dir_csv, filename), index=True)
+
+    # Also the correlation df
+    filename = f'{sample_id}_HEV_{gene_of_interest}_and_cell_proportions_corr.csv'
 
     # Sort by correlation
     sorted_cell_types = sorted(corr.keys(), key=lambda x: corr[x], reverse=True)
@@ -647,304 +609,6 @@ for max_dist in max_dists:
     # Add a column for -log10(p-value)
     corr_df['-log10(p_value)'] = -np.log10(corr_df['p_value'] + 1e-10)  # add small value to avoid log(0)
 
-    # Make a dotplot with pearson r on x-axis, cell types on y-axis, dot size = avg_prop, color = p-value
-    plt.figure(figsize=(3, 5))
-
-    # Set vmin & vmax & size range
-    vmin = corr_df['-log10(p_value)'].min()
-    vmax = corr_df['-log10(p_value)'].max()
-
-    norm = Normalize(vmin=vmin, vmax=vmax)
-
-    size_min = corr_df['avg_prop'].min()
-    size_max = corr_df['avg_prop'].max()
-
-
-    # Plot all points (no border)
-    sns.scatterplot(
-        data=corr_df, x='pearson_r', y='cell_type', size='avg_prop', hue='-log10(p_value)', hue_norm=norm, size_norm=(size_min, size_max),
-        sizes=(20, 200), palette='Reds', legend='brief', linewidth=0.5, edgecolor='lightgray'
-    )
-
-    # Overlay significant points with gray border
-    sns.scatterplot(
-        data=corr_df[corr_df['p<0.05']], x='pearson_r', y='cell_type', size='avg_prop', hue_norm=norm, size_norm=(size_min, size_max),
-        hue='-log10(p_value)', sizes=(20, 200), palette='Reds', legend=False,
-        edgecolor='black', linewidth=0.5
-    )
-
-    plt.axvline(0, color='lightgrey', linestyle='-', zorder=0, linewidth=2)
-    plt.xlabel('Pearson correlation (r)', fontweight='bold')
-    plt.ylabel('Cell type', fontweight='bold')
-    plt.title(f'HEV {gene_of_interest} expression\nvs\ncell type proportion (<{max_dist} µm)', fontweight='bold')
-    plt.legend(title='Avg. proportion', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-    # Resize the ax based on number of cell types
-    ax = plt.gca()
-    ax_pos = ax.get_position()
-    ax.set_position([ax_pos.x0, ax_pos.y0, ax_pos.width,  0.03*len(ax.get_yticks())])
-
-    # Adjust ylimits
-    ax.set_ylim(len(ax.get_yticks())-0.5, -0.5)
-
-    # Adjust ylabels to shorter names
-    ytick_text = [tick.get_text() for tick in ax.get_yticklabels()]
-    ylabels = [miniatlas_sub_dict['miniatlas_subset_short'].get(label, label) for label in ytick_text]
-    ax.set_yticklabels(ylabels)
-
-    # Add an ax to the left for the cell type colors
-    ax_pos = ax.get_position()
-    ax_color = plt.gcf().add_axes([ax_pos.x0 - 0.04, ax_pos.y0, 0.03, ax_pos.height])
-    for n, cell_type in enumerate(ytick_text):
-        ax_color.add_patch(plt.Rectangle((0, n - 0.5), 1, 1, color=color_dict.get(cell_type, 'lightgrey')))
-
-    # Add white lines between the colors
-    for n in range(len(ytick_text)-1):
-        ax_color.plot([0, 1], [n + 0.5, n + 0.5], color='white', linewidth=1)
-
-    ax_color.set_ylim(len(ytick_text)-0.5, -0.5)
-
-    # Take the yticks and ylabel from the main ax
-    ax_color.set_yticks(ax.get_yticks())
-    ax_color.set_yticklabels(ylabels)
-    ax_color.set_ylabel('Cell type', fontweight='bold')
-
-    ax_color.set_xticks([])
-
-    # Remove ytick labels from main ax
-    ax.set_yticklabels([])
-    ax.set_ylabel('')
-
-    # Add a colorbar for the p-value
-    norm = plt.Normalize(corr_df['-log10(p_value)'].min(), corr_df['-log10(p_value)'].max())
-    sm = plt.cm.ScalarMappable(cmap="Reds", norm=norm)
-    sm.set_array([])
-    ax_height = 0.03*6
-    cbar_ax = plt.gcf().add_axes([ax_pos.x1 + 0.1, ax_pos.y1-ax_height, 0.04, ax_height])
-    cbar = plt.colorbar(sm, cax=cbar_ax)
-    cbar_ax.set_ylabel('-log10(p-val)',)
-    cbar_ax.yaxis.set_label_position('left')
-
-    cbar_pos = cbar_ax.get_position()
-    left = cbar_pos.x0
-    bottom = cbar_pos.y0
-
-    # Extract the size legend and put just below the colorbar
-    handles, labels = ax.get_legend_handles_labels()
-    size_handles = handles[1:4]
-    size_labels = labels[1:4]
-
-    max_right_edge, max_top_edge, max_left_edge, max_bottom_edge = position_legend(cbar_ax)
-
-    legend = plotting_functions.add_size_legend(ax, ax, size='avg_prop', size_title='Proportion\n(Average)', limit_circles=True)
-
-    # Add legend to plot
-    size_handles = legend.legend_handles
-    size_labels = [h.get_label() for h in size_handles]
-
-    # Remove the legend from the main ax
-    ax.legend_.remove()
-
-    fig = plt.gcf()
-
-    legend_1 = fig.legend(size_handles, size_labels, title='Avg. proportion', bbox_to_anchor=(max_left_edge, max_bottom_edge - 0.14), loc='upper left', frameon=False,
-            alignment='left', handletextpad=1, borderpad=0, bbox_transform=fig.transFigure)
-
-    # Add a legend for significant vs non-significant
-    signif_handles = [
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='lightgray', markersize=10, label='True', markeredgecolor='black', markeredgewidth=1),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='lightgray', markersize=10, label='False', markeredgecolor='lightgray', markeredgewidth=0.5),
-    ]
-
-    legend_2 = fig.legend(signif_handles, [h.get_label() for h in signif_handles], title='p<0.05', bbox_to_anchor=(max_left_edge, max_bottom_edge - 0.01), loc='upper left', frameon=False,
-            alignment='left', handletextpad=1, borderpad=0, bbox_transform=fig.transFigure)
-
-    # Add major type legend
-    labels = major_cell_types_sorted
-
-    # Create legend handles (colored boxes with labels)
-    handles = [
-        mpl.patches.Patch(facecolor=color_dict[label], label=label, edgecolor='black', linewidth=0.8)
-        for label in labels if label in color_dict
-    ]
-
-    fig.legend(handles=handles, title='Major cell type', bbox_to_anchor=(max_left_edge, max_bottom_edge - 0.31), loc='upper left', frameon=False,
-            alignment='left', borderpad=0, bbox_transform=fig.transFigure, handlelength=0.8, labelspacing=0.4)
-
-    # Add a suptitle
-    title_x = ax.get_position().x0 + (ax.get_position().x1 - ax.get_position().x0) / 2
-    title_y = ax.get_position().y1 + 0.2
-    plt.suptitle(f'{sample_id} ({subtype}) - Correlation between HEV {gene_of_interest} expression (ACKR1+ endothelial) and cell type abundance (within {max_dist} µm of HEV, stepwise={stepwise}, only_in_TLS={only_in_TLS})', x=title_x, y=title_y, fontweight='bold')
-
-
-    # --- Plot 6: Same as above but just the significant ones
-
-    # Subset to significant ones
-    corr_df_sig = corr_df[corr_df['p<0.05']].copy()
-
-    # Check if there are any significant ones
-    if corr_df_sig.shape[0] > 0:
-
-        # Make a dotplot with pearson r on x-axis, cell types on y-axis, dot size = avg_prop, color = p-value
-        plt.figure(figsize=(3, 5))
-
-        # Plot all points (no border)
-        sns.scatterplot(
-            data=corr_df_sig, x='pearson_r', y='cell_type', size='avg_prop', hue='-log10(p_value)', hue_norm=norm, size_norm=(size_min, size_max),
-            sizes=(20, 200), palette='Reds', legend='brief', linewidth=0.5, edgecolor='lightgray'
-        )
-
-        # Overlay significant points with gray border
-        sns.scatterplot(
-            data=corr_df_sig[corr_df_sig['p<0.05']], x='pearson_r', y='cell_type', size='avg_prop', hue_norm=norm, size_norm=(size_min, size_max),
-            hue='-log10(p_value)', sizes=(20, 200), palette='Reds', legend=False,
-            edgecolor='black', linewidth=0.5
-        )
-
-        plt.axvline(0, color='lightgrey', linestyle='-', zorder=0, linewidth=2)
-        plt.xlabel('Pearson correlation (r)', fontweight='bold')
-        plt.ylabel('Cell type', fontweight='bold')
-        plt.title(f'HEV {gene_of_interest} expression\nvs\ncell type proportion (<{max_dist} µm)', fontweight='bold')
-        plt.legend(title='Avg. proportion', bbox_to_anchor=(1.05, 1), loc='upper left')
-
-        # Resize the ax based on number of cell types
-        ax = plt.gca()
-        ax_pos = ax.get_position()
-        ax.set_position([ax_pos.x0, ax_pos.y0, ax_pos.width,  0.03*len(ax.get_yticks())])
-
-        # Adjust ylimits
-        ax.set_ylim(len(ax.get_yticks())-0.5, -0.5)
-
-        # Adjust ylabels to shorter names
-        ytick_text = [tick.get_text() for tick in ax.get_yticklabels()]
-        ylabels = [miniatlas_sub_dict['miniatlas_subset_short'].get(label, label) for label in ytick_text]
-        ax.set_yticklabels(ylabels)
-
-        # Add an ax to the left for the cell type colors
-        ax_pos = ax.get_position()
-        ax_color = plt.gcf().add_axes([ax_pos.x0 - 0.04, ax_pos.y0, 0.03, ax_pos.height])
-        for n, cell_type in enumerate(ytick_text):
-            ax_color.add_patch(plt.Rectangle((0, n - 0.5), 1, 1, color=color_dict.get(cell_type, 'lightgrey')))
-
-        # Add white lines between the colors
-        for n in range(len(ytick_text)-1):
-            ax_color.plot([0, 1], [n + 0.5, n + 0.5], color='white', linewidth=1)
-
-        ax_color.set_ylim(len(ytick_text)-0.5, -0.5)
-
-        # Take the yticks and ylabel from the main ax
-        ax_color.set_yticks(ax.get_yticks())
-        ax_color.set_yticklabels(ylabels)
-        ax_color.set_ylabel('Cell type', fontweight='bold')
-
-        ax_color.set_xticks([])
-
-        # Remove ytick labels from main ax
-        ax.set_yticklabels([])
-        ax.set_ylabel('')
-
-        # Add a colorbar for the p-value
-        norm = plt.Normalize(corr_df['-log10(p_value)'].min(), corr_df['-log10(p_value)'].max())
-        sm = plt.cm.ScalarMappable(cmap="Reds", norm=norm)
-        sm.set_array([])
-        ax_height = 0.03*5
-        cbar_ax = plt.gcf().add_axes([ax_pos.x1 + 0.1, ax_pos.y1-ax_height, 0.04, ax_height])
-        cbar = plt.colorbar(sm, cax=cbar_ax)
-        cbar_ax.set_ylabel('-log10(p-val)',)
-        cbar_ax.yaxis.set_label_position('left')
-
-        cbar_pos = cbar_ax.get_position()
-        left = cbar_pos.x0
-        bottom = cbar_pos.y0
-
-        # Extract the size legend and put just below the colorbar
-        handles, labels = ax.get_legend_handles_labels()
-        size_handles = handles[1:4]
-        size_labels = labels[1:4]
-
-        max_right_edge, max_top_edge, max_left_edge, max_bottom_edge = position_legend(cbar_ax)
-
-        legend = plotting_functions.add_size_legend(ax, ax, size='avg_prop', size_title='Proportion\n(Average)', limit_circles=True)
-
-        # Add legend to plot
-        size_handles = legend.legend_handles
-        size_labels = [h.get_label() for h in size_handles]
-
-        # Remove the legend from the main ax
-        ax.legend_.remove()
-
-        fig = plt.gcf()
-
-        legend_1 = fig.legend(size_handles, size_labels, title='Avg. proportion', bbox_to_anchor=(max_left_edge, max_bottom_edge - 0.14), loc='upper left', frameon=False,
-                alignment='left', handletextpad=1, borderpad=0, bbox_transform=fig.transFigure)
-
-        # Add a legend for significant vs non-significant
-        signif_handles = [
-            Line2D([0], [0], marker='o', color='w', markerfacecolor='lightgray', markersize=10, label='True', markeredgecolor='black', markeredgewidth=1),
-            Line2D([0], [0], marker='o', color='w', markerfacecolor='lightgray', markersize=10, label='False', markeredgecolor='lightgray', markeredgewidth=0.5),
-        ]
-
-        legend_2 = fig.legend(signif_handles, [h.get_label() for h in signif_handles], title='p<0.05', bbox_to_anchor=(max_left_edge, max_bottom_edge - 0.01), loc='upper left', frameon=False,
-                alignment='left', handletextpad=1, borderpad=0, bbox_transform=fig.transFigure)
-
-        # Add major type legend
-        # Filter major types to only those present in the significant cell types
-        major_cell_types_sig = set()
-        for cell_type in corr_df_sig['cell_type']:
-            major_type = miniatlas_df.set_index('miniatlas_subset').loc[cell_type, 'miniatlas_major']
-            major_type = major_type.unique()[0] if isinstance(major_type, pd.Series) else major_type
-            major_cell_types_sig.add(major_type)
-
-        # Maintain order
-        major_cell_types_sorted_sig = [mct for mct in major_cell_types_sorted if mct in major_cell_types_sig]
-        labels = major_cell_types_sorted_sig
-
-        # Create legend handles (colored boxes with labels)
-        handles = [
-            mpl.patches.Patch(facecolor=color_dict[label], label=label, edgecolor='black', linewidth=0.8)
-            for label in labels if label in color_dict
-        ]
-
-        fig.legend(handles=handles, title='Major cell type', bbox_to_anchor=(max_left_edge, max_bottom_edge - 0.31), loc='upper left', frameon=False,
-                alignment='left', borderpad=0, bbox_transform=fig.transFigure, handlelength=0.8, labelspacing=0.4)
-
-        # Add a suptitle
-        title_x = ax.get_position().x0 + (ax.get_position().x1 - ax.get_position().x0) / 2
-        title_y = ax.get_position().y1 + 0.2
-        plt.suptitle(f'{sample_id} ({subtype}) - Correlation between HEV {gene_of_interest} expression (ACKR1+ endothelial) and cell type abundance (within {max_dist} µm of HEV, stepwise={stepwise}, only_in_TLS={only_in_TLS})', x=title_x, y=title_y, fontweight='bold')
-
-
-    # --- Save the output
-
-    out_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'per_sample', 'gene_expression_vs_cell_abundance', f'{gene_of_interest}_vs_cell_abundance')
-
-    if only_in_TLS:
-        out_dir = os.path.join(out_dir, 'only_in_TLS')
-
-    out_dir = os.path.join(out_dir, f'maxdist_{max_dist}um')
-
-    if stepwise:
-        out_dir = os.path.join(out_dir, 'stepwise')
-
-    today = datetime.now().strftime('%Y%m%d')
-    out_dir_plots = os.path.join(out_dir, today, 'plots')
-    os.makedirs(out_dir_plots, exist_ok=True)
-
-    out_dir_csv = os.path.join(out_dir, today, 'csv_files')
-    os.makedirs(out_dir_csv, exist_ok=True)
-
-    # Save plots
-    filename = f'{sample_id}_HEV_{gene_of_interest}_vs_cell_abundance.pdf'
-
-    save_multi_image(os.path.join(out_dir_plots, filename))
-    plt.close('all')
-
-    # And save the dfs
-    filename = f'{sample_id}_HEV_{gene_of_interest}_and_cell_proportions.csv'
-    spp1_avg.to_csv(os.path.join(out_dir_csv, filename), index=True)
-
-    # Also the correlation df
-    filename = f'{sample_id}_HEV_{gene_of_interest}_and_cell_proportions_corr.csv'
     corr_df.to_csv(os.path.join(out_dir_csv, filename), index=False)
 
 

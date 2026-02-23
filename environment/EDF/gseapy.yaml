@@ -1,0 +1,26 @@
+name: gseapy
+
+channels:
+  - conda-forge
+  - bioconda
+  - pypi
+
+dependencies:
+  - python=3.10
+  - anndata
+  - arpack
+  - conda
+  - git
+  - mamba
+  - numpy=1.23
+  - pandas
+  - rpy2
+  - scanpy
+  - seaborn
+  - setuptools
+  - squidpy
+  - gseapy
+  - pip
+  - pip:
+    - mycolorpy
+

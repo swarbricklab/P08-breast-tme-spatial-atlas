@@ -12,6 +12,7 @@
 
 import argparse
 import os
+import sys
 
 import anndata as ad
 import scanpy as sc
@@ -48,6 +49,7 @@ parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
 parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--seed", help="Seed for reproducibility", type=int)
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 
 args = vars(parser.parse_args())
@@ -61,14 +63,21 @@ sample_id=args["sample_id"]
 res_dir = args['res_dir']
 project_dir = args['project_dir']
 
+# Import function script as a module
+sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms'))
+import plotting_functions
+
 
 # --- Extract some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet_xenium.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 # Also load tissue metadata
@@ -81,7 +90,7 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'].astype(str) == str(tissue
 
 # --- Load data
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample_id}_log_norm.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coordinates for optimal presentation
@@ -94,8 +103,8 @@ crop_coord = auto_crop_xenium(adata)
 # Decide which annotation level to use
 level = 'major'
 
-annotation_dir = os.path.join(project_dir, 'resources', 'annotation', 'tangram', sample_id, f'{level}_level')
-annotation_file = f'{sample_id}_pred_cell_types.csv'
+annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
 
@@ -136,8 +145,8 @@ plt.figure(figsize=(9*ncols, 7*nrows))
 n=0
 ax = plt.subplot(nrows, ncols, n + 1)
 
-sc.pl.spatial(adata, color=[annotation_key], groups=cell_types_of_interest, spot_size=20, title=f'{sample_id} ({subtype})',
-            crop_coord=crop_coord, ax=ax, palette=color_dict, na_in_legend=False)
+sc.pl.spatial(adata, color=[annotation_key], groups=cell_types_of_interest, title=f'{sample_id} ({subtype})',
+            crop_coord=crop_coord, ax=ax, palette=color_dict, na_in_legend=False, alpha_img=0.3, size=0.5)
 
 # Remove the labels
 ax.set_xlabel('')
@@ -150,7 +159,8 @@ plt.suptitle(f'{sample_id} ({subtype}) - T & B cells based on Tangram label tran
 
 # --- Identify TLS regions based on density of T & B cells
 
-xy = adata.obsm['spatial'].copy()             # microns
+# Extract the spatial coordinates in microns (not pixel space) for more interpretable distance calculations
+xy = adata.obs[['x_centroid', 'y_centroid']].values
 ct = adata.obs[annotation_key].astype(str)
 t_labels = {'T-cells'}
 b_labels = {'B-cells'}
@@ -254,7 +264,8 @@ tls_gdf = gpd.GeoDataFrame({"tls_id": range(1, len(keep_labels)+1)}, geometry=ge
 # --- Annotate which cells are in TLS regions
 
 # Create a dataframe with the cell coordinates
-cells_df = pd.DataFrame(adata.obsm['spatial'], columns=['x', 'y'])
+cells_df = adata.obs[['x_centroid', 'y_centroid']].copy()
+cells_df.columns = ['x', 'y']
 cells_df['cell_id'] = adata.obs_names.values
 
 cells_gdf = gpd.GeoDataFrame(cells_df, geometry=gpd.points_from_xy(cells_df.x, cells_df.y), crs="EPSG:3857")
@@ -265,6 +276,8 @@ cells_in_tls = gpd.sjoin(cells_gdf, tls_gdf, predicate='intersects')
 # Add to adata
 adata.obs['in_TLS'] = adata.obs_names.isin(cells_in_tls['cell_id']).astype(str)
 adata.obs['TLS_id'] = adata.obs_names.map(cells_in_tls.set_index('cell_id')['tls_id']).fillna(0).astype(int)
+
+print(f'Total cells in TLS regions: {adata.obs["in_TLS"].value_counts().get("True", 0)}')
 
 
 # --- Plot 2: Overview of TLS regions identified based on T & B cell densities
@@ -279,8 +292,8 @@ fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(9*ncols, 7*nrows))
 # add a new subplot iteratively
 n=0
 ax = axs[n]
-sc.pl.spatial(adata, color=[annotation_key], groups=cell_types_of_interest, spot_size=20, title=f'{sample_id} ({subtype})',
-            crop_coord=crop_coord, ax=ax, palette=color_dict, na_in_legend=False)
+sc.pl.spatial(adata, color=[annotation_key], groups=cell_types_of_interest, title=f'{sample_id} ({subtype})',
+            crop_coord=crop_coord, ax=ax, palette=color_dict, na_in_legend=False, alpha_img=0.3, size=0.5)
 
 ax.set_title(f'{sample_id} ({subtype})\nTLS regions', fontweight='bold')
 
@@ -288,15 +301,30 @@ ax.set_title(f'{sample_id} ({subtype})\nTLS regions', fontweight='bold')
 ax.set_xlabel('')
 ax.set_ylabel('')
 
+# If plotting on image-level coordinates, transform TLS polygons
+if 'xenium_um_spatial' in adata.obsm and 'spatial' in adata.uns and sample_id in adata.uns['spatial']:
+    try:
+        print("Transforming TLS polygons to image space...")
+        tls_gdf_plot = plotting_functions.transform_geojson_to_image_space(tls_gdf.copy(), adata, sample_id, project_dir)
+        print("Transformation successful!")
+        plot_tls_polygons = True
+    except Exception as e:
+        print(f"Warning: Could not transform TLS polygons to image space: {e}")
+        plot_tls_polygons = False
+else:
+    tls_gdf_plot = tls_gdf
+    plot_tls_polygons = True
+
 # Plot TLS regions
-tls_gdf.plot(ax=ax, facecolor="none", edgecolor="black", linewidth=1)
+if plot_tls_polygons:
+    tls_gdf_plot.plot(ax=ax, facecolor="none", edgecolor="black", linewidth=1)
 
 # Add another ax next to it
 ax = axs[n+1]
 
 # Plot all cells in light grey
-sc.pl.spatial(adata, color=[annotation_key], spot_size=20, title=f'{sample_id} ({subtype})',
-            crop_coord=crop_coord, ax=ax, palette=['lightgray'], na_in_legend=False, legend_loc=None)
+sc.pl.spatial(adata, color=[annotation_key], title=f'{sample_id} ({subtype})', size=0.5,
+            crop_coord=crop_coord, ax=ax, palette=['lightgray'], na_in_legend=False, legend_loc=None, alpha_img=0.3)
 
 ax.set_title(f'{sample_id} ({subtype})\nTLS regions', fontweight='bold')
 
@@ -305,12 +333,13 @@ ax.set_xlabel('')
 ax.set_ylabel('')
 
 # Plot TLS regions
-tls_gdf.plot(ax=ax, facecolor="mediumblue", edgecolor="black", linewidth=0, alpha=0.4)
+if plot_tls_polygons:
+    tls_gdf_plot.plot(ax=ax, facecolor="mediumblue", edgecolor="black", linewidth=0, alpha=0.4)
 
 # -- Plot which cells are in TLS regions
 ax = axs[n+2]
-sc.pl.spatial(adata, color=['in_TLS'], spot_size=20, title=f'{sample_id} ({subtype})',
-            crop_coord=crop_coord, ax=ax, palette=['lightgray', 'cornflowerblue'], na_in_legend=False)
+sc.pl.spatial(adata, color=['in_TLS'], title=f'{sample_id} ({subtype})', size=0.5,
+            crop_coord=crop_coord, ax=ax, palette=['lightgray', 'cornflowerblue'], na_in_legend=False, alpha_img=0.3)
 
 ax.set_title(f'{sample_id} ({subtype})\nCells in TLS regions', fontweight='bold')
 
@@ -392,7 +421,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - Cells in TLS regions identified based o
 
 # --- Save the output
 
-out_dir = os.path.join(res_dir, 'TLS_analysis', 'TLS_regions', 'per_sample')
+out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '01_identify_TLS_regions')
 os.makedirs(out_dir, exist_ok=True)
 
 # Make a dir for plots

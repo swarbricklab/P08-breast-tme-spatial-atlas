@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Compare PVL counts and associations between HEV and non-HEV vessels.
-# Quantify differences in PVL distribution and vessel overlap.
+# Plot PVL composition across distance bins to look at tendencies of PVLs association with HEVs vs non-HEV vessels
+
 
 # --- Define environment
 # env: vis-hd
@@ -10,60 +10,75 @@
 # --- Load packages
 import argparse
 import os
-import sys
 from datetime import date, datetime
 
+import anndata as ad
 import matplotlib as mpl
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scanpy as sc
+import squidpy as sq
 import seaborn as sns
-import scanpy.plotting.palettes as sc_palettes
-import matplotlib.colors as mcolors
+from matplotlib.colors import ListedColormap
+import sys
+import re
+from scipy.spatial import cKDTree
 
 # Import custom functions
+from sophiesfunctions.auto_crop import auto_crop_scanpy
+from sophiesfunctions.auto_crop import auto_crop
 from sophiesfunctions.save_multi_image import save_multi_image
-from sophiesfunctions.color_functions import generate_color_variations 
+
+sc.set_figure_params(facecolor="white", figsize=(8, 8))
+sc.settings.verbosity = 3
 
 mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+
+
+parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument("-s", "--samples",
-    nargs="*",  # 0 or more values expected => creates a list
-    type=str,
-    help="List of samples")
-parser.add_argument("-r", "--res_dir", help="Path to results directory")
+# Required
+parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+
+parser.add_argument("--min_count", help="Min count for QC", type=int)
+parser.add_argument("--min_gene", help="Min gene for QC", type=int)
+parser.add_argument("--min_spots", help="Minimal spots per gene", type=int)
 
 args = vars(parser.parse_args())
 
-# Arguments
-project_dir = args["project_dir"]
-h5ad_dir = args["h5ad_dir"]
-res_dir = args["res_dir"]
-sample_list = args["samples"]
 
-print(f'Samples in python: {sample_list}')
+# --- Arguments
+
+res_dir = args["res_dir"]
+h5ad_dir=args["h5ad_dir"]
+sample_id=args["sample_id"]
+project_dir=args["project_dir"]
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_model', '05_HEV_analysis', '04_cellular_composition',))
+sys.path.append(os.path.join(project_dir, 'scripts', '04_vascular_microenvironment'))
 import plotting_functions
 
 
 # --- Extract some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-sample_dir = os.path.join(project_dir, 'config')
-
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-sample_lut = sample_sheet.set_index('section_id')
+sample_sheet = pd.read_csv(sample_sheet_path)
+tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
 # --- Also get some tissue metadata
@@ -73,15 +88,46 @@ metadata_file = 'tissue_metadata.csv'
 
 tissue_metadata = pd.read_csv(os.path.join(resource_dir, metadata_file))
 
-# Merge the two DataFrames on the common column 'tissue_id'
-merged_df = pd.merge(sample_sheet, tissue_metadata, on='tissue_id')
 # Create a sample - subtype dictionary
-subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
+subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clinical_subtype'].values[0]
+
+
+# --- Load the adata object
+
+use_data = 'log_norm'
+# Need both the 48 & 16 res
+base_res = 'square_016um'
+decon_resolution = 'square_016um'
+resolutions = [base_res]
+
+if decon_resolution not in resolutions:
+    resolutions.append(decon_resolution)
+
+adata_dict = {}
+
+for resolution in resolutions:
+    adata_dict[resolution] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
+
+
+# --- Calculate crop coords for optimal presentation
+
+coords_dict  = {}
+
+for resolution in resolutions:
+    coords = auto_crop_scanpy(adata_dict[resolution], border_size=0.1)
+    coords_dict[resolution] = coords
+
+# Also calculate some coords for squidpy
+coords_dict_sq  = {}
+
+for resolution in resolutions:
+    coords = auto_crop(adata_dict[resolution], border_size=0.1)
+    coords_dict_sq[resolution] = coords
 
 
 # --- Load miniatlas classifications
 
-decon_level = 'subset'
+decon_level = 'minor'
 
 # To make it easier to visualize trends by lineage
 class_dir = os.path.join(project_dir, 'resources', 'cell_types', 'miniatlas')
@@ -93,15 +139,15 @@ class_df = pd.read_csv(os.path.join(class_dir, class_file))
 endothelial = list(class_df[class_df['miniatlas_major'] == 'Endothelial'][f'miniatlas_{decon_level}'].unique())
 endothelial = sorted(endothelial)
 
+# Decide which decon level to use
+decon_level = 'subset'
+
 # Also get PVL classes
 PVL_classes = list(class_df[class_df['miniatlas_major'] == 'PVL'][f'miniatlas_{decon_level}'].unique())
 PVL_classes = sorted(PVL_classes)
 
-# Define which endothelial type want to look at
-endo_of_interest = 'Endothelial ACKR1'
-out_name = endo_of_interest.split(' ')[-1]
 
-# --- Load the vessel classifications
+# --- Load vessel groups
 
 # Function to find the most recent results
 def find_most_recent(dir):
@@ -129,62 +175,85 @@ def find_most_recent(dir):
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
+# Define which endothelial type want to look at
+endo_of_interest = 'Endothelial ACKR1'
+out_name = endo_of_interest.split(' ')[-1]
+
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                             f'threshold_{threshold_adj}', 'other_vessels', 'vessel_HEV_overlap', 'csv_files')
+TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
-PVL_counts = {}
-vessel_HEV_overlap = {}
+filename = f'{sample_id}_vessel_classification.csv'
+vessel_classes = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
+adata_dict[base_res].obs[vessel_classes.columns] = vessel_classes
 
-for sample in sample_list:
-    filename = f'{sample}_PVL_counts_per_vessel.csv'
-    vessel_classes = pd.read_csv(os.path.join(most_recent_dir_path, filename),)
-    PVL_counts[sample] = vessel_classes
-    filename = f'{sample}_vessel_HEV_overlap.csv'
-    vessel_classes = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
-    vessel_HEV_overlap[sample] = vessel_classes
+# Collapse to single vessel class per spot
+collapsed_col = vessel_classes[endothelial].apply(lambda row: row.first_valid_index() if row.first_valid_index() is not None else None, axis=1)
+adata_dict[base_res].obs['vessel_class'] = collapsed_col
 
-# Extract a single df
-HEV_overlap_df = pd.concat(
-    [df.assign(sample_id=key) for key, df in vessel_HEV_overlap.items()],
-    ignore_index=True
-)
 
-# Redefine HEV overlap as min >0.5 of vessel
+# --- Load the deconvolution results
+
+resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
+resolution_numbers = int(resolution_numbers)
+
+decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
+
+decon_file = f'{sample_id}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
+
+decon_res = pd.read_csv(os.path.join(decon_dir, decon_file), index_col=0)
+
+# Only load the PVL classes
+adata_dict[decon_resolution].obs[PVL_classes] = decon_res[PVL_classes]
+
+
+# --- Load HEV overlap information
+
+# Define which endothelial type want to look at
+endo_of_interest = 'Endothelial ACKR1'
+out_name = endo_of_interest.split(' ')[-1]
+
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels', 'csv_files')
+
+most_recent_dir_path = find_most_recent(TLS_group_dir)
+
+filename = f'{sample_id}_vessel_HEV_overlap_spot_level.csv'
+overlap_df = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
+
+adata_dict[base_res].obs['overlap'] = overlap_df['overlap']
+
+# Also load the file with proportion of overlap
+filename = f'{sample_id}_vessel_HEV_overlap.csv'
+proportion_df = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
+
+# Identify groups with at least 50% overlap
 min_overlap = 0.5
-HEV_overlap_df['HEV_overlap'] = HEV_overlap_df['pct_overlap'] > min_overlap
 
-PVL_counts_df = pd.concat(
-    [df.assign(sample_id=key) for key, df in PVL_counts.items()],
-    ignore_index=True
-)
+# Filter for the endothelial type of interest
+proportion_df_endo = proportion_df[proportion_df['group_type'] == endo_of_interest].copy()
 
+# Separate groups with overlap above vs below threshold (or NaN)
+proportion_df_high = proportion_df_endo[proportion_df_endo['pct_overlap'] > min_overlap]
+# Include both low overlap and NaN (vessels with 0 or no overlap data)
+proportion_df_low = proportion_df_endo[(proportion_df_endo['pct_overlap'] <= min_overlap) | (proportion_df_endo['pct_overlap'].isna())]
 
-# --- Also load the pathology annotations
-# Load pathology annotations
+high_overlap_groups = proportion_df_high['group'].to_list()
+low_overlap_groups = proportion_df_low['group'].to_list()
 
-# Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                             f'threshold_{threshold_adj}', 'other_vessels', 'pathology_annotations', 'csv_files')
+# Initialize the column
+adata_dict[base_res].obs['majority_overlap'] = np.nan
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+# Set 'overlap' for vessels with high overlap
+barcode_groups_high = adata_dict[base_res].obs[adata_dict[base_res].obs[endo_of_interest].isin(high_overlap_groups)].index
+adata_dict[base_res].obs.loc[barcode_groups_high, 'majority_overlap'] = 'overlap'
 
-path_dict = {}
-
-for sample in sample_list:
-    filename = f'{sample}_dominant_pathology_per_vessel_group.csv'
-    path_dict[sample] = pd.read_csv(os.path.join(most_recent_dir_path, filename))
-
-# Collate all pathology annotations into a single DataFrame
-pathology_df = pd.concat(
-    [df.assign(sample_id=key) for key, df in path_dict.items()],
-    ignore_index=True
-)
+# Set vessel type name for vessels with low/no overlap
+barcode_groups_low = adata_dict[base_res].obs[adata_dict[base_res].obs[endo_of_interest].isin(low_overlap_groups)].index
+adata_dict[base_res].obs.loc[barcode_groups_low, 'majority_overlap'] = endo_of_interest
 
 
-# --- Define some colors
+# --- Also get some colors
 
 # Define some colors per endothelial type
 colors_file = os.path.join(project_dir, 'resources', 'plotting_colors', 'endothelial_colors.csv')
@@ -193,529 +262,346 @@ colors_df = pd.read_csv(colors_file)
 # Make a color_dict
 color_dict = colors_df.set_index('endothelial_type')['color'].to_dict()
 
-# Some colors for the pathology annotations
-annotation_labels = {
-    'epithelial': ['invasive', 'in_situ', 'benign', 'normal'],
-    'immune': ['lymphocytes'],
-    'stroma': ['stroma_fibrous', 'stroma_adipose'],
-    'additional_features': ['necrosis', 'blood_vessel', 'LVI']
-}
-
-# Get some colors
-all_colors = sc_palettes.default_20
-
-# Remove red to be more colorblind-friendly
-del all_colors[3] 
-
-# Extract all pathology categories
-all_cats = list(pathology_df['dominant_pathology'].dropna().unique())
-
-top_cat_colors = {}
-for n, cat in enumerate(annotation_labels):
-    top_cat_colors[cat] = all_colors[n]
-
-# Get some color variations of the original colors (so variations of the same annotation are a similar color)
-color_dict_path = {}
-
-# And also define a plot order
-plot_order = []
-
-for top_cat, labels in annotation_labels.items():
-    base_color = top_cat_colors[top_cat]
-    # Check how many of the labels are found in the object
-    num_cols = len(labels)
-    # Get the matching items
-    matching_items = [item for item in labels if item in set(all_cats)]
-    plot_order += matching_items
-    if num_cols > 4:
-        step_size=0.1
-    else:
-        step_size=0.2
-    variations = generate_color_variations(base_color, num_cols, step_size=step_size)
-    for n, item in enumerate(labels):
-        color_dict_path[item] = variations[n]
+# Add a color for overlap
+color_dict['overlap'] = 'indigo'
 
 
-# --- Plot 1: Groups with HEV vs no HEV overlap
+# --- Plot 1: Plot endo of i, HEV overlap, distances after binning
 
-# Enable gridlines behind the plot for all plots
-plt.rcParams['axes.grid'] = True
-plt.rcParams['axes.axisbelow'] = True
+adata = adata_dict[base_res]
 
 # Plotting
-nrows = 1
-ncols = 4
-fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(3*ncols, 2.5))
+sc.set_figure_params(fontsize=15)
 
-# -- First stacked barplot showing HEV overlap per category
+ncols = 2
+nrows = 1
+
+fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(7*ncols, 5*nrows))
+
+# -- First the vessel type of interest
 n=0
 ax = axs[n]
 
-# Step 1: Pivot the counts to get the count of True per group
-counts_true = HEV_overlap_df.groupby(['group_type', 'HEV_overlap']).size().unstack(fill_value=0)[True]
+adata_sub = adata[adata.obs[endo_of_interest].notna()]
 
-# Step 2: Pivot the counts to get the count of False per group
-counts_false = HEV_overlap_df.groupby(['group_type', 'HEV_overlap']).size().unstack(fill_value=0)[False]
+sc.pl.spatial(adata_sub, color=endo_of_interest, bw=False, alpha_img=0.5, crop_coord=coords_dict[base_res], 
+            title=f'{sample_id} ({subtype})\n{endo_of_interest}',
+            palette=[color_dict[endo_of_interest]], ax=ax, legend_loc=None)
 
-# Step 3: Merge the two counts into one DataFrame
-final_counts = pd.concat([counts_true, counts_false], axis=1)
+ax.set_title(ax.get_title(), fontweight='bold')
 
-#  Step 1: Create an empty DataFrame with columns corresponding to each category
-transformed_df = pd.DataFrame(0, index=final_counts.index, columns=endothelial)
-
-# Step 2: Assign True counts to corresponding columns
-for category in endothelial:
-    transformed_df[category] = final_counts.loc[final_counts.index.str.contains(category), True]
-
-transformed_df['False'] = final_counts[False]
-transformed_df = transformed_df.fillna(0)
-
-color_dict['False'] = 'lightgray'
-
-# 4. Plot
-transformed_df.plot(kind='bar', stacked=True, color=color_dict, ax=ax, legend=False,
-                    width=0.9)
-
-plotting_functions.beautify_plot(ax)
-
-plotting_functions.annotate_bars(ax, final_counts.reset_index(), x='group_type', y=True, plot_order=endothelial, margin=1, annotation_size=9)
-ax.grid(axis='x', visible=False)  # Turn off vertical gridlines
-
-ax.set_xlabel('')
-ax.set_ylabel('# vessels')
-ax.set_title(f'All samples\nHEV overlap', fontweight='bold')
-
-# -- Next plot proportions
+# -- Then plot overlap with HEVs
 n+=1
 ax = axs[n]
 
-rowsums = transformed_df.sum(axis=1)
-prop_df = transformed_df.div(rowsums, axis=0)
+adata_sub = adata[adata.obs['majority_overlap'].notna()]
 
-prop_df.plot(kind='bar', stacked=True, color=color_dict, ax=ax, legend=False,
-                    width=0.9)
-plotting_functions.beautify_plot(ax)
-ax.grid(axis='x', visible=False)  # Turn off vertical gridlines
+sc.pl.spatial(adata_sub, color='majority_overlap', bw=False, alpha_img=0.5, crop_coord=coords_dict[base_res], 
+            title=f'{sample_id} ({subtype})\nHEV overlap (>{min_overlap} spots)',
+            palette=color_dict, ax=ax,)
 
-anno_df = prop_df[endothelial].sum().reset_index()
-plotting_functions.annotate_bars(ax, anno_df, x='index', y=0, plot_order=endothelial, margin=1, annotation_size=9, round_int=False,)
+ax.set_title(ax.get_title(), fontweight='bold')
 
-ax.set_xlabel('')
-ax.set_ylabel('Proportion')
-ax.set_title(f'All samples\nHEV overlap', fontweight='bold')
+plt.suptitle(f'{sample_id} ({subtype}) - {endo_of_interest} overlap with HEVs (minimum overlap >{min_overlap} spots)', y=1.2, x=0.5, fontweight='bold')
 
-# -- Then boxplot showing overlap size
 
-# Boxplot size
-# Properties for boxplot
-whisker_props = {'color': 'black'}
-median_props = {'color': 'black'}
+# --- Plot 2: Barplot of overlap
 
-n+=1
-ax = axs[n]
-
-sns.boxplot(HEV_overlap_df, x='group_type', y='pct_overlap', order=endothelial, palette=color_dict, ax=ax, hue='group_type',
-            saturation=1, whiskerprops=whisker_props, medianprops=median_props, showfliers=False)
-
-# Make sure the dots below min_overlap are gray
-# Split the DataFrame
-below = HEV_overlap_df[HEV_overlap_df['pct_overlap'] <= min_overlap]
-above = HEV_overlap_df[HEV_overlap_df['pct_overlap'] > min_overlap]
-
-# Plot gray dots (below threshold)
-sns.stripplot(
-    data=below, x='group_type', y='pct_overlap',
-    color="gray", order=endothelial, size=2, ax=ax, dodge=False
-)
-# Plot black dots (above threshold)
-sns.stripplot(
-    data=above, x='group_type', y='pct_overlap',
-    color="black", order=endothelial, size=2, ax=ax, dodge=False
-)
-
-# Beautify the plot
-plotting_functions.beautify_plot(ax)
-
-# Draw a line indicating the min_overlap threshold
-ax.axhline(min_overlap, color='red', linestyle='-', linewidth=1, alpha=0.7, zorder=-1)   
-
-ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-ax.set_xlabel('')
-ax.set_title(f'All samples\nHEV overlap size', fontweight='bold')
-
-# -- Then scatterplot overlap vs size colored by type
-
-n+=1
-ax = axs[n]
-
-sns.scatterplot(HEV_overlap_df, x='count', y='pct_overlap', palette=color_dict, ax=ax, hue='group_type', hue_order=endothelial,
-                s=10, alpha=0.5, edgecolor=None)
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=False)
-
-ax.set_title(f'All samples\nPct overlap vs vessel size', fontweight='bold')
-
-
-plt.subplots_adjust(wspace=0.3)
-
-plt.suptitle(f'All samples - Overlap vessel groups with HEVs (min_overlap={min_overlap})', 
-             y=1.2, x=0.5, fontweight='bold')
-
-
-# --- Plot 2: Same as above but stacked barplots with error bars
-
-# Calculate means per group
-counts_df = HEV_overlap_df.groupby(['sample_id', 'group_type', 'HEV_overlap',]).size().unstack(fill_value=0)
-counts_df = counts_df.reset_index()
-counts_df.columns = counts_df.columns.astype(str)
-
-rowsums = counts_df[['True', 'False']].sum(axis=1)
-prop_df = counts_df.copy()
-prop_df[['True', 'False']] = counts_df[['True', 'False']].div(rowsums, axis=0)
-
-# Step 1: Aggregate by group_type
-agg = prop_df.groupby('group_type')[['True', 'False']].agg(['mean', 'std'])
-
-# Flatten the column MultiIndex
-agg.columns = ['_'.join(col).strip() for col in agg.columns.values]
-agg = agg.reset_index()
-
-# Step 2: Extract values
-x = np.arange(len(agg))
-true_means = agg['True_mean']
-false_means = agg['False_mean']
-true_stds = agg['True_std']
-false_stds = agg['False_std']
-
-# Plotting
-nrows = 1
-ncols = 3
-fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(3*ncols, 2))
-
-# -- First stacked barplot showing HEV overlap per category
-n=0
-ax = axs[n]
-
-# Plot True (bottom)
-bar1 = ax.bar(x, true_means, yerr=true_stds, label='True', color=color_list, ecolor='black',
-    error_kw=dict(lw=1, capsize=3, capthick=1), width=0.9)
-
-# Plot False (on top of True)
-bar2 = ax.bar(x, false_means, bottom=true_means, label='False', color='lightgray', width=0.9)
-
-plotting_functions.beautify_plot(ax)
-
-plotting_functions.annotate_bars(ax, true_means.reset_index(), x='index', y='True_mean', plot_order=true_means.index,
-                                 round_int=False, offset=list(true_stds), margin=1)
-
-# Some tweaking
-ax.set_xlabel('')
-ax.set_ylabel('Proportion of vessels')
-ax.set_title(f'All samples\nHEV overlap', fontweight='bold')
-ax.grid(axis='x', visible=False)  # Turn off vertical gridlines
-
-ax.set_xticks(x)
-ax.set_xticklabels(agg['group_type'], rotation=90)
-
-
-# -- Then plot vessel composition per sample
-n+=1
-ax = axs[n]
-
-counts_df = HEV_overlap_df.groupby(['sample_id', 'group_type']).size().unstack(fill_value=0)
-
-counts_df.plot(kind='bar', stacked=True, color=color_dict, ax=ax, legend=False,
-                    width=0.9)
-
-plotting_functions.beautify_plot(ax)
-ax.grid(axis='x', visible=False)  # Turn off vertical gridlines
-
-ax.set_xlabel('')
-ax.set_ylabel('Number of vessels')
-ax.set_title(f'All samples\nVessel type frequencies', fontweight='bold')
-
-# -- Now proportions
-n+=1
-ax = axs[n]
-
-rowsums = counts_df.sum(axis=1)
-prop_df = counts_df.div(rowsums, axis=0)
-
-prop_df.plot(kind='bar', stacked=True, color=color_dict, ax=ax, legend=False,
-                    width=0.9)
-
-plotting_functions.beautify_plot(ax)
-ax.grid(axis='x', visible=False)  # Turn off vertical gridlines
-
-ax.set_xlabel('')
-ax.set_ylabel('Proportion of vessels')
-ax.set_title(f'All samples\nVessel type frequencies', fontweight='bold')
-
-ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=False, handlelength=0.7)
-
-plt.subplots_adjust(wspace=0.5)
-
-plt.suptitle(f'All samples - Overlap vessel groups with HEVs (with error bars) (min_overlap={min_overlap})', 
-             y=1.2, x=0.5, fontweight='bold')
-
-
-# --- Make col colors df for heatmap
-
-# Make an index that contains all relevant info
-PVL_counts_df.columns.values[0] = 'concat_val'
-PVL_counts_df['index'] = PVL_counts_df.reset_index()['concat_val'] + '-' + PVL_counts_df['sample_id']
-
-HEV_overlap_df['index'] = HEV_overlap_df['group_type'] + '-' + HEV_overlap_df['group'] + '-' + HEV_overlap_df['sample_id']
-
-# First make a metadata df
-metadata_df = HEV_overlap_df.copy()
-metadata_df['endothelial_type'] = metadata_df['group_type']
-metadata_df['vessel_size'] = metadata_df['count']
-
-metadata_df = metadata_df[['sample_id', 'endothelial_type', 'HEV_overlap', 'vessel_size', 'index']]
-metadata_df = metadata_df.set_index('index')
-
-# Also add dominant pathology annotations
-pathology_df['combined_id'] = pathology_df['vessel_type'] + '-' + pathology_df['group'] + '-' + pathology_df['sample_id']
-pathology_df = pathology_df.set_index('combined_id')
-
-metadata_df['dominant_pathology'] = pathology_df['dominant_pathology']
-
-# Generate a col colors df
-col_colors = metadata_df.copy()
-col_colors['endothelial_type'] = col_colors['endothelial_type'].replace(color_dict)
-
-color_dict[True] = 'indigo'
-color_dict[False] = 'lightgray'
-
-col_colors['HEV_overlap'] = col_colors['HEV_overlap'].replace(color_dict)
-
-# And colors for sample_id
-sample_color = {}
-
-cmap = plt.get_cmap("Set2")  # or any other cmap like 'plasma', 'tab10', etc.
-hex_colors = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
-
-for n, sample in enumerate(sorted(sample_list)):
-    sample_color[sample] = hex_colors[n]
-
-col_colors['sample_id'] = col_colors['sample_id'].replace(sample_color)
-
-# Pathology annotations
-col_colors['dominant_pathology'] = col_colors['dominant_pathology'].replace(color_dict_path)
-
-# Generate a cmap for the vessel sizes
-# Normalize the values to [0, 1]
-vmin = metadata_df['vessel_size'].min() 
-vmax = metadata_df['vessel_size'].quantile(0.9)  # 99th percentile
-norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
-
-# Choose a colormap (e.g., "viridis", "coolwarm", "plasma", etc.)
-cmap = plt.colormaps['Reds']
-
-# Map the values to RGBA colors
-col_colors['vessel_size'] = col_colors['vessel_size'].map(lambda x: cmap(norm(x)))
-
-# Define 2 evenly spaced values between vmin and vmax
-mid_values = np.linspace(vmin, vmax, 5)[1:-1]  # This gives 2 evenly spaced values
-mid_values = np.round(mid_values).astype(int)  # Round and convert to integer
-
-# Combine min, mid-values, and max (ensure they are integers)
-legend_values = [int(vmin)] + list(mid_values) + [int(vmax)]  # Ensure all are integers
-legend_values = legend_values[::-1]
-
-# Format labels and get corresponding colors
-legend_labels = [f"{val}" for val in legend_values]  # No decimal places
-legend_colors = [cmap(norm(val)) for val in legend_values]
-
-# Create legend handles (colored boxes)
-legend_handles = [mpatches.Patch(facecolor=color, label=label, edgecolor='black', linewidth=0.8) 
-                  for color, label in zip(legend_colors, legend_labels)]
-
-
-# --- Plot 2a: Heatmap showing dominant PVL
-
-PVL_counts_df = PVL_counts_df.set_index('index')
+sc.set_figure_params(fontsize=10)
 
 # Disable the grid
 plt.rcParams['axes.grid'] = False
 
-# Make heatmap
-g = sns.clustermap(PVL_counts_df[PVL_classes].T, row_cluster=True, col_cluster=True, cmap='viridis', linewidths=0, figsize=(4, 4), annot=False,
-            colors_ratio=(0.01, 0.1), xticklabels=True, yticklabels=True, fmt='g', row_colors=None,
-            col_colors=col_colors, rasterized=True,
-            dendrogram_ratio=(0.2, 0.2), z_score=1)
+# Prepare for plotting
+overlap_ratio = proportion_df[proportion_df['group_type'] == endo_of_interest]
+overlap_ratio = overlap_ratio.set_index('group')['pct_overlap']
+group_classification = overlap_ratio > 0.5
+summary_df = group_classification.value_counts().rename_axis('majority_overlap').reset_index(name='num_groups')
+summary_df['majority_overlap'] = summary_df['majority_overlap'].replace({True: 'overlap', False: 'no_overlap'})
 
-axs = plotting_functions.beautify_heatmap(g, row_colors=False, col_colors=True, cbar_title='z score\n(column)', label_size=10, fontsize_title=11, title='',
-                    cbar_pad=10.5, cbar_height_square=len(PVL_classes), cbar_width_square=0.6, space_per_square=0.05, width_to_height_ratio=0.01,
-                    colors_div=1)
+color_dict['no_overlap'] = 'lightgray'
 
-# Adjust dendrograms
-plotting_functions.adjust_dendrograms(g, num_square=3, title=f'All samples\nEndothelial - PVL associations')
+# Plotting
+nrows = 1
+ncols = 1
+fig, ax = plt.subplots(ncols=ncols, nrows=nrows, figsize=(1.5*ncols, 2.5))
 
-# Add some lines separating clusters
-dend_thresh=1.5
-plotting_functions.cut_dendrogram_and_draw_lines(g, axis='col', threshold_dend=dend_thresh, color='white', linewidth=1, linestyle='--', alpha=1)
+sns.barplot(data=summary_df, x='majority_overlap', y='num_groups', palette=color_dict, hue='majority_overlap', ax=ax,)
 
-# Remove the xticks
-heatmap_ax = g.ax_heatmap
-heatmap_ax.set_xticks([])
+plotting_functions.beautify_plot(ax)
+plotting_functions.annotate_bars(ax, summary_df, x='majority_overlap', y='num_groups', plot_order=['no_overlap', 'overlap'], margin=1.1, annotation_size=9)
 
-# Add the discrete color legend
-legend1 = g.ax_cbar.legend(handles=legend_handles, title="vessel_size", frameon=False, alignment='left', handlelength=0.7,
-                    loc='center left', bbox_to_anchor=(4, 0.5), labelspacing=0)  # adjust position
-legend1.get_title().set_fontweight('bold')
+ax.set_xlabel('')
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+ax.set_ylabel('Number of vessels')
 
-# Add legends
-legend2 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=[True, False], color_lut=color_dict, title='HEV_overlap', 
-                                        y_offset=1, x_offset=4, loc='lower left')
+ax.set_title(f'{endo_of_interest}\nHEV overlap', fontweight='bold')
 
-legend3 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=endothelial, color_lut=color_dict, title='endothelial_type', 
-                                        y_offset=1.8, x_offset=4, loc='lower left')
-
-legend4 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=sample_list, color_lut=sample_color, title='sample_id', 
-                                        y_offset=3.2, x_offset=4, loc='lower left')
-
-legend5 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=plot_order, color_lut=color_dict_path, title='dominant_pathology', 
-                                        y_offset=0, x_offset=25, loc='lower left')
-
-g.ax_cbar.add_artist(legend1)
-g.ax_cbar.add_artist(legend2)
-g.ax_cbar.add_artist(legend3)
-g.ax_cbar.add_artist(legend4)
-
-# Calculate the midpoint to position the title
-top_ax = g.ax_col_dendrogram
-title_x = (top_ax.get_position().x0 + top_ax.get_position().x1)/2
-title_y = top_ax.get_position().y1 + 0.2
-
-plt.suptitle(f'All samples - PVL association per vessel type (decon_level={decon_level}, z_score=col, dend_thresh={dend_thresh})', y=title_y, x=title_x, fontweight='bold')
+plt.suptitle(f'{sample_id} ({subtype}) - {endo_of_interest} overlap with HEVs (minimum overlap >{min_overlap} spots)', y=1.2, x=0.5, fontweight='bold')
 
 
-# --- Plot 2b: Same as above but with endothelial ACKR1 only
+# --- Figure out pixel to um scalefactor
 
-# Filter the PVL_counts_df to only include endothelial ACKR1
-# Included in the index
-filtered_df = PVL_counts_df[PVL_counts_df.index.str.contains(out_name)]
+target_res = decon_resolution
+resolution_numbers = re.findall(r'\d+', target_res)[0]
+resolution_numbers = int(resolution_numbers)
 
+spot_diameter_um = resolution_numbers # Square size is whatever the resolution is 
 
-# Make heatmap
-g = sns.clustermap(filtered_df[PVL_classes].T, row_cluster=True, col_cluster=True, cmap='viridis', linewidths=0, figsize=(4, 4), annot=False,
-            colors_ratio=(0.01, 0.1), xticklabels=True, yticklabels=True, fmt='g', row_colors=None,
-            col_colors=col_colors, rasterized=True,
-            dendrogram_ratio=(0.2, 0.2), z_score=1)
+# Get a scalefactor for converting pixel coords to um
+spot_diameter_pixel = adata_dict[target_res].uns['spatial'][sample_id]['scalefactors']['spot_diameter_fullres']
 
-axs = plotting_functions.beautify_heatmap(g, row_colors=False, col_colors=True, cbar_title='z score\n(column)', label_size=10, fontsize_title=11, title='',
-                    cbar_pad=10.5, cbar_height_square=len(PVL_classes), cbar_width_square=0.6, space_per_square=0.05, width_to_height_ratio=0.01,
-                    colors_div=1)
-
-# Adjust dendrograms
-plotting_functions.adjust_dendrograms(g, num_square=3, title=f'All samples\nEndothelial ACKR1 - PVL associations')
-
-# Add some lines separating clusters
-dend_thresh=1.5
-plotting_functions.cut_dendrogram_and_draw_lines(g, axis='col', threshold_dend=dend_thresh, color='white', linewidth=1, linestyle='--', alpha=1)
-
-# Remove the xticks
-heatmap_ax = g.ax_heatmap
-heatmap_ax.set_xticks([])
-
-# Add the discrete color legend
-legend1 = g.ax_cbar.legend(handles=legend_handles, title="vessel_size", frameon=False, alignment='left', handlelength=0.7,
-                    loc='center left', bbox_to_anchor=(4, 0.5), labelspacing=0)  # adjust position
-legend1.get_title().set_fontweight('bold')
-
-# Add legends
-legend2 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=[True, False], color_lut=color_dict, title='HEV_overlap', 
-                                        y_offset=1, x_offset=4, loc='lower left')
-
-legend3 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=endothelial, color_lut=color_dict, title='endothelial_type', 
-                                        y_offset=1.8, x_offset=4, loc='lower left')
-
-legend4 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=sample_list, color_lut=sample_color, title='sample_id', 
-                                        y_offset=3.2, x_offset=4, loc='lower left')
-
-legend5 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=plot_order, color_lut=color_dict_path, title='dominant_pathology', 
-                                        y_offset=0, x_offset=25, loc='lower left')
-
-g.ax_cbar.add_artist(legend1)
-g.ax_cbar.add_artist(legend2)
-g.ax_cbar.add_artist(legend3)
-g.ax_cbar.add_artist(legend4)
-
-# Calculate the midpoint to position the title
-top_ax = g.ax_col_dendrogram
-title_x = (top_ax.get_position().x0 + top_ax.get_position().x1)/2
-title_y = top_ax.get_position().y1 + 0.2
-
-plt.suptitle(f'All samples - PVL association per vessel type (decon_level={decon_level}, z_score=col, dend_thresh={dend_thresh})', y=title_y, x=title_x, fontweight='bold')
+scalefactor_um = spot_diameter_um/spot_diameter_pixel
 
 
-# --- Plot 2c: Heatmap showing dominant PVL - HEV overlapping vessels only
+# --- Calculate distances on the fly
 
-overlap_with_HEV = list(metadata_df[metadata_df['HEV_overlap']].index)
-PVL_sub = PVL_counts_df.loc[overlap_with_HEV,:]
+# Function to calculate distances
+def calculate_distance(base_res, target_res, group_key):
+    # Extract shortened versions of resolution
+    base_res_short = base_res.split('_')[1]
+    target_res_short = target_res.split('_')[1]
+    adata = adata_dict[base_res]
+    coords = adata.obsm['spatial']  # Extract the spot coords
+    groups = adata.obs[group_key]  # Group labels
+    # Convert to DataFrame for easier manipulation
+    df = pd.DataFrame(coords, columns=["x", "y"])
+    df["vessel_group"] = groups.values
+    # Add barcodes to the 16µm DataFrame
+    df[f"barcode_{base_res_short}"] = adata.obs.index
+    df = df.dropna(subset='vessel_group')
+    # Extract coordinates and barcodes for each group
+    grouped_data_16 = {
+        group: df[df["vessel_group"] == group][["x", "y", f"barcode_{base_res_short}"]].reset_index(drop=True)
+        for group in df["vessel_group"].unique()
+    }
+    # --- Extract decon_resolution spot coordinates
+    adata_48um = adata_dict[target_res]
+    df_48um = pd.DataFrame(adata_48um.obsm['spatial'], columns=["x", "y"])
+    df_48um["barcode"] = adata_48um.obs.index
+    # --- Compute the minimum distance to any 16 µm spot in each group
+    results = []
+    for group, group_df_16 in grouped_data_16.items():
+        if group_df_16.empty:
+            continue  # Skip empty groups
+        coords_16um = group_df_16[["x", "y"]].to_numpy()
+        barcodes_16um = group_df_16[f"barcode_{base_res_short}"].to_numpy()
+        # Build KDTree for the current group
+        tree = cKDTree(coords_16um)
+        # Query the tree to find the closest 16 µm spot for each 48 µm spot
+        min_distances, nearest_idx = tree.query(df_48um[['x', 'y']].values)
+        # Get coordinates and barcodes of the closest 16 µm spot
+        nearest_coords = coords_16um[nearest_idx]
+        nearest_barcodes = barcodes_16um[nearest_idx]
+        # Store results in a DataFrame, including barcodes
+        df_temp = pd.DataFrame({
+            f"barcode_{target_res_short}": df_48um["barcode"],  # Save barcode
+            "vessel_group": group,
+            f"x_{target_res_short}": df_48um["x"],
+            f"y_{target_res_short}": df_48um["y"],
+            f"nearest_{base_res_short}_x": nearest_coords[:, 0],
+            f"nearest_{base_res_short}_y": nearest_coords[:, 1],
+            f"nearest_{base_res_short}_barcode": nearest_barcodes,
+            f"nearest_{base_res_short}_dist": min_distances
+        })
+        results.append(df_temp)
+    # Combine results for all groups
+    df_results = pd.concat(results, ignore_index=True)
+    # --- Convert pixel distances to um
+    df_results[f'nearest_{base_res_short}_dist_um'] = df_results[f'nearest_{base_res_short}_dist'] * scalefactor_um
+    return df_results
 
-# Make heatmap
-g = sns.clustermap(PVL_sub[PVL_classes].T, row_cluster=True, col_cluster=True, cmap='viridis', linewidths=0, figsize=(4, 4), annot=False,
-            colors_ratio=(0.01, 0.1), xticklabels=True, yticklabels=True, fmt='g', row_colors=None,
-            col_colors=col_colors, rasterized=True,
-            dendrogram_ratio=(0.2, 0.2), z_score=1)
+# Save results in a dict
+group_key = endo_of_interest
+print(f'Calculating distances for {group_key}')
+dist_df = calculate_distance(base_res, target_res, group_key)
 
-axs = plotting_functions.beautify_heatmap(g, row_colors=False, col_colors=True, cbar_title='z score\n(column)', label_size=10, fontsize_title=11, title='',
-                    cbar_pad=10.5, cbar_height_square=len(PVL_classes), cbar_width_square=0.6, space_per_square=0.05, width_to_height_ratio=0.1,
-                    colors_div=1)
+# Also get a df with smallest distance to any vessel within a vessel type
+base_res_short = base_res.split('_')[1]
+target_res_short = target_res.split('_')[1]
 
-# Adjust dendrograms
-plotting_functions.adjust_dendrograms(g, num_square=3, title=f'All samples\nEndothelial - PVL associations\nVessels overlapping with HEVs')
+# Now calculate smallest distance for overlap vs no overlap
+# Get group names as sets
+groups_with_overlap = set(group_classification[group_classification == True].index)
+groups_without_overlap = set(group_classification[group_classification == False].index)
 
-# Add some lines separating clusters
-dend_thresh=1.5
-plotting_functions.cut_dendrogram_and_draw_lines(g, axis='col', threshold_dend=dend_thresh, color='white', linewidth=1, linestyle='--', alpha=1)
+df_sub = dist_df[dist_df['vessel_group'].isin(groups_with_overlap)]
+min_dist_overlap = df_sub.sort_values(f"nearest_{base_res_short}_dist_um").drop_duplicates(f"barcode_{target_res_short}", keep="first")
 
-# Remove the xticks
-heatmap_ax = g.ax_heatmap
-heatmap_ax.set_xticks([])
+df_sub = dist_df[dist_df['vessel_group'].isin(groups_without_overlap)]
+min_dist_no_overlap = df_sub.sort_values(f"nearest_{base_res_short}_dist_um").drop_duplicates(f"barcode_{target_res_short}", keep="first")
 
-# Add the discrete color legend
-legend1 = g.ax_cbar.legend(handles=legend_handles, title="vessel_size", frameon=False, alignment='left', handlelength=0.7,
-                    loc='center left', bbox_to_anchor=(4, 0.5), labelspacing=0)  # adjust position
-legend1.get_title().set_fontweight('bold')
-
-# Add legends
-legend2 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=[True, False], color_lut=color_dict, title='HEV_overlap', 
-                                        y_offset=1, x_offset=4, loc='lower left')
-
-legend3 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=endothelial, color_lut=color_dict, title='endothelial_type', 
-                                        y_offset=1.8, x_offset=4, loc='lower left')
-
-legend4 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=sample_list, color_lut=sample_color, title='sample_id', 
-                                        y_offset=3.2, x_offset=4, loc='lower left')
-
-legend5 = plotting_functions.add_legend(ax=g.ax_cbar, ordered_list=plot_order, color_lut=color_dict_path, title='dominant_pathology',
-                                        y_offset=0, x_offset=25, loc='lower left')              
-
-g.ax_cbar.add_artist(legend1)
-g.ax_cbar.add_artist(legend2)
-g.ax_cbar.add_artist(legend3)
-g.ax_cbar.add_artist(legend4)
-
-# Calculate the midpoint to position the title
-top_ax = g.ax_col_dendrogram
-title_x = (top_ax.get_position().x0 + top_ax.get_position().x1)/2
-title_y = top_ax.get_position().y1 + 0.2
-
-plt.suptitle(f'All samples - PVL association per vessel type - vessels with HEV overlap only (decon_level={decon_level}, z_score=col, dend_thresh={dend_thresh})', y=title_y, x=title_x, fontweight='bold')
+# Add to adata
+adata_dict[target_res].obs[f'min_dist_overlap'] = min_dist_overlap.set_index(f'barcode_{target_res_short}')['nearest_016um_dist_um']
+adata_dict[target_res].obs[f'min_dist_no_overlap'] = min_dist_no_overlap.set_index(f'barcode_{target_res_short}')['nearest_016um_dist_um']
 
 
-# --- Save the output
+# --- Now bin the distances
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+group_types = ['no_overlap', 'overlap']
+
+distance_dict = {}
+
+distance_dict['no_overlap'] = min_dist_no_overlap
+distance_dict['overlap'] = min_dist_overlap
+
+def bin_distances(df, column_name, bin_size, max_distance):
+    # Define the bin edges
+    bins = np.arange(0, max_distance + bin_size, bin_size)
+    # Use pd.cut to assign each value in the column to a bin
+    df['binned'] = pd.cut(df[column_name], bins=bins, right=False, labels=[f'{bins[i]}-{bins[i+1]}' for i in range(len(bins)-1)], include_lowest=True)
+    return df['binned']
+
+# Bin distances
+bin_size = 25
+column_name = 'nearest_016um_dist_um'
+max_distance=400
+
+for cell_type in group_types:
+    df_min_dist = distance_dict[cell_type]
+    df_min_dist['binned'] = bin_distances(df_min_dist, column_name=column_name, bin_size=bin_size, max_distance=max_distance)
+    # Add to adata
+    adata_dict[target_res].obs[f'dist_bin_{cell_type}'] = df_min_dist.set_index(f'barcode_{target_res_short}')['binned']
+
+
+# --- Plot 3: Plot distances after binning
+
+sc.set_figure_params(fontsize=15)
+
+adata_dict[base_res].obs['overlap_adj'] = adata_dict[base_res].obs['majority_overlap']
+adata_dict[base_res].obs['overlap_adj'] = adata_dict[base_res].obs['overlap_adj'].replace(endo_of_interest, 'no_overlap')
+
+ncols = len(group_types)
+nrows = 1
+
+plt.figure(figsize=(8*ncols, 6*nrows))
+
+for n, cell_type in enumerate(group_types):
+    # add a new subplot iteratively
+    ax = plt.subplot(nrows, ncols, n + 1)
+    # Add legend only to the last one
+    if n == (ncols-1):
+        legend_loc = 'right margin'
+    else:
+        legend_loc = None
+    adata_sub = adata_dict[target_res][adata_dict[target_res].obs[f'dist_bin_{cell_type}'].notna()]
+    sq.pl.spatial_scatter(adata_sub, color=f'dist_bin_{cell_type}', img_alpha=0.7,
+                    crop_coord=coords_dict_sq[target_res], title=f'{sample_id} ({subtype})\nHEV classification', ax=ax,
+                    shape='square', palette='viridis', legend_loc=legend_loc)
+    adata_sub = adata_dict[base_res][adata_dict[base_res].obs['overlap_adj'].notna()]
+    sq.pl.spatial_scatter(adata_sub, color='overlap_adj', img_alpha=0, groups=[cell_type],
+                    crop_coord=coords_dict_sq[base_res], title=f'{sample_id} ({subtype})\n{endo_of_interest} {cell_type}\nDistance (µm)', ax=ax,
+                    shape='square', palette=ListedColormap(['white']), legend_loc=None)
+    ax.set_title(ax.get_title(), fontweight='bold')
+
+plt.suptitle(f'{sample_id} ({subtype}) - Distances after binning (resolution={target_res})', y=1.1, fontweight='bold', x=0.5)
+
+
+# --- Plot 4: Plot PVL association between HEV overlap vs no overlap
+
+sc.set_figure_params(fontsize=10)
+# Set grid behind plot
+plt.rcParams['axes.axisbelow'] = True
+
+# Update color_dict
+color_dict['no_overlap'] = color_dict[endo_of_interest]
+
+# Also limit the bins to make the plots smaller
+bin_limit = 200
+
+nrows = len(group_types)
+ncols = len(PVL_classes)
+
+fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(2, 2.2), squeeze=False)
+
+for n, PVL_class in enumerate(PVL_classes):
+    for i, cell_type in enumerate(group_types):
+        # add a new subplot iteratively
+        ax = axs[i, n]
+        cell_df = adata_dict[target_res].obs[[f'dist_bin_{cell_type}'] + PVL_classes]
+        # Melt to long format: one row per (bin, subtype, PVL value)
+        temp = cell_df[[f'dist_bin_{cell_type}', PVL_class]].copy()
+        temp = temp.rename(columns={f'dist_bin_{cell_type}': 'distance_bin', PVL_class: 'PVL_value'})
+        temp['endothelial_subtype'] = cell_type
+        df_long = temp
+        # Drop rows with missing bins or PVL values
+        df_long = df_long.dropna(subset=['distance_bin', 'PVL_value'])
+        # Order bins numerically
+        bin_order = sorted(df_long['distance_bin'].unique(), key=lambda x: int(x.split('-')[0]))
+        df_long['distance_bin'] = pd.Categorical(df_long['distance_bin'], categories=bin_order, ordered=True)
+        # Limit the bins
+        bin_order = [b for b in bin_order if int(b.split('-')[1]) <= bin_limit]
+        df_long = df_long[df_long['distance_bin'].isin(bin_order)]
+        # Plot each subtype separately
+        ax = axs[i, n]  # Access the correct subplot
+        sub_df = df_long[df_long['endothelial_subtype'] == cell_type]
+        # Calculate mean per bin
+        sub_df = sub_df.groupby('distance_bin')['PVL_value'].mean().reset_index()
+        sub_df.set_index('distance_bin').plot.area(ax=ax, color=color_dict[cell_type], legend=False, alpha=0.5)
+        # Make sure all xticklabels are displayed
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90)  # Rotate x-tick labels if needed
+        ax.set_xticks(range(len(bin_order)))  # Ensure all x-ticks are placed
+        ax.set_xticklabels(bin_order)  # Set the x-tick labels to match the DataFrame index
+        ax.set_title(f'{PVL_class}', fontweight='bold', fontsize=10)
+        # # Rotate xtick labels 90
+        # ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+        # Adjust labels
+        ax.set_xlabel('Distance (µm)')
+        ax.set_ylabel('')
+        # Adjust x-limits to fit the bins
+        ax.set_xlim(0, len(bin_order) - 1)
+
+ymax = 0
+
+for ax in axs.ravel():
+    if ax.get_ylim()[1] > ymax:
+        ymax = ax.get_ylim()[1]
+
+# Adjust positioning & size
+for n, ax in enumerate(axs.ravel()):
+    ax_pos = ax.get_position()
+    ax.set_position([ax_pos.x0, ax_pos.y0, len(bin_order)*0.08, ax_pos.height])
+    ax.set_ylim(0, ymax)  # Set the same y-limits for all subplots
+
+plotting_functions.move_plots_x_y(axs, x_offset=0.3, y_offset=0.05, remove_ylabels=False)
+
+# Move legend
+ax = axs[0,-1]
+plotting_functions.add_legend(ax=ax, ordered_list=group_types, color_lut=color_dict, title=f'{endo_of_interest}\nHEV overlap', 
+                               loc='center left', y_offset=0, x_offset=1)
+
+# Make the facecolor of the legend handles more transparent
+for handle in ax.get_legend().legend_handles:
+    facecolor = handle.get_facecolor()
+    handle.set_facecolor(handle.get_facecolor()[:3] + (0.5,))  # Add transparency to the facecolor
+    # Set the edgecolor to be the same as the facecolor
+    handle.set_edgecolor(facecolor)
+    # Set the linewidth to 2
+    handle.set_linewidth(1.25)
+
+# Get the left-most x-position among all subplots
+lefts = [ax.get_position().x0 for ax in axs.flat]
+left_min = min(lefts)
+
+# Add shared y-label just to the left of all subplots
+fig.text(left_min - 0.3, 0.5, 'Average proportion', va='center', ha='right',
+         rotation='vertical')
+
+# Calculate x to center
+title_x = (axs[0][0].get_position().x0 + axs[0][-1].get_position().x1)/2
+
+plt.suptitle(f'{sample_id} ({subtype}) - PVL composition across distance bins (threshold={threshold}, decon_res={decon_resolution}, decon_level={decon_level}, (minimum overlap >{min_overlap} spots))',
+             y=1.2, fontweight='bold', x=title_x)
+
+
+# --- Save output
+
+qc_dir = os.path.join(project_dir, 'results')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'all_samples', 'square_016um', f'threshold_{threshold_adj}', 'other_vessels',
-                       'HEV_vs_non_HEV', out_name, 'PVL_association')
+out_dir = os.path.join(qc_dir, '04_vascular_microenvironment', '03_compare_HEV_to_other_venous', '03_compare_PVL_association',)
 
 os.makedirs(out_dir, exist_ok=True)
 
@@ -724,8 +610,23 @@ out_dir_plots = os.path.join(out_dir, 'plots', today)
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Save plots
-filename = 'All_samples_vessel_HEV_overlap_PVL.pdf'
+filename = f'{sample_id}_HEV_vs_non_HEV_PVL_composition_vs_distance.pdf'
+
 save_multi_image(os.path.join(out_dir_plots, filename))
+plt.close('all')
+
+# Also save csv file for convenience
+out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+os.makedirs(out_dir_csv, exist_ok=True)
+
+group_keys = [f'dist_bin_{cell_type}' for cell_type in group_types]
+cell_df = adata_dict[decon_resolution].obs[group_keys + PVL_classes]
+
+# Drop rows with NaN values in the group keys
+cell_df = cell_df.dropna(subset=group_keys)
+
+# Save as gzipped csv
+cell_df.to_csv(os.path.join(out_dir_csv, f'{sample_id}_PVL_composition_vs_distance.csv'), index=True)
 
 
 # --- Finish

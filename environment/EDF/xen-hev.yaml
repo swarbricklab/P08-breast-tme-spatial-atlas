@@ -1,0 +1,32 @@
+name: xen-hev
+
+channels:
+  - conda-forge
+  - bioconda
+  - pypi
+
+dependencies:
+  - python
+  - anndata
+  - arpack
+  - conda
+  - git
+  - mamba
+  - numpy
+  - pandas
+  - rpy2
+  - scanpy
+  - seaborn
+  - setuptools
+  - squidpy
+  - harmonypy
+  - shapely
+  - geopandas
+  - plotly
+  - plotnine
+  - mizani==0.9.2
+  - pip
+  - pip:
+    - mycolorpy
+    - kaleido
+    - pyalluvial

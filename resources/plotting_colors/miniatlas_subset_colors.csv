@@ -1,0 +1,51 @@
+miniatlas_subset,color
+B cells Memory,#f78f1e
+B cells Naive,#fcb658
+CAFs MSC iCAF-like s1,#63a9cf
+CAFs MSC iCAF-like s2,#b1d4e7
+CAFs Transitioning s3,#33708e
+CAFs myCAF like s4,#275d7f
+CAFs myCAF like s5,#4694c6
+Cancer Basal SC,#ba652a
+Cancer Cycling,#efe08a
+Cancer Her2 SC,#e9bb1f
+Cancer LumA SC,#90ca74
+Cancer LumB SC,#58aa46
+Cycling PVL,#b29aa3
+Cycling Myeloid,#de90be
+Cycling_Myeloid,#de90be
+Endothelial ACKR1,#caa6ce
+Endothelial CXCL12,#52c8e6
+Endothelial Lymphatic LYVE1,#86c440
+Endothelial RGS5,#faa861
+Luminal Progenitors,#58be8c
+Mature Luminal,#ba2030
+Myeloid_c0_DC_LAMP3,#26473c
+Myeloid_c1_LAM1_FABP5,#d41764
+Myeloid_c2_LAM2_APOE,#ee639c
+Myeloid_c3_cDC1_CLEC9A,#7ebba6
+Myeloid_c4_DCs_pDC_IRF7,#c1ded4
+Myeloid_c5_Macrophage_3_SIGLEC1,#f391b9
+Myeloid_c7_Monocyte_3_FCGR3A,#4fa1d4
+Myeloid_c8_Monocyte_2_S100A9,#a1cde8
+Myeloid_c9_Macrophage_2_CXCL10,#f8bfd6
+Myeloid_c10_Macrophage_1_EGR1,#e9357e
+Myeloid_c11_cDC2_CD1C,#498a74
+Myeloid_c12_Monocyte_1_IL1B,#256c98
+Myoepithelial,#f4af8c
+PVL Differentiated s3,#8dcb89
+PVL Immature s1,#9073b6
+PVL_Immature s2,#c5b6d9
+Plasmablasts,#cb1c87
+T_cells_c0_CD4+_CCR7,#2d1e37
+T_cells_c1_CD4+_IL7R,#634279
+T_cells_c2_CD4+_T-regs_FOXP3,#9770b1
+T_cells_c3_CD4+_Tfh_CXCL13,#c7b2d5
+T_cells_c4_CD8+_ZFP36,#7b4256
+T_cells_c5_CD8+_GZMK,#b27187
+T_cells_c6_IFIT1,#888EC6
+T_cells_c7_CD8+_IFNG,#d6b3bf
+T_cells_c8_CD8+_LAG3,#f6eef1
+T_cells_c9_NK_cells_AREG,#9d64a9
+T_cells_c10_NKT_cells_FCGR3A,#909ca7
+T_cells_c11_MKI67,#f69b93
