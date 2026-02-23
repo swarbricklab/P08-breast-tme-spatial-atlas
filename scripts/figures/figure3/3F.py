@@ -47,8 +47,8 @@ sample_list = args["samples"]
 print(f'Samples in python: {sample_list}')
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_model', '05_HEV_analysis', '04_cellular_composition',))
-import plotting_functions
+sys.path.append(os.path.join(project_dir, 'scripts', 'figures',))
+import dotplot_functions
 
 
 # --- Extract some info from the sample sheet
@@ -58,7 +58,7 @@ if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
     sample_dir = os.path.join(project_dir, 'config')
-    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_file = 'sample_sheet_visium_hd.csv'
     sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
 sample_sheet = pd.read_csv(sample_sheet_path)
@@ -199,6 +199,7 @@ endo_name_dict = {
 bin_limit = 200
 
 nrows = len(endothelial)
+ncols = len(PVL_classes)
 
 fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(2, 2.2), squeeze=False)
 
@@ -253,13 +254,13 @@ for n, ax in enumerate(axs.ravel()):
     ax_pos = ax.get_position()
     ax.set_position([ax_pos.x0, ax_pos.y0, len(bin_order)*0.08, ax_pos.height])
 
-plotting_functions.move_plots_x_y(axs, x_offset=0.25, y_offset=0.05, remove_ylabels=False)
+dotplot_functions.move_plots_x_y(axs, x_offset=0.25, y_offset=0.05, remove_ylabels=False)
 
 # Move legend
 ax = axs[0,-1]
 
 # Adjust the endothelial names according to the dict
-plotting_functions.add_legend(ax=ax, ordered_list=endothelial, color_lut=color_dict, title='Vessel type', 
+dotplot_functions.add_legend(ax=ax, ordered_list=endothelial, color_lut=color_dict, title='Vessel type', 
                             loc='upper left', y_offset=0, x_offset=1)
 
 # Make the facecolor of the legend handles more transparent
@@ -313,8 +314,13 @@ title_x = (axs[0][0].get_position().x0 + axs[0][-1].get_position().x1)/2
 plt.suptitle(f'All samples - PVL composition across distance bins (decon_level={decon_level})',
             y=1.2, fontweight='bold', x=title_x)
 
-plt.savefig('test.pdf', bbox_inches='tight')
 
+# --- Save the output
 
+out_dir = os.path.join(res_dir, 'figures')
+os.makedirs(out_dir, exist_ok=True)
+
+filename = 'Fig_3F.pdf'
+plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')
 
 print("Script successfully completed")

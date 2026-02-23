@@ -173,19 +173,20 @@ def move_plots(axs, offset=0.02, remove_yticks=True):
         ax_pos_prev = axs[n].get_position()
 
 # Function to move plots so they don't overlap, moving both in x & y direction
-def move_plots_x_y(axs, x_offset=0.02, y_offset=0.04):
+def move_plots_x_y(axs, x_offset=0.02, y_offset=0.04, remove_ylabels=True, remove_xlabels=True, remove_title=True):
     for i, axs_row in enumerate(axs):
         for j, ax in enumerate(axs_row):
             if j > 0:
-                ax.set_ylabel('')
-                ax.set_yticklabels('')
-                ax.set_yticks([])
+                if remove_ylabels:
+                    ax.set_ylabel('')
+                    ax.set_yticklabels('')
             if i != (len(axs) - 1):
-                ax.set_xlabel('')
-                ax.set_xticklabels('')
-                ax.set_xticks([])
+                if remove_xlabels:
+                    ax.set_xlabel('')
+                    ax.set_xticklabels('')
             if i != 0:
-                ax.set_title('')
+                if remove_title:
+                    ax.set_title('')
             # Adjust the positions of the subplots
             ax_pos = ax.get_position()
             # Shift the subplot to the desired location + set the width so it's equal for all plots
@@ -604,3 +605,22 @@ def add_subtype_colors_y_only(axs, sorted_subtypes, color_lut, alpha=0.7):
         rect = mpatches.Rectangle((xlim[1] - width, ylim[1]), width=width, height=height, facecolor=color, alpha=alpha, zorder=-1)
         axs[n].add_patch(rect)
 
+# Function to add legend
+def add_legend(ax, ordered_list, color_lut, title='Lineage', x_offset=1.5, y_offset=1.5, loc='lower left', fontsize=10, edgecolor='black'):
+    # Create a list of handles and labels for the legend
+    handles_subtype = []
+    labels_subtype = []
+    for subtype in ordered_list:
+        handles_subtype.append(mpatches.Patch(facecolor=color_lut[subtype], edgecolor='black', linewidth=0.8))
+        labels_subtype.append(subtype)
+    # Create the legend using the Patch objects
+    legend1 = ax.legend(handles=handles_subtype, labels=labels_subtype, bbox_to_anchor=(1, 1), loc=loc, fontsize=fontsize, 
+                                title=title, handlelength=0.7, frameon=False)
+    # Legend position
+    x_offset = x_offset
+    y_offset = y_offset
+    legend1.set_bbox_to_anchor((x_offset, y_offset))
+    legend1.get_title().set_fontweight('bold')
+    # Set the alignment of the legend title to the left
+    legend1._legend_box.align = "left"
+    return(legend1)
