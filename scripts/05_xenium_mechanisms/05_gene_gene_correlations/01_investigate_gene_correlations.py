@@ -45,6 +45,7 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -55,16 +56,21 @@ res_dir = args["res_dir"]
 sample_list = args["samples"]
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_analysis', '04_HEV_microenvironment',))
+sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms'))
 import plotting_functions
 
 
 # --- Extract some info from the sample sheet
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 
 # Also load tissue metadata
 metadata_dir = os.path.join(project_dir, 'resources',)
@@ -84,7 +90,7 @@ subtype_dict = sample_sheet.set_index('section_id')['subtype'].to_dict()
 adata_dict = {}
 
 for sample in sample_list:
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample}_log_norm.h5ad'))
+    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample}.h5ad'))
     adata_dict[sample] = adata
 
 
@@ -112,7 +118,7 @@ def find_most_recent(dir):
     else:
         print("No valid directories found.")
 
-distance_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'per_sample', 'define_regions')
+distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions',)
 
 most_recent_distance = find_most_recent(distance_dir)
 
@@ -141,9 +147,9 @@ for sample in sample_list:
 level = 'subset'
 
 for sample in sample_list:
-    annotation_file = f'{sample}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'resources', 'annotation', 'tangram', sample)
-    annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
+    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+    annotation_file = f'{sample}_{level}_pred_cell_types.csv'
+    annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
     # Add to adata
     adata_dict[sample].obs[level] = annotations['pred_cell_type']
 
@@ -165,13 +171,6 @@ all_adata = ad.concat(adata_list, merge='same')
 
 # --- Create an adata with mean expression per niche
 
-# Decide whether to filter for endothelial ACKR1 only
-filter_endothelial_ACKR1 = False
-
-if filter_endothelial_ACKR1:
-    all_adata = all_adata[all_adata.obs[level] == 'Endothelial ACKR1'].copy()
-
-
 mean_adata = all_adata.to_df().groupby(all_adata.obs['niche_id']).mean()
 
 mean_adata = ad.AnnData(mean_adata)
@@ -182,7 +181,7 @@ mean_adata.obs['niche_id'] = mean_adata.obs.index
 # --- Calculate correlations between STING expression and all other genes
 
 # Pick a gene of interest
-gene_of_i = 'CXCL10'  # STING gene symbol
+gene_of_i = 'TMEM173'  # STING gene symbol
 
 correlation_df = pd.DataFrame(columns=['gene', 'correlation', 'p_value'])
 
@@ -220,8 +219,8 @@ sns.scatterplot(data=correlation_df, x='rank', y='correlation', color='lightgrey
 sns.scatterplot(data=significant_corr_df, x='rank', y='correlation', color='red', edgecolor=None, s=2, ax=ax)
 
 # Annotate some genes
-annotate_genes = ['SELE', 'SELP', 'SPP1', 'ACKR1', 'TMEM173', 'LTBR', 'CXCL10', 'CXCL9', 'CCL5', 'CCL2', 'CCL19', 'CCL21',
-                  'RAMP3', 'TSPAN7', 'MEOX2', 'SPNS2', 'IL33', 'MCAM', 'ICAM1', 'ICAM2', 'VCAM1', 'BCAM', 'PECAM1']
+annotate_genes = ['SELE', 'SELP', 'CXCL10', 'CXCL9', 'CCL5', 'CCL2', 'CCL19', 'CCL21', 'CXCL13',
+                    'MCAM', 'ICAM1', 'ICAM2', 'VCAM1', 'BCAM', 'PECAM1']
 
 annotated_positions = []
 min_dist = 15  # minimum pixel distance between annotations
@@ -268,7 +267,7 @@ ax.legend(title=f'p<{pval_threshold}', labels=['False', 'True'], loc='center lef
 # Add a title
 ax.set_title(f'Correlation mean {gene_of_i} expression & other genes per HEV', fontweight='bold')
 
-plt.suptitle(f'All samples - Correlation between mean {gene_of_i} expression and other genes per HEV niche (filter_endothelial_ACKR1={filter_endothelial_ACKR1})', fontweight='bold', y=1.02)
+plt.suptitle(f'All samples - Correlation between mean {gene_of_i} expression and other genes per HEV niche', fontweight='bold', y=1.02)
 
 
 # --- Find cells within 30 microns of HEV niches
@@ -522,10 +521,7 @@ plt.suptitle(f'All samples - Correlations between HEV {gene_of_i} expression and
 
 # --- Save the output
 
-out_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'all_samples', 'gene_gene_correlations', f'HEV_{gene_of_i}_correlations',)
-
-if filter_endothelial_ACKR1:
-    out_dir = os.path.join(out_dir, 'filter_endothelial_ACKR1')
+out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '05_gene_gene_correlations', f'{gene_of_i}_correlations')
 
 today = datetime.now().strftime('%Y%m%d')
 out_dir_plots = os.path.join(out_dir, today, 'plots')
