@@ -37,6 +37,7 @@ parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
+
 parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
@@ -47,6 +48,7 @@ parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
 parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--seed", help="Seed for reproducibility", type=int)
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 
 args = vars(parser.parse_args())
@@ -61,17 +63,20 @@ res_dir = args['res_dir']
 project_dir = args['project_dir']
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_analysis', '04_HEV_microenvironment',))
+sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms'))
 import plotting_functions
 
 
 # --- Extract some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 # Also load tissue metadata
@@ -84,7 +89,7 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 
 # --- Load data
 
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample_id}_log_norm.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 
 # --- Load the tangram annotations
@@ -92,9 +97,8 @@ adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample_id}_log_norm.h
 # Decide which annotation level to use
 level = 'major'
 
-annotation_dir = os.path.join(project_dir, 'resources', 'annotation', 'tangram', sample_id, f'{level}_level')
-annotation_file = f'{sample_id}_pred_cell_types.csv'
-
+annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
 
 # Add to anndata object
@@ -107,11 +111,9 @@ adata.obs[probability_key] = annotations['pred_cell_type_prob']
 # Also add the subset annotations
 level = 'subset'
 
-annotation_dir = os.path.join(project_dir, 'resources', 'annotation', 'tangram', sample_id, f'{level}_level')
-annotation_file = f'{sample_id}_pred_cell_types.csv'
-
+annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
-
 adata.obs[level] = annotations['pred_cell_type']
 
 
@@ -220,7 +222,7 @@ def find_most_recent(dir):
     else:
         print("No valid directories found.")
 
-distance_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'per_sample', 'define_regions')
+distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
 
 most_recent_distance = find_most_recent(distance_dir)
 
@@ -797,7 +799,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - STING & type I IFN signature scores in 
 
 # --- Save the output
 
-out_dir = os.path.join(res_dir, 'TLS_analysis', 'HEV_regions', 'per_sample', 'STING_signatures',)
+out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '04_score_signatures', '01_score_STING_signatures')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
