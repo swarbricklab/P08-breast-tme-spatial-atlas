@@ -56,9 +56,9 @@ do
         -m a \
         -l walltime=01:00:00 \
         -l ncpus=$n_cores \
-        -l mem=100g \
+        -l mem=50g \
         -l storage=gdata/a56+gdata/px14+scratch/px14 \
         -V \
-        -- $run_script_file $function_script_file $h5ad_dir $project_dir $s $environment $min_gene $min_count $min_spots $res_dir $visium_sample_sheet
+        -- $run_script_file $function_script_file $h5ad_dir $project_dir $s $environment $min_gene $min_count $res_dir $visium_sample_sheet
         
 done

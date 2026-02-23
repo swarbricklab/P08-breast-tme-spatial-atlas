@@ -15,9 +15,8 @@ sample_id=$4
 environment=$5
 min_gene=$6
 min_count=$7
-min_spots=$8
-res_dir=$9
-visium_sample_sheet=${10}
+res_dir=$8
+visium_sample_sheet=$9
 
 # Initialize Conda environment
 if [ -f /g/data/a56/conda/miniconda3/etc/profile.d/conda.sh ]; then
@@ -35,6 +34,5 @@ $function_script_file \
   --project_dir $project_dir \
   --min_gene $min_gene \
   --min_count $min_count \
-  --min_spots $min_spots \
   --res_dir $res_dir \
   --sample_sheet $visium_sample_sheet \
