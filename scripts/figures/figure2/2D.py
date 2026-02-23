@@ -238,11 +238,11 @@ plt.suptitle(f'All samples - Top {top} (use_data={use_data})', x=title_x, y=titl
 # --- Save the output
 
 # Prepare for saving
-out_dir_plots = os.path.join(most_recent, 'top_genes_heatmap',)
+out_dir_plots = os.path.join(project_dir, 'results', 'figures')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 #  Save plots
-filename = f'Top_{top}_genes_heatmap.pdf'
+filename = 'Fig_2D.pdf'
 save_multi_image(os.path.join(out_dir_plots, filename))
 plt.close('all')
 
