@@ -1,0 +1,6 @@
+outs:
+- md5: eed6cadd2d89fdfe2167ab252a1ca3f5.dir
+  size: 28166484532
+  nfiles: 6
+  hash: md5
+  path: spatialdata_objects
