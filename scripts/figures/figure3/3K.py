@@ -131,7 +131,7 @@ xval = 'HEV_count'
 yval = 'TLS_size'
 
 # Plotting
-fig, axs = plt.subplots(nrows, ncols, figsize=(2*ncols, 2*nrows))
+fig, axs = plt.subplots(nrows, ncols, figsize=(2.5*ncols, 2.5*nrows))
 
 if ncols == 1:
     axs = [axs]
