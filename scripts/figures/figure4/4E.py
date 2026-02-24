@@ -79,8 +79,7 @@ for sample in sample_list:
     # Prepend sample id to index
     annotations.index = [f'{sample}_{idx}' for idx in annotations.index]
     tmp_df[level] = annotations['pred_cell_type']
-
-anno_df = pd.concat([anno_df, tmp_df])
+    anno_df = pd.concat([anno_df, tmp_df])
 
 # Add sample_id column
 # Split on the last _ and take the first part to get the sample id
@@ -1098,7 +1097,7 @@ plt.suptitle(f'All samples - Gene expression near (<{max_hev_dist}µm) HEVs', x=
 out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
-filename = '4E.pdf'
+filename = 'Fig_4E.pdf'
 plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')
 
 
