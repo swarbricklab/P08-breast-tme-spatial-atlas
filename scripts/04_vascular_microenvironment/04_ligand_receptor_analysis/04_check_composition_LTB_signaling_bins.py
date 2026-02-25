@@ -11,6 +11,7 @@
 import argparse
 import os
 import re
+import sys
 from datetime import date, datetime
 from collections.abc import Iterable
 
@@ -25,9 +26,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scanpy as sc
-
-# Import custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -55,6 +53,8 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import save_multi_image
 
 print(f'Samples in python: {sample_list}')
 

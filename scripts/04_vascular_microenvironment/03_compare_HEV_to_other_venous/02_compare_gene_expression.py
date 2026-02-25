@@ -11,6 +11,7 @@
 import argparse
 import math
 import os
+import sys
 from datetime import date, datetime
 
 import anndata as ad
@@ -23,11 +24,6 @@ import scanpy as sc
 import scanpy.external as sce
 import scanpy.plotting.palettes as sc_palettes
 from matplotlib.backends.backend_pdf import PdfPages
-
-# Custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.color_functions import generate_color_variations
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=20)
 sc.settings.verbosity = 3
@@ -56,6 +52,8 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, save_multi_image
 
 print(f'Samples in python: {sample_list}')
 

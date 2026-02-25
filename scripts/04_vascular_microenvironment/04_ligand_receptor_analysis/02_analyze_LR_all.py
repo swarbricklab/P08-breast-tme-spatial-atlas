@@ -29,9 +29,6 @@ from adjustText import adjust_text
 from matplotlib.colors import TwoSlopeNorm
 from matplotlib.patches import Rectangle
 
-# Import custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.save_multi_image import save_multi_image
 from upsetplot import UpSet
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
@@ -60,6 +57,8 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, save_multi_image
 
 print(f'Samples in python: {sample_list}')
 

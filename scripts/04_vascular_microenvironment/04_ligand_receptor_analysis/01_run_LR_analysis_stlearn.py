@@ -10,6 +10,7 @@
 # --- Load packages
 import argparse
 import os
+import sys
 from datetime import date, datetime
 
 import anndata as ad
@@ -23,11 +24,6 @@ import re
 import scanpy.plotting.palettes as sc_palettes
 from collections.abc import Iterable
 import math
-
-# Import custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.save_multi_image import save_multi_image
-from sophiesfunctions.color_functions import generate_color_variations
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -58,6 +54,8 @@ res_dir = args["res_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, save_multi_image
 
 
 # --- Get some info from the sample sheet
