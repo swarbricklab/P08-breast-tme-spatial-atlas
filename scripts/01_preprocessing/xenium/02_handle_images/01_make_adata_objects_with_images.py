@@ -6,7 +6,7 @@
 
 
 # --- Define environment
-# env: tifffile
+# env: xen-hev
 
 # --- Load packages
 import argparse

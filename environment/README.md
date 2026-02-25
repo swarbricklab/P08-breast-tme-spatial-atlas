@@ -47,9 +47,6 @@ This allows job submission scripts to activate the correct environment automatic
 ### spatial-pilot
 - Used for Visium analysis.
 
-### tifffile
-- Used for image processing and reading TIFF files with the tifffile package.
-
 ### vis-hd
 - Used for Visium HD analysis.
 
