@@ -84,6 +84,10 @@ use_layer = 'log_norm'
 
 sc.set_figure_params(fontsize=15)
 
+# Choose between resource signatures or newly generated results
+# Set to True to use curated signatures from resources directory
+use_resource_signatures = False
+
 for resolution in resolutions:
 
     # --- Load anndata
@@ -94,33 +98,66 @@ for resolution in resolutions:
     coords = auto_crop(adata, border_size=0.1)
 
 
+    # --- Load the genes from a file
+
+    if use_resource_signatures:
+        print("Using niche signatures from resources directory")
+        # Load from resources
+        niche_sig_file = os.path.join(resource_dir, 'gene_lists', 'TLS_niche_signatures', 'niche_signatures.csv')
+        niche_signatures_df = pd.read_csv(niche_sig_file)
+        
+        # Define mapping between score names and niche names in CSV
+        niche_mapping = {
+            'GC': 'Germinal center',
+            'B_cell_zone': 'B cell zone',
+            'T_cell_zone': 'T cell zone',
+            'HEVs': 'HEVs',
+        }
+        
+        # Create gene lists dict from the niche signatures file
+        gene_lists_dict = {}
+        for score_name, niche_name in niche_mapping.items():
+            niche_genes = niche_signatures_df[niche_signatures_df['niche'] == niche_name].copy()
+            # Sort by rank to get genes in order
+            niche_genes = niche_genes.sort_values('rank')
+            gene_lists_dict[score_name] = niche_genes['gene_symbol'].tolist()
+        
+    else:
+        print("Using niche signatures from generated results")
+        # Load from results directory (original behavior)
+        gene_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '04_final_niche_signature_files')
+        
+        clusters_of_i = {
+            'GC': 'germinal_center_filtered_epithelial_genes.csv',
+            'B_cell_zone': 'b_cell_zone_top_genes_filtered.csv',
+            'T_cell_zone': 't_cell_zone_top_genes_filtered.csv',
+            'HEVs': 'hevs_filtered_endothelial_genes.csv'
+        }
+        
+        gene_lists_dict = {}
+        for score_name, filename in clusters_of_i.items():
+            gene_table = pd.read_csv(os.path.join(gene_dir, filename))
+            
+            # Extract the genes
+            if 'gene' in gene_table.columns:
+                gene_list = list(gene_table.gene)
+            elif 'genes' in gene_table.columns:
+                gene_list = list(gene_table.genes)
+            else:
+                gene_list = list(gene_table.iloc[:, 0])  # Assuming the genes are in the first column of this table
+            
+            # Remove any potential nan values
+            gene_list = [x for x in gene_list if isinstance(x, str) or not np.isnan(x)]
+            gene_lists_dict[score_name] = gene_list
+
+
     # --- Assess multiple scores
 
-    clusters_of_i = {
-        'GC': 'germinal_center_filtered_epithelial_genes.csv',
-        'B_cell_zone': 'b_cell_zone_top_genes_filtered.csv',
-        'T_cell_zone': 't_cell_zone_top_genes_filtered.csv',
-        'HEVs': 'hevs_filtered_endothelial_genes.csv'
-    }
+    for score_name in gene_lists_dict.keys():
 
-    # -- Load the genes from a file
-
-    gene_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '04_final_niche_signature_files')
-
-    for score_name, filename in clusters_of_i.items():
-
-        gene_table = pd.read_csv(os.path.join(gene_dir, filename))
-
-        # Extract the genes
-        if 'gene' in gene_table.columns:
-            gene_list = list(gene_table.gene)
-        elif 'genes' in gene_table.columns:
-            gene_list = list(gene_table.genes)
-        else:
-            gene_list = list(gene_table.iloc[:, 0]) # Assuming the genes are in the first column of this table
-
-        # Remove any potential nan values
-        gene_list = [x for x in gene_list if isinstance(x, str) or not np.isnan(x)]
+        gene_list = gene_lists_dict[score_name]
+        
+        print(f'\nProcessing {score_name} signature with {len(gene_list)} genes')
 
         # Select only the genes that are present in the anndata objects
         to_plot = np.intersect1d(gene_list , adata.var.index).tolist()
