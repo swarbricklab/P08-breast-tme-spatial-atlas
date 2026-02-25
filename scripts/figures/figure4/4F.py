@@ -10,8 +10,6 @@
 # --- Load packages
 
 import argparse
-import glob
-from datetime import date
 from datetime import datetime
 import os
 
@@ -48,6 +46,7 @@ parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--min_count", help="Min count for QC", type=int)
 parser.add_argument("--min_gene", help="Min gene for QC", type=int)
 parser.add_argument("--min_spots", help="Minimal spots per gene", type=int)
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -63,10 +62,12 @@ project_dir = args["project_dir"]
 # --- Extract some info from the sample sheet
 
 # Extract the external_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet_visium_hd.csv'
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_hd.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]
 
 
@@ -103,7 +104,7 @@ def find_most_recent(dir):
         print("No valid directories found.")
     return most_recent_dir_path
 
-bin_size = 0  # in um
+bin_size = 25  # in um
 
 lr_res_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
                           '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 'csv_files')
@@ -434,9 +435,9 @@ plt.suptitle(f'{sample_id} ({subtype}) - HEV grouping used for LR analysis', y=t
 
 # --- Save plot with high resolution
 
-filename = '4F.pdf'
+filename = 'Fig_4F.pdf'
 
-plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight', dpi=500)
+plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')
 
 
 # --- Finish
