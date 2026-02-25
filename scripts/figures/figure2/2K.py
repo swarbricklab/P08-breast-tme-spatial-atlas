@@ -15,6 +15,7 @@ import os
 from datetime import datetime
 import ast
 import argparse
+import sys
 
 import scanpy as sc
 import anndata as ad
@@ -31,9 +32,6 @@ import matplotlib.patheffects as path_effects
 import geopandas as gpd
 import PIL
 import tifffile
-
-# Custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
 
 mpl.rcParams['pdf.fonttype'] = 42
 
@@ -58,6 +56,8 @@ sample_id = args["sample_id"]
 
 print(f'Sample: {sample_id}')
 
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy
 
 # --- Load sample sheet
 

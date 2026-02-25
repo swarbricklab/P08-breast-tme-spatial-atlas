@@ -11,6 +11,7 @@
 # --- Load packages
 import argparse
 import os
+import sys
 from datetime import datetime
 
 import anndata as ad
@@ -26,8 +27,6 @@ import scanpy as sc
 import scanpy.plotting.palettes as sc_palettes
 import squidpy as sq
 import tifffile
-
-from sophiesfunctions.color_functions import generate_color_variations
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -54,6 +53,9 @@ res_dir = args["res_dir"]
 sample_id = args["sample_id"]
 
 print(f'Sample: {sample_id}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import generate_color_variations
 
 
 # --- Extract some info from the sample sheet

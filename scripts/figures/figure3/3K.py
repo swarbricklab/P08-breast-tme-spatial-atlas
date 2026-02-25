@@ -18,9 +18,6 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 
-# Import custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
-
 mpl.rcParams['pdf.fonttype'] = 42
 
 

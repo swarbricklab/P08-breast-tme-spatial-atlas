@@ -12,6 +12,7 @@
 import argparse
 import os
 from datetime import datetime
+import sys
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -25,9 +26,6 @@ import tifffile
 from matplotlib_scalebar.scalebar import ScaleBar
 
 mpl.rcParams['pdf.fonttype'] = 42
-
-# Custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -52,6 +50,9 @@ sample_id = args["sample_id"]
 project_dir = args["project_dir"]
 
 print(f'Sample: {sample_id}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy
 
 
 # --- Extract some info from the sample sheet

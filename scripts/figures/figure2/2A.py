@@ -14,6 +14,7 @@ import argparse
 import os
 import json
 from datetime import datetime
+import sys
 
 import anndata as ad
 import matplotlib as mpl
@@ -27,8 +28,6 @@ import scanpy as sc
 import tifffile
 
 from mycolorpy import colorlist as mcp
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.color_functions import generate_color_variations
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -55,6 +54,9 @@ res_dir = args["res_dir"]
 sample_id = args["sample_id"]
 
 print(f'Sample: {sample_id}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, generate_color_variations
 
 
 # --- Extract some info from the sample sheet

@@ -12,6 +12,7 @@
 
 import json
 import os
+import sys
 from collections import defaultdict
 import argparse
 
@@ -23,10 +24,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.lines as mlines
 import scanpy.plotting.palettes as sc_palettes
-
-# Custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
-from sophiesfunctions.color_functions import generate_color_variations
 
 mpl.rcParams['pdf.fonttype'] = 42
 
@@ -57,6 +54,9 @@ sample_list = args["samples"]
 project_dir = args["project_dir"]
 
 print(f'Samples in python: {sample_list}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import generate_color_variations, save_multi_image
 
 
 # --- Extract some info from the sample sheet

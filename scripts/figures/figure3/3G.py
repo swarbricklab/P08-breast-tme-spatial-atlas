@@ -18,9 +18,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# Import custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
-
 mpl.rcParams['pdf.fonttype'] = 42
 
 

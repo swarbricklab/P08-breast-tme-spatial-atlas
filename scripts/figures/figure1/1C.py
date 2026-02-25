@@ -29,8 +29,10 @@ from matplotlib.lines import Line2D
 mpl.rcParams['pdf.fonttype'] = 42
 
 # Custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.color_functions import generate_color_variations
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+from helper_functions import auto_crop_scanpy, generate_color_variations
 
 
 # --- Arguments

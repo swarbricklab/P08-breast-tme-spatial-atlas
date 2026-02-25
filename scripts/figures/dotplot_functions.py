@@ -12,7 +12,10 @@ import pandas as pd
 
 import scanpy.plotting.palettes as sc_palettes
 
-from sophiesfunctions.color_functions import generate_color_variations
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+from helper_functions import generate_color_variations
 
 
 # --- Functions

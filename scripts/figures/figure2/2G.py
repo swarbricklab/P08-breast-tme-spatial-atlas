@@ -11,6 +11,7 @@
 import argparse
 import os
 import json
+import sys
 
 import anndata as ad
 import matplotlib as mpl
@@ -27,8 +28,6 @@ import tifffile
 from PIL import Image
 
 from mycolorpy import colorlist as mcp
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.color_functions import generate_color_variations
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -57,6 +56,9 @@ h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 
 print(f'Project: {project_dir}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import generate_color_variations
 
 
 # --- Load sample sheet

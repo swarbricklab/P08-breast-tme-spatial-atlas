@@ -19,9 +19,6 @@ import numpy as np
 import matplotlib as mpl
 import seaborn as sns
 
-# Custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
-
 mpl.rcParams['pdf.fonttype'] = 42
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=10)
@@ -242,7 +239,7 @@ os.makedirs(out_dir_plots, exist_ok=True)
 
 #  Save plots
 filename = 'Fig_2D.pdf'
-save_multi_image(os.path.join(out_dir_plots, filename))
+plt.savefig(os.path.join(out_dir_plots, filename), bbox_inches='tight')
 plt.close('all')
 
 

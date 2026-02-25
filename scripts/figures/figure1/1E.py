@@ -20,8 +20,6 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.colors as mcolors
 
-from sophiesfunctions.save_multi_image import save_multi_image
-
 mpl.rcParams['pdf.fonttype'] = 42
 
 

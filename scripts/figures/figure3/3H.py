@@ -11,15 +11,13 @@
 import argparse
 import math
 import os
+import sys
 from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pandas as pd
 import scanpy.plotting.palettes as sc_palettes
-
-# Import custom functions
-from sophiesfunctions.color_functions import generate_color_variations
 
 mpl.rcParams['pdf.fonttype'] = 42
 
@@ -46,6 +44,9 @@ res_dir = args["res_dir"]
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import generate_color_variations
 
 
 # --- Extract some info from the sample sheet
