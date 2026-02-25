@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot expression of genes of interest in cells inside vs outside of TLS regions
-# To check out who are the main expressers in vs outside of TLS
+# Plot Figure 5G: gene expression in cells inside vs outside TLS regions
+# Shows cell type-specific expression patterns comparing TLS interior with surrounding tissue
 
 # --- Define environment
 # env: xen-hev

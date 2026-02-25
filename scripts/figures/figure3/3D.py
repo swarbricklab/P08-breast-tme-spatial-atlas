@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# After classifying vessels based on decon results: investigate which vessels are likely to be arterial or venous
-# Using marker genes identified in Kumar 2023 normal breast study
-# This script: all samples together
+# Plot Figure 3D: arterial vs venous vessel classification using marker genes
+# Shows expression of arterial/venous markers in vessels classified by deconvolution results
+# Based on marker genes from Kumar 2023 normal breast study
+# This creates Figure 3D
 
 # --- Define environment
 # env: vis-hd

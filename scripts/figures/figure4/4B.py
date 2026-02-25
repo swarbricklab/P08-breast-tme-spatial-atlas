@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Correlate average expression in HEVs with distance to TLS
+# Plot Figure 4B: HEV gene expression correlation with distance to TLS
+# Shows how TMEM173 expression in HEV ECs changes as a function of distance to TLS
 
 # --- Define environment
 # env: xen-hev

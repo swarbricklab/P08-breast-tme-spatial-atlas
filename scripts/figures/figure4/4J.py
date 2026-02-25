@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Correlate average expression in HEVs with distance to TLS
+# Plot Figure 4J: gene expression in HEVs as function of distance to TLS
+# Shows spatial gradients of LTBR expression relative to TLS structures
 
 # --- Define environment
 # env: xen-hev

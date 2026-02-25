@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# PVL subtype DEG analysis - matrixplot with gene category markers (Figure 3E)
+# PVL subtype DEG analysis in scRNA-seq reference - matrixplot with gene category markers (Figure 3E)
 # Shows top genes per PVL subtype with presence matrix marking contractile, complement, chemokine, cell cycle, and hypoxia response genes
 
 # --- Define environment

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot ligand-receptor interactions involving genes upregulated in HEVs vs ACKR1 ECs
-# Dotplot showing LR pairs across HEV compartments
-
-# This script plots LR interactions for bin_size=0
-
+# Plot Figure 5D: ligand-receptor interactions for HEV-upregulated genes
+# Shows dotplot of LR pairs enriched in HEVs compared to ACKR1+ ECs across HEV compartments
+# Uses bin_size=0 (HEV bins only)
 
 # --- Define environment
 # env: vis-hd

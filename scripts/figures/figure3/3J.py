@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot PVL composition across distance bins to look at tendencies of PVLs association with different vessels
-# For all samples together
-
+# Plot Figure 3J: barplot showing PVL subtype association with HEV-overlapping vs non-overlapping vessels
 
 # --- Define environment
 # env: vis-hd

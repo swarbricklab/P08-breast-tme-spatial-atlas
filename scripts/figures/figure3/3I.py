@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Look at gene expression of vessels overlapping with HEV vs not overlapping with HEV
-# Per vessel type (classified based on decon results)
-# This script: plot the DEGs in a nice way, make a volcano plot and a dotplot of the genes
+# Plot Figure 3I: differential gene expression in HEV-overlapping vs non-overlapping vessels
+# Shows volcano plot and dotplot of genes enriched in vessels with HEV signatures
+# Stratified by vessel type based on deconvolution results
 
 # --- Define environment
 # env: shapely (has adjustText)

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make some boxplots with normalized B/T cell ratios per subtype
-# Across all spots, immune-annotated spots, and TLS/aggregate annotated spots
+# Plot Figure 1G: B-cell to T-cell ratios per clinical subtype
+# Shows ratios across TLS/aggregate annotated spots
+# This creates Figure 1G
 
 
 # --- Define environment

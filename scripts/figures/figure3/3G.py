@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# After classifying vessels based on decon results & looking at association w/ PVL subtypes & HEV overlap per sample: plot for all samples
-
+# Plot Figure 3G: stacked barplot showing proportion of HEV-overlapping vessels per endothelial lineage
+# Shows how different endothelial lineages (arterial, capillary, venous, lymphatic) associate with HEVs based on overlap
 
 # --- Define environment
 # env: vis-hd

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make a barplot that shows the number of GCs split by subtype
+# Plot Figure 2J: barplot showing number of germinal centers per clinical subtype
+# GCs identified by signature scoring
 
 # --- Define environment
 # env: spatial-pilot

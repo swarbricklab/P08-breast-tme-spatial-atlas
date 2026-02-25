@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot the TLS model scores per annotation as a ridgeplot
-# To check which annotations are preferentially picked up by the TLS model
-# Would expect these to be 'TLS' and 'aggregate'
+# Plot Figure 2B: ridgeplot showing TLS model scores per pathology annotation
+# Shows distribution of TLS scores across different tissue compartments (expect highest in TLS/aggregate regions)
 
 # --- Define environment
 # env: spatial-pilot

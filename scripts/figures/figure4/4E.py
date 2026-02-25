@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot gene expression of all cell types within x µm of HEVs
-# Specifically for LRi analysis - find likely interacting cell types for given LR pairs active in HEV niches (identified in Visium data)
-# This script specifically looks at interactions involving cell adhesion molecules
+# Plot Figure 4E: cell type expression near HEVs for ligand-receptor interaction analysis
+# Shows expression of cell adhesion molecules in different cell types within perivascular regions
+# Identifies likely cellular interactions in HEV niches based on Visium LR pairs
 
 # --- Define environment
 # env: xen-hev

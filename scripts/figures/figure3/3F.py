@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot PVL composition across distance bins to look at tendencies of PVLs association with different vessels
-# For all samples together
-
+# Plot Figure 3F: PVL (perivascular-like) subtype composition across distance from vessels
+# Shows how different PVL subtypes associate with different vessel types based on proximity
 
 # --- Define environment
 # env: vis-hd
@@ -11,7 +10,7 @@
 # --- Load packages
 import argparse
 import os
-from datetime import date, datetime
+from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt

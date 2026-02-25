@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Correlate average expression in HEVs with distance to TLS
+# Plot Figure 5F: gene expression in HEVs correlated with distance to TLS
+# Shows spatial expression gradients of SPP1 as function of proximity to TLS
 
 # --- Define environment
 # env: xen-hev

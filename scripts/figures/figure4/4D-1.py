@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# After calculating gene-gene correlations, use this script to replot the ranked gene plot for the figure
-# Just bc the other script also calculates the correlations, but this one is only for plotting
+# Plot Figure 4D (part 1): ranked correlation plot of genes with STING expression in HEVs
+# Shows genes that correlate positively or negatively with STING pathway activation
 
 # --- Define environment
 # env: shapely

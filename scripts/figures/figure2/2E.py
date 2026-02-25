@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Marker genes per cluster indicate dominance of different cell types within each cluster
-# Check against deconvolution results: are expected cell types enriched?
+# Plot Figure 2E: deconvolution results per TLS cluster
+# Shows cell type enrichment of selected cell types in each TLS cluster
 
 
 # --- Define environment

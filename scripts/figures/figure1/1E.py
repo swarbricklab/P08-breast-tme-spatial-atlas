@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make some boxplots with cell proportions per subtype, using the deconvolution results from cell2location
+# Plot Figure 1E: scatterplot of T cell vs B cell proportions across samples
+# Shows relationship between T cell and B cell abundance across breast cancer subtypes
 
 # --- Define environment
 # env: spatial-pilot

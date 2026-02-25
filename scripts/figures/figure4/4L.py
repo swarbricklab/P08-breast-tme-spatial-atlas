@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot gene expression for different cell types inside TLS
+# Plot Figure 4L: cell type-specific gene expression within TLS regions
+# Shows expression patterns of key genes in different cell populations inside TLS
 
 # --- Define environment
 # env: xen-hev

@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make a nice plot for a figure showing location of CCL19, CCL21 & TSPAN7 transcripts
-# And a plot showing SPP1 expression in HEVs
-
-# This script is set up for P29_Xe5k
-
+# Plot Figure 5E: spatial transcript distribution of SPP1 in HEV regions
 
 # --- Define environment
 # env: spatdat

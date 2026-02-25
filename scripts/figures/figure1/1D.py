@@ -2,6 +2,8 @@
 
 # --- Aim
 # Plot Figure 1D: barplot of sample composition by pathology annotations & deconvolution results
+# Shows stacked bars for each sample with proportions of pathology categories and cell types
+# This creates Figure 1D
 
 # --- Define environment
 # env: spatial-pilot

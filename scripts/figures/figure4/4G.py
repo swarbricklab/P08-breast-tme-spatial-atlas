@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Generate Figure 4G: Scatterplot showing key LR interactions between HEV groups
+# Generate Figure 4G: Scatterplot showing key LR interactions between HEV groups (TLS-associated vs stromal HEV-like)
 
 # --- Define environment
 # env: vis-hd

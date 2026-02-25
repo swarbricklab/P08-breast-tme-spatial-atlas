@@ -221,12 +221,12 @@ def crop_and_subset_anndata(
     adata,
     adata_crop,
     img,
-    new_sample_id,
+    sample_id,
     original_hires_key,
     zoom_coord_fulres,
     width_fulres,
     fulres_fact,
-    aspect_ratio=1.5
+    aspect_ratio=1
 ):
     """
     Crop the H&E image and subset the AnnData object to the cropped region.
@@ -234,7 +234,7 @@ def crop_and_subset_anndata(
     """
     coords_group = [
         zoom_coord_fulres[0],
-        zoom_coord_fulres[0] + int(width_fulres * aspect_ratio),
+        zoom_coord_fulres[0] + int(width_fulres*aspect_ratio),
         zoom_coord_fulres[1],
         zoom_coord_fulres[1] + width_fulres
     ]
@@ -249,19 +249,19 @@ def crop_and_subset_anndata(
     ymin = 0
     if adjusted_coords[2] < ymin:
         ymin = adjusted_coords[2]
-    adata_crop.uns['spatial'][new_sample_id]['images'][original_hires_key] = crop_img
+    adata_crop.uns['spatial'][sample_id]['images'][original_hires_key] = crop_img
     # Shift the spot coordinates
     spot_coords = adata.obsm['spatial']
     shifted_coords = spot_coords - np.array([adjusted_coords[0], adjusted_coords[2]])
     adata_crop.obsm['spatial'] = shifted_coords
-    # Subset to just the spots that are actually in the crop
+    # Subset to just the spots that are actually in the crop (to speed things up)
     xmax = xmin + width_crop
     ymax = ymin + height_crop
     # Also add scale factor
-    adata_crop.uns['spatial'][new_sample_id]['scalefactors'][f'tissue_{original_hires_key}_scalef'] = fulres_fact
-    # Extract spatial coordinates
-    adata_crop.obs["pxl_col_in_fullres"] = adata_crop.obsm["spatial"][:, 0] * fulres_fact
-    adata_crop.obs["pxl_row_in_fullres"] = adata_crop.obsm["spatial"][:, 1] * fulres_fact
+    adata_crop.uns['spatial'][sample_id]['scalefactors'][f'tissue_{original_hires_key}_scalef'] = fulres_fact
+    # Extract spatial coordinates (assuming they are in the form of an (N, 2) array)
+    adata_crop.obs["pxl_col_in_fullres"] = adata_crop.obsm["spatial"][:, 0] * fulres_fact  # X-coordinates
+    adata_crop.obs["pxl_row_in_fullres"] = adata_crop.obsm["spatial"][:, 1] * fulres_fact # Y-coordinates
     # Subset the AnnData object based on the crop region
     # Have a grace region of 10% around the crop to avoid losing spots that are on the edge
     grace_region = 0.1  # 10% grace region
@@ -280,8 +280,7 @@ def crop_and_subset_anndata(
 
 
 # --- Function to move plots
-def move_plots_x_y(axs, x_offset=0.02, y_offset=0.02, remove_title=False):
-    """Move plots to remove white space between them"""
+def move_plots_x_y(axs, x_offset=0.02, y_offset=0.02, remove_title=True):
     for i, axs_row in enumerate(axs):
         for j, ax in enumerate(axs_row):
             if i != 0:
@@ -303,17 +302,34 @@ def move_plots_x_y(axs, x_offset=0.02, y_offset=0.02, remove_title=False):
         ax_pos_row_prev = axs_row[0].get_position()
 
 
+# --- Adjust the crop coords
+# So that the plots will be 2:1 aspect ratio
+# This is done by adjusting the width of the crop to be 2x the height
+
+aspect_ratio = 1.5  # Set aspect ratio width:height
+height_adj = 1.3 # Adjust height to be a bit larger than originally defined
+
+for TLS, coords in TLS_coords.items():
+    sample = coords['new_sample_id']
+    top_left = coords['top_left']
+    width = coords['width']
+    new_height = int(width * height_adj)
+    # Adjust the top left coordinates to center the crop
+    center_x = top_left[0] + width // 2
+    center_y = top_left[1] + width // 2
+    width_adjusted = int(new_height * aspect_ratio)
+    top_left_adjusted_x = int(center_x - width_adjusted // 2)
+    top_left_adjusted_y = int(center_y - new_height // 2)
+    top_left_adjusted = (top_left_adjusted_x, top_left_adjusted_y)
+    TLS_coords[TLS]['top_left'] = top_left_adjusted
+    TLS_coords[TLS]['width'] = new_height
+
+
 # --- Load fulres images & create cropped anndatas
 cropped_adata_dict = {}
 
-# Need to set this for large images
-Image.MAX_IMAGE_PIXELS = None
-
 # Define key for adding to anndata
 original_hires_key = 'original_hires'
-
-# Aspect ratio for rectangular crops
-aspect_ratio = 1.5
 
 # Load images
 image_dir = os.path.join(project_dir, 'data', 'images', 'visium')
@@ -368,7 +384,7 @@ for n, TLS in enumerate(TLS_coords):
         'B_cell_zone': 'B_cell_zone_score',
         'GC': 'GC_score'
     }
-    top_genes = 50
+    top_genes = 20
     
     for script_name, file_name in signature_mapping.items():
         score_col = f'{script_name}_score_{top_genes}'
@@ -444,16 +460,16 @@ for n, TLS in enumerate(TLS_coords):
         adata=adata,
         adata_crop=adata_crop,
         img=img,
-        new_sample_id=new_sample_id,
+        sample_id=new_sample_id,
         original_hires_key=original_hires_key,
         zoom_coord_fulres=top_left,
         width_fulres=width,
         fulres_fact=fulres_fact,
-        aspect_ratio=aspect_ratio
+        aspect_ratio=aspect_ratio  # Adjusted to 2:1 aspect ratio
     )
     
     # Store the cropped adata
-    cropped_adata_dict[TLS] = adata_sub
+    cropped_adata_dict[TLS] = adata_sub.copy()
 
 
 # --- Define plotting parameters

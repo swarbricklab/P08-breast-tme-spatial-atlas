@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make some plots comparing gene expression in ACKR1+ endothelial cells in HEV vs not in HEV niches
+# Plot Figure 4A: gene expression comparison between ACKR1+ (venous) ECs in HEV vs non-HEV niches
 
 # --- Define environment
 # env: xen-hev

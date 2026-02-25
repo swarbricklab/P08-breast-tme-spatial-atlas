@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot deconvolution results per pathology annotation category
+# Plot Figure 1F: cell type composition within different pathology annotation categories
+# Shows deconvolution results stratified by tissue compartments (invasive, in situ, stroma, etc.)
+# This creates Figure 1F
 
 # --- Define environment
 # env: spatial-pilot

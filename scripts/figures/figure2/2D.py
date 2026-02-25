@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot the top genes for clusters of interest as a heatmap
-# To show which chemokines, chemokine receptors and cell type markers are present in the top genes of each cluster
+# Plot Figure 2D: heatmap of top marker genes per TLS cluster
 
 # --- Define environment
 # env: spatial-pilot

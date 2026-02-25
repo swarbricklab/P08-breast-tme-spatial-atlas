@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# After calculating composition vs distance per sample - plot the average composition across samples
-
+# Plot Figure 3H: average tissue composition across distance from HEV-overlapping vs non-overlapping vessels
+# Shows how the microenvironment (based on pathology annotations) changes across distance from HEV-overlapping vs non-overlapping vessels, averaged across all samples
 
 # --- Define environment
 # env: vis-hd

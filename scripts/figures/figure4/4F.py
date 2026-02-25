@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make a plot showing a zoomed in area with TLS HEVs & stromal HEV-like, to show how grouping was done for LR analysis
+# Plot Figure 4F: zoomed view showing TLS-HEVs vs stromal HEV-like vessels
+# Shows spatial context for HEV classification used in ligand-receptor analysis
 # This script is set up for sample P29_HD
 
 # --- Define environment

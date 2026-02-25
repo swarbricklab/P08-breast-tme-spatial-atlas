@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make a barplot that shows the number of lymphoid structures split by subtype
+# Plot Figure 2C: barplot showing prevalence of lymphoid structures per clinical subtype
+# Shows proportion of spots with high TLS score stratified by breast cancer subtype
 
 # --- Define environment
 # env: spatial-pilot

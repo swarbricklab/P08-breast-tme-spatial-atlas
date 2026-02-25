@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot the Pearson correlations calculated per sample as boxplot
-# Just because cell composition & SPP1 expression can vary across samples
-# Want to see if correlations are consistent across samples
+# Plot Figure 5H: Pearson correlations of HEV SPP1 expression with cell types across samples
+# Accounts for variation in cell composition and HEV SPP1 expression levels
 
 # --- Define environment
 # env: xen-hev

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# After getting a list of genes that correlate with STING expression in HEV niches,
-# perform GSEA analysis to find enriched pathways
+# Plot Figure 4D (part 2): GSEA pathway enrichment for STING-correlated genes
+# Shows biological pathways enriched in genes that correlate with STING in HEV niches
 
 # --- Define environment
 # env: gseapy

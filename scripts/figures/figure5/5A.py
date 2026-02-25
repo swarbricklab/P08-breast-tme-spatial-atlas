@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Correlate CCL19 & CCL21 expression in HEVs with distance to TLS
+# Plot Figure 5A: CCL19 and CCL21 chemokine expression in HEVs vs distance to TLS
+# Shows spatial gradients of T-cell recruiting chemokines relative to TLS structures
 
 # --- Define environment
 # env: xen-hev

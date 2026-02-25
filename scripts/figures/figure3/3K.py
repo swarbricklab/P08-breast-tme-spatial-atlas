@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# After classifying HEVs on distance to closest TLS: make some overview plots for all samples together
+# Plot Figure 3K: relationship between number of HEVs and TLS size
+# Shows correlation between number of HEVs proximal to a TLS and the size of the TLS (number of 48 µm bins)
 
 # --- Define environment
 # env: vis-hd
@@ -9,7 +10,7 @@
 # --- Load packages
 import argparse
 import os
-from datetime import date, datetime
+from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
