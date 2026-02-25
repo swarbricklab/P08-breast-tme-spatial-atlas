@@ -1,6 +1,6 @@
 outs:
-- md5: e0d4bfcb241dbd0ecff47deb19aa5285.dir
-  size: 105712893
-  nfiles: 44
+- md5: cec361d5b6dbede3197771b027b05448.dir
+  size: 106357723
+  nfiles: 58
   hash: md5
   path: pathology_annotations
