@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot members of the lymphotoxin system in TLS HEVs vs stromal HEVs 
-# As LR analysis suggests that stromal HEVs might be lacking this signal
+# Plot members of the lymphotoxin system in TLS HEVs vs stromal HEVs (Figure 4I)
+# Shows expression of lymphotoxin signaling components in perivascular bins
 
 # --- Define environment
 # env: vis-hd
 
 # --- Load packages
 import argparse
-import math
 import os
 import re
-from datetime import date, datetime
+from datetime import datetime
 
 import seaborn as sns
 
 import anndata as ad
 import matplotlib as mpl
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -31,7 +29,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Plot lymphotoxin system expression for Figure 4I",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -54,26 +52,26 @@ sample_list = args["samples"]
 print(f'Samples in python: {sample_list}')
 
 
-# --- Load the adata objects
+# --- Extract some info from the sample sheet
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_hd.csv')
 
+sample_sheet = pd.read_csv(sample_sheet_path)
+sample_lut = sample_sheet.set_index('section_id')
+
+
+# --- Parameters
+
+bin_size = 25  # um
 resolution = 'square_016um'
-
-# Multiple samples as a dictionary seems like an okay idea
-adata_dict = {}
-
 use_data = 'log_norm'
 
-for sample in sample_list:
-    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample}.h5ad'))
 
-# Add the sample_id to the obs
-for sample in adata_dict.keys():
-    adata_dict[sample].obs['sample_id'] = sample
+# --- Function to find most recent results
 
-
-# --- Also load the grouped adata objects
-
-# Function to find the most recent results
 def find_most_recent(dir):
     # Find most recent results
     subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
@@ -91,32 +89,32 @@ def find_most_recent(dir):
         most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
         most_recent_dir_path = os.path.join(dir, most_recent_dir)
         print("Most recent results:", most_recent_dir_path)
+        return most_recent_dir_path
     else:
         print("No valid directories found.")
-    return most_recent_dir_path
+        return None
 
-# Find most recent results
-threshold = 0.5
-threshold_adj = str(threshold).split('.')[-1]
-bin_size = 25  # um
 
-lr_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', 'csv_files')
+# --- Load the adata objects
 
-most_recent_dir_path = find_most_recent(lr_dir)
-
-adata_dict_grouped = {}
+adata_dict = {}
 
 for sample in sample_list:
-    # Load the anndata object
-    filename = f'{sample}_HEV_LR_analysis_stlearn_spatial_groups.h5ad'
-    adata_dict_grouped[sample] = ad.read_h5ad(os.path.join(most_recent_dir_path, filename))
+    adata_dict[sample] = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample}.h5ad'))
+    # Add the sample_id to the obs
+    adata_dict[sample].obs['sample_id'] = sample
 
 
-# --- Also load the spot labels & add to adata
+# --- Load the spot labels from LR analysis and add to adata
+
+lr_label_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
+                             '03_plot_LR_per_sample', f'{bin_size}um_bin', 'csv_files')
+
+most_recent_label_path = find_most_recent(lr_label_dir)
 
 for sample in sample_list:
     spot_label_file = f'{sample}_HEV_spot_grouping.csv'
-    label_df = pd.read_csv(os.path.join(most_recent_dir_path, spot_label_file), index_col=0)
+    label_df = pd.read_csv(os.path.join(most_recent_label_path, spot_label_file), index_col=0)
     adata_dict[sample].obs[label_df.columns] = label_df
 
 
@@ -125,11 +123,6 @@ for sample in sample_list:
 adata_list = list(adata_dict.values())
 all_adata = ad.concat(adata_list, merge='same')
 all_adata.obs_names_make_unique()
-
-# Same for the grouped adata
-adata_list = list(adata_dict_grouped.values())
-adata_grouped = ad.concat(adata_list, merge='same')
-adata_grouped.obs_names_make_unique()
 
 
 # --- Define a color_dict for the spot labels
@@ -143,9 +136,6 @@ color_df = pd.read_csv(os.path.join(color_dir, color_file), index_col=0)
 # Make a color_dict
 color_dict = {}
 for label, color in zip(color_df.index, color_df['color']):
-    # Convert color to hex if it's not already
-    if not isinstance(color, str) or not re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', color):
-        color = mcolors.to_hex(color)
     color_dict[label] = color
 
 color_dict['TLS'] = color_dict['nearby_near_TLS_HEV']
@@ -157,54 +147,10 @@ color_dict['Stroma'] = color_dict['nearby_non_TLS_HEV']
 rename_dict = {
     'near_TLS_HEV': 'HEV (TLS)',
     'non_TLS_HEV': 'HEV-like (stroma)',
-    'nearby_spots': f'Perivascular bins (<{bin_size}µm)',
-    'nearby_near_TLS_HEV': f'Perivascular bins (<{bin_size}µm, TLS)',
-    'nearby_non_TLS_HEV': f'Perivascular bins (<{bin_size}µm, stroma)',
+    'nearby_spots': f'Perivascular bins',
+    'nearby_near_TLS_HEV': f'Perivascular bins (TLS)',
+    'nearby_non_TLS_HEV': f'Perivascular bins (stroma)',
 }
-
-
-# --- Plot 1: First plot the spatial plot of the spot labels for sanity
-
-sc.set_figure_params(fontsize=18)
-
-ncols = 5
-
-if len(sample_list) <= ncols:
-    ncols = len(sample_list)
-
-n_samples = len(sample_list)
-
-if n_samples <= ncols:
-    nrows = 1
-else:
-    nrows = math.ceil(n_samples / ncols)
-
-fig = plt.figure(figsize=(8*ncols, 8*nrows))
-
-for i, sample in enumerate(sorted(sample_list)):
-    # Add legend to last plot of first row only
-    if i == ncols - 1:
-        legend_loc = 'right margin'
-    else:
-        legend_loc = None
-    ax = fig.add_subplot(nrows, ncols, i+1)
-    subtype = subtype_dict[sample]
-    # Subset to speed things up
-    adata_sub = adata_dict[sample][adata_dict[sample].obs['nearby_spots_revisited'].notna()]
-    sc.pl.spatial(adata_sub, color='nearby_spots_revisited', bw=False, alpha_img=0.5, crop_coord=coords[sample],
-                    title=f'{sample} ({subtype})\nSpot labels',    
-                    palette=color_dict, ax=ax, legend_loc=legend_loc)
-    ax.set_title(ax.get_title(), fontweight='bold')
-
-# Edit the labels of the legend according to the dict
-legend = ax.get_legend()
-for text in legend.get_texts():
-    original_text = text.get_text()
-    if original_text in rename_dict:
-        text.set_text(rename_dict[original_text])
-
-# Add a title to the whole figure
-plt.suptitle(f'All samples - Spot labels (bin_size={bin_size}µm)', y=1, x=0.5, fontweight='bold')
 
 
 # --- Functions for plotting
@@ -596,272 +542,12 @@ title_y = count_axs[0].get_position().y1 + 0.1
 plt.suptitle(f'All samples - Lymphotoxin system members in TLS HEVs vs stromal HEVs (bin_size={bin_size}µm)', fontsize=10, x=title_x, y=title_y, fontweight='bold')
 
 
-# --- Plot 3: Spatial plot of spatial grouping for sanity
+# --- Save the figure
 
-sc.set_figure_params(fontsize=18)
+out_file = os.path.join(project_dir, 'results', 'figures', 'Fig_4I.pdf')
+os.makedirs(os.path.dirname(out_file), exist_ok=True)
+plt.savefig(out_file, bbox_inches='tight', dpi=300)
 
-ncols = 5
-
-if len(sample_list) <= ncols:
-    ncols = len(sample_list)
-
-if n_samples <= ncols:
-    nrows = 1
-else:
-    nrows = math.ceil(n_samples / ncols)
-
-fig = plt.figure(figsize=(8*ncols, 8*nrows))
-
-for i, sample in enumerate(sorted(sample_list)):
-    ax = fig.add_subplot(nrows, ncols, i+1)
-    subtype = subtype_dict[sample]
-    # Subset to speed things up
-    adata_sub = adata_dict[sample][adata_dict[sample].obs['new_grouping'].notna()]
-    sc.pl.spatial(adata_sub, color='new_grouping', bw=False, alpha_img=0.5, crop_coord=coords[sample],
-                    title=f'{sample} ({subtype})\nSpatial grouping',    
-                    palette='Set1', ax=ax, legend_loc=None)
-    ax.set_title(ax.get_title(), fontweight='bold')
-
-# Add a title to the whole figure
-plt.suptitle(f'All samples - Spatial grouping of spots (bin_size={bin_size}µm)', y=1, x=0.5, fontweight='bold')
-
-
-# ---  Now also average gene expression by spatial group
-
-all_adata_sub = all_adata[all_adata.obs['new_grouping'].notna()]
-
-# Extract all genes in the lr_list as a single unnested list
-# Just to speed things up
-gene_list = top_genes
-
-# Remove duplicates
-gene_list = list(set(gene_list))
-
-# Get an unnested list of genes
-expr_df = all_adata_sub.to_df(layer=use_data)[gene_list]
-
-# Add composite group column
-expr_df['group'] = all_adata_sub.obs['new_grouping'].values
-
-# And also add the spot labels
-expr_df['nearby_spots_revisited'] = all_adata_sub.obs['nearby_spots_revisited'].values
-
-# Compute mean expression per composite group
-grouped_expr = expr_df.groupby(['group', 'nearby_spots_revisited']).mean()
-
-# Drop any rows with NaN values
-grouped_expr = grouped_expr.dropna()
-
-adata_grouped = ad.AnnData(X=grouped_expr.values)
-
-# Collapse the multiindex to a single index
-grouped_expr.index = grouped_expr.index.map(lambda x: f"{x[0]}-{x[1]}")
-adata_grouped.obs_names = grouped_expr.index
-adata_grouped.var_names = grouped_expr.columns
-vessel_classes_df = grouped_expr.index.to_series().str.split('-', expand=True)[1]
-
-adata_grouped.obs['nearby_spots_revisited'] = vessel_classes_df
-
-
-# --- Plot 4: Dotplot of lymphotoxin members expression averaged across spatial groups
-
-sc.set_figure_params(fontsize=10)
-
-# First make a plot to get the vmax & size max
-fig, ax = plt.subplots(figsize=(5, 5))
-dp = sc.pl.dotplot(adata_grouped, var_names=top_genes, groupby=['nearby_spots_revisited'], swap_axes=True,
-                   ax=ax, show=False)
-vmax = dp['color_legend_ax'].get_xlim()[1]
-size_max = int(dp['size_legend_ax'].get_xticklabels()[-1].get_text())/100
-plt.close(fig)
-
-ncols = 2
-nrows = 1
-
-fig, axs = plt.subplots(figsize=(5, 5), ncols=ncols, nrows=nrows)
-
-heatmap_axs = []
-
-for n, cat_type in enumerate(all_cats):
-    ax = axs[n]
-    adata_sub = adata_grouped[adata_grouped.obs['nearby_spots_revisited'].isin(cat_type)]
-    dp = sc.pl.dotplot(adata_sub, var_names=top_genes, groupby=['nearby_spots_revisited'], swap_axes=True,
-                    ax=ax, show=False, vmin=vmin, vmax=vmax, dot_max=size_max, dot_min=None, cmap='Reds')
-    # Adjust the size of the axes
-    auto_resize_dotplot(dp['mainplot_ax'], space_per_dot=0.04, width_ratio=1.2)
-    main_ax = dp['mainplot_ax']
-    # Adjust the ylims
-    buffer = 0.25
-    main_ax.set_ylim(len(main_ax.get_yticks()) + buffer, -buffer)
-    # If not the last ax, remove the colorlegend & sizelegend
-    if n < ncols - 1:
-        dp['color_legend_ax'].remove()
-        dp['size_legend_ax'].remove()
-    else:
-        size_ax = dp['size_legend_ax']
-        cbar_ax = dp['color_legend_ax']
-    heatmap_axs.append(main_ax)
-
-# Move the plots
-for n, heatmap_ax in enumerate(heatmap_axs):
-    pos = heatmap_ax.get_position()
-    if n == 0:
-        ax_pos_prev = pos
-    else:
-        heatmap_ax.set_position([ax_pos_prev.x1 + 0.01, pos.y0, pos.width, pos.height])
-        ax_pos_prev = heatmap_ax.get_position()
-        # Remove yticks
-        heatmap_ax.set_yticks([])
-        heatmap_ax.set_ylabel('')
-
-size_ax.set_title('Spatial groups\nexpressing (%)', y=0.5, fontsize=8.5)
-
-# Position the cbar
-main_ax = heatmap_axs[-1]
-ax_pos = main_ax.get_position()
-space_per_dot = 0.04
-cbar_height = space_per_dot * 0.6
-cbar_width = space_per_dot * 3
-cbar_ax.set_position([ax_pos.x1 + 0.05, ax_pos.y0, cbar_width, cbar_height])
-
-# Position the size legend just above the cbar
-cbar_pos = cbar_ax.get_position()
-size_ax.set_position([cbar_pos.x0, cbar_pos.y1 + 0.12, cbar_width, cbar_height*3])
-
-# Join the ligand-receptor pairs
-main_ax = heatmap_axs[0]
-
-# Rename the labels
-main_yticklabels = [label.get_text() for label in main_ax.get_yticklabels()]
-main_yticklabels_renamed = [gene_rename_dict.get(label, label) for label in main_yticklabels]
-main_ax.set_yticklabels(main_yticklabels_renamed)
-
-x_left_global = join_lr_multi([main_ax], lr_pairs, offset=0.25)
-
-# Add an ax just above for counts per group
-count_axs = []
-
-for n, main_ax in enumerate(heatmap_axs):
-    ax_pos = main_ax.get_position()
-    count_ax = fig.add_axes([ax_pos.x0, ax_pos.y1 + 0.01, ax_pos.width, space_per_dot*2])  # [left, bottom, width, height]
-    xticklabels = [label.get_text() for label in main_ax.get_xticklabels()]
-    count_df = adata_grouped.obs['nearby_spots_revisited'].value_counts().reindex(xticklabels, fill_value=0)
-    sns.barplot(x=count_df.index, y=count_df.values, ax=count_ax, palette=color_dict, edgecolor='black', linewidth=0.5, saturation=1)
-    # Set count_ax xlim
-    count_ax.set_xlim(-0.5-buffer, len(xticklabels)-0.5+buffer)
-    # Remove x ticks & labels
-    count_ax.set_xticks([])
-    count_ax.set_xlabel('')
-    count_ax.set_yticks([])
-    if n == 0:
-        count_ax.set_ylabel('# groups', fontsize=8)
-    # Remove all spines except bottom
-    for spine in ['top', 'right', 'left']:
-        count_ax.spines[spine].set_visible(False)
-    # Annotate the bars with cell counts
-    for rect, count in zip(count_ax.patches, count_df[xticklabels]):
-        height = rect.get_height()
-        if height > 0:
-            # Rework the number format if >1000
-            if count >= 1000:
-                # Round to 1 decimal
-                count = f'{count/1000:.1f}k'
-            count_ax.text(
-                rect.get_x() + rect.get_width() / 2, height + count_ax.get_ylim()[1]*0.02,
-                f'{count}',
-                ha='center', va='bottom',
-                fontsize=6
-            )
-    count_axs.append(count_ax)
-
-# Set same ylims for all count_axs
-ymax = max(count_ax.get_ylim()[1] for count_ax in count_axs)
-for count_ax in count_axs:
-    count_ax.set_ylim(0, ymax)
-
-# Adjust the xticklabels according to the rename_dict
-for main_ax in heatmap_axs:
-    new_labels = []
-    for label in main_ax.get_xticklabels():
-        original_text = label.get_text()
-        if original_text in rename_dict:
-            new_label = rename_dict[original_text]
-            # Remove the bits in brackets to shorten the label
-            new_label = re.sub(r'\s*\(.*?\)\s*', '', new_label)
-            new_labels.append(new_label)
-        else:
-            new_labels.append(original_text)
-    main_ax.set_xticklabels(new_labels)
-
-# Plot rectangles just above count axes
-labels = ['TLS', 'Stroma']
-
-# Draw rectangles from top to bottom of each ax
-for n, ax in enumerate(count_axs):
-    # Add vertical text
-    label = labels[n]
-    face_color = color_dict[label]
-    # Convert x_left_global from data to figure coordinates
-    pos = ax.get_position()
-    x0 = pos.x0
-    x1 = pos.x1
-    y1 = pos.y1 + 0.02
-    width = abs(x1 - x0)
-    height = 0.01  # Height in figure coordinates
-    highlight_rect = mpl.patches.Rectangle(
-        (x0, y1), width, height,
-        transform=fig.transFigure,
-        facecolor=face_color,
-        edgecolor='black',
-        linewidth=0,
-        alpha=1
-    )
-    fig.patches.append(highlight_rect)
-    # Calculate midpoint x
-    x_text = (x0 + x1) / 2
-    y_text = y1 + height
-    # Add text
-    fig.text(
-        x_text, y_text,
-        label,
-        ha='center', va='bottom',
-        color='black',
-        fontsize=8.5,
-    )
-
-# Limit size_ax to 3 circles
-keep_indices = [0, len(size_ax.collections[0].get_sizes()) // 2, len(size_ax.collections[0].get_sizes()) - 1]
-style_dotplot_legend(size_ax, keep_indices)
-size_ax.set_xlim(-0.5, keep_indices[-1] + 1.5)
-
-# Position title
-title_x = (heatmap_axs[0].get_position().x0 + heatmap_axs[-1].get_position().x1) / 2
-title_y = count_axs[0].get_position().y1 + 0.1
-
-plt.suptitle(f'All samples - Lymphotoxin system members in TLS HEVs vs stromal HEVs - expression averaged across spatial groups (bin_size={bin_size}µm)', fontsize=10, x=title_x, y=title_y, fontweight='bold')
-
-
-# --- Save the output
-
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
-
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'all_samples', 'square_016um', f'threshold_{threshold_adj}', 'LR_analysis',
-                       'HEV_level', f'{bin_size}um_bin', 'lymphotoxin_system_expression')
-
-os.makedirs(out_dir, exist_ok=True)
-
-# Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
-os.makedirs(out_dir_plots, exist_ok=True)
-
-# Save plots
-filename = f'All_samples_HEV_lymphotoxin_gene_expression.pdf'
-save_multi_image(os.path.join(out_dir_plots, filename))
-
-
-# --- Finish
-
+print(f"Figure saved to: {out_file}")
 print("Script successfully completed")
+
