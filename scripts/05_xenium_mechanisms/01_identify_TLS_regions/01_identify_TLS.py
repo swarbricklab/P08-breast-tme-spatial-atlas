@@ -28,8 +28,6 @@ from skimage.morphology import remove_small_objects
 from shapely.geometry import Polygon
 import geopandas as gpd
 
-from sophiesfunctions.auto_crop import auto_crop_xenium
-
 sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=20)
 
 
@@ -62,6 +60,9 @@ sample_id=args["sample_id"]
 
 res_dir = args['res_dir']
 project_dir = args['project_dir']
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_xenium
 
 # Import function script as a module
 sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms'))

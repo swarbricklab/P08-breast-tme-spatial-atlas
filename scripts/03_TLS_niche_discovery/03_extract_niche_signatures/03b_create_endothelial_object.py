@@ -12,6 +12,7 @@ import scanpy as sc
 import scanpy.external as sce
 import anndata as ad
 import os
+import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import date
@@ -21,10 +22,6 @@ import matplotlib.lines as mlines
 
 import math
 import scanpy.plotting.palettes as sc_palettes
-
-# Custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=20)
 sc.settings.verbosity = 3
@@ -53,6 +50,9 @@ res_dir = args["res_dir"]
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, save_multi_image
 
 
 # --- Extract some info from the sample sheet

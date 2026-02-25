@@ -29,9 +29,6 @@ from adjustText import adjust_text
 from matplotlib.colors import TwoSlopeNorm
 from matplotlib.patches import Rectangle
 
-# Import custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.save_multi_image import save_multi_image
 from upsetplot import UpSet
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
@@ -51,6 +48,7 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
 
@@ -59,28 +57,25 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, save_multi_image
 
 print(f'Samples in python: {sample_list}')
 
 # Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', 'TLS_model', '05_HEV_analysis', '04_cellular_composition',))
+sys.path.append(os.path.join(project_dir, 'scripts', '04_vascular_microenvironment'))
 import plotting_functions
 
-# --- Extract some info from the sample sheet
 
-sample_dir = os.path.join(project_dir, 'config')
+# --- Get some info from the sample sheet
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
-
-# --- Hardcoded parameter for scrambling sample IDs
-
-scramble_sample_id = True
-
-# Create new_sample_id mapping
-new_sample_id_lut = sample_sheet.set_index('section_id')['new_sample_id'].to_dict()
 
 
 # --- Load the adata object with LR results
@@ -111,10 +106,10 @@ def find_most_recent(dir):
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 resolution = 'square_016um'
-bin_size = 1  # um
+bin_size = 25  # um
 
-lr_dir = os.path.join(project_dir, 'results', 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', 'square_016um', 
-                        f'threshold_{threshold_adj}', 'LR_analysis', 'HEV_level', f'{bin_size}um_bin', 'csv_files')
+lr_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 
+                        'csv_files')
 
 most_recent_dir_path = find_most_recent(lr_dir)
 
@@ -135,27 +130,15 @@ for sample in adata_dict.keys():
 
 # --- Also load HEV groups for each sample
 
-# Decide whether to use the expanded groups
-expanded = True
-
-TLS_group_dir = os.path.join(res_dir, 'TLS_model', 'other_signatures', 'HEV_analysis', 'per_sample', resolution, f'threshold_{threshold_adj}',)
-
-if expanded:
-    TLS_group_dir = os.path.join(TLS_group_dir, 'expanded_groups')
-
+# Load the expanded groups
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', resolution, f'threshold_{threshold_adj}',)
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
 most_recent_dir_path = find_most_recent(TLS_group_dir)
 
 # Read in the results & add to anndata
-score_of_i = 'HEV_filtered'
-
-group_key = 'group_too_small_removed'
-
-if expanded:
-    group_key_source = 'expanded_groups'
-else:
-    group_key_source = group_key
+score_of_i = 'HEVs'
+group_key_source = 'expanded_groups'
 
 for sample in sample_list:
     # Load the anndata object
@@ -212,20 +195,11 @@ sample_color = {}
 cmap = plt.get_cmap("Set2")  # or any other cmap like 'plasma', 'tab10', etc.
 hex_colors = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
 
-# Use new_sample_id for color dict and plotting order if scrambling
-if scramble_sample_id:
-    sample_pairs = [(s, new_sample_id_lut[s]) for s in sample_list]
-    sample_pairs_sorted = sorted(sample_pairs, key=lambda x: x[1])
-    plot_labels = [pair[1] for pair in sample_pairs_sorted]
-    plot_samples = [pair[0] for pair in sample_pairs_sorted]
-    # Key sample_color by new_sample_id
-    for n, (orig, new_id) in enumerate(sample_pairs_sorted):
-        sample_color[new_id] = hex_colors[n]
-else:
-    plot_labels = sorted(sample_list)
-    plot_samples = plot_labels
-    for n, sample in enumerate(plot_samples):
-        sample_color[sample] = hex_colors[n]
+# Make sure the colors are assigned in the same order as the samples appear in the sample list
+plot_labels = sorted(sample_list)
+plot_samples = plot_labels
+for n, sample in enumerate(plot_samples):
+    sample_color[sample] = hex_colors[n]
 
 
 # --- Also prepare a dict to rename the labels in the plots
@@ -241,16 +215,8 @@ rename_dict = {
 
 sc.set_figure_params(fontsize=10)
 
-# Optionally scramble sample IDs for plotting and order by new_sample_id
-if scramble_sample_id:
-    # Pair each sample with its new_sample_id, sort, then extract the new_sample_ids in order
-    sample_pairs = [(s, new_sample_id_lut[s]) for s in sample_list]
-    sample_pairs_sorted = sorted(sample_pairs, key=lambda x: x[1])
-    upsetplot_labels = [pair[1] for pair in sample_pairs_sorted]
-    sample_list_ordered = [pair[0] for pair in sample_pairs_sorted]
-else:
-    upsetplot_labels = sorted(sample_list)
-    sample_list_ordered = upsetplot_labels
+upsetplot_labels = sorted(sample_list)
+sample_list_ordered = upsetplot_labels
 
 # Prepare df for upsetplot
 # Create a boolean DataFrame for significance, using the ordered sample list
@@ -285,11 +251,7 @@ nrows = 1
 # Subset to top 50 LRs & prepare the df for plotting
 plot_df = lr_counts.head(top)
 plot_df.set_index('LR', inplace=True)
-if scramble_sample_id:
-    plot_df = plot_df[plot_samples[::-1]]
-    plot_df.columns = [new_sample_id_lut[s] for s in plot_df.columns]
-else:
-    plot_df = plot_df[plot_samples[::-1]]
+plot_df = plot_df[plot_samples[::-1]]
 
 fig, ax = plt.subplots(ncols=ncols, nrows=nrows, figsize=(10*ncols, 3*nrows))
 
@@ -311,7 +273,6 @@ handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles[::-1], labels[::-1], loc='best', handlelength=0.8,
               bbox_to_anchor=(1, 1), fontsize='small', title_fontsize='medium')
 
-
 plt.suptitle(f'All samples - stlearn significant LR interactions top {top} by number of spots', y=1.2, x=0.5, fontweight='bold')
 
 
@@ -322,12 +283,7 @@ collagen_pattern = r'COLLAG|COL1A|COL2A|COL'
 plot_df_filtered = lr_counts[~lr_counts.set_index('LR').index.str.contains(collagen_pattern, regex=True)]
 plot_df_filtered.set_index('LR', inplace=True)
 
-if scramble_sample_id:
-    plot_df_filtered = plot_df_filtered[plot_samples[::-1]]
-    plot_df_filtered.columns = [new_sample_id_lut[s] for s in plot_df_filtered.columns]
-else:
-    plot_df_filtered = plot_df_filtered[plot_samples[::-1]]
-
+plot_df_filtered = plot_df_filtered[plot_samples[::-1]]
 plot_df_filtered = plot_df_filtered.head(top)
 
 fig, ax = plt.subplots(ncols=ncols, nrows=nrows, figsize=(10*ncols, 3*nrows))
@@ -383,7 +339,7 @@ for n, sample in enumerate(plot_samples):
         legend_loc = None
     # add a new subplot iteratively
     ax = plt.subplot(nrows, ncols, n + 1)
-    display_title = new_sample_id_lut[sample] if scramble_sample_id else sample
+    display_title = sample
     sc.pl.spatial(adata_dict[sample], color='cell_type', bw=False, alpha_img=0.5,
             title=f'{display_title}\nGrouping info', crop_coord=coords[sample], ax=ax, legend_loc=legend_loc,
             palette=color_dict,)
@@ -484,7 +440,7 @@ plt.figure(figsize=(8*ncols, 7*nrows))
 for n, sample in enumerate(plot_samples):
     # add a new subplot iteratively
     ax = plt.subplot(nrows, ncols, n + 1)
-    display_title = new_sample_id_lut[sample] if scramble_sample_id else sample
+    display_title = sample
     sc.pl.spatial(adata_dict[sample], color='new_grouping', bw=False, alpha_img=0.5,
         title=f'{display_title}\nGrouping info', crop_coord=coords[sample], ax=ax, legend_loc=None,
         palette='Set1',)
@@ -534,7 +490,7 @@ for n, sample in enumerate(plot_samples):
         legend_loc = None
     # add a new subplot iteratively
     ax = plt.subplot(nrows, ncols, n + 1)
-    display_title = new_sample_id_lut[sample] if scramble_sample_id else sample
+    display_title = sample
     sc.pl.spatial(adata_dict[sample], color='dominant_HEV_label', bw=False, alpha_img=0.5,
             title=f'{display_title}\nDominant label', crop_coord=coords[sample], ax=ax, legend_loc=legend_loc,
             palette=color_dict,)
@@ -1112,13 +1068,12 @@ plt.suptitle(f'All samples - stlearn significant LR interactions top {top} by LF
 
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', 'TLS_model')
+qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '02_analyze_LR_all', f'{bin_size}um_bin')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'all_samples', 'square_016um', f'threshold_{threshold_adj}', 'LR_analysis',
-                       'HEV_level', f'{bin_size}um_bin')
+out_dir = os.path.join(qc_dir)
 
 os.makedirs(out_dir, exist_ok=True)
 

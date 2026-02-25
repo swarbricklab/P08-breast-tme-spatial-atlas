@@ -9,9 +9,7 @@
 
 # --- Load packages
 import argparse
-import math
 import os
-import re
 import sys
 from collections import defaultdict
 from datetime import date, datetime
@@ -25,10 +23,6 @@ import pandas as pd
 import scanpy as sc
 import seaborn as sns
 from matplotlib import colors
-
-# Import custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -58,6 +52,8 @@ res_dir = args["res_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, save_multi_image
 
 # Import function script as a module
 sys.path.append(os.path.join(project_dir, 'scripts', '04_vascular_microenvironment'))

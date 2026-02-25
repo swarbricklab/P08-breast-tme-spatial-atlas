@@ -11,6 +11,7 @@
 import argparse
 import math
 import os
+import sys
 from datetime import date, datetime
 
 import anndata as ad
@@ -23,11 +24,6 @@ import scanpy as sc
 import scanpy.external as sce
 import scanpy.plotting.palettes as sc_palettes
 from matplotlib.backends.backend_pdf import PdfPages
-
-# Custom functions
-from sophiesfunctions.auto_crop import auto_crop_scanpy
-from sophiesfunctions.color_functions import generate_color_variations
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=20)
 sc.settings.verbosity = 3
@@ -56,6 +52,8 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_scanpy, save_multi_image
 
 print(f'Samples in python: {sample_list}')
 
@@ -66,7 +64,7 @@ if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
     sample_dir = os.path.join(project_dir, 'config')
-    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_file = 'sample_sheet_visium_hd.csv'
     sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
 sample_sheet = pd.read_csv(sample_sheet_path)
@@ -389,7 +387,12 @@ for rank_genes_key in all_keys:
     final_df.to_csv(os.path.join(out_dir_csv, filename), index=False)
 
 # Save the whole object as well for future reference
-ad.AnnData.write(all_adata, filename=os.path.join(out_dir_csv, f"All_samples_HEV_{out_name}.h5ad"))
+# Convert all object or category columns in .obs to string
+for col in all_adata.obs.columns:
+    if all_adata.obs[col].dtype.name in ['object', 'category']:
+        all_adata.obs[col] = all_adata.obs[col].astype(str)
+
+all_adata.write(os.path.join(out_dir_csv, f"All_samples_HEV_{out_name}.h5ad"))
 
 
 # --- Finish

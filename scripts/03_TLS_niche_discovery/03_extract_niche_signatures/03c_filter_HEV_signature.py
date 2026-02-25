@@ -13,14 +13,12 @@ import argparse
 import scanpy as sc
 import anndata as ad
 import os
+import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import date
 from datetime import datetime
 import numpy as np
-
-# Custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=10)
 sc.settings.verbosity = 3
@@ -49,6 +47,9 @@ res_dir = args["res_dir"]
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import save_multi_image
 
 # --- Extract some info from the sample sheet
 

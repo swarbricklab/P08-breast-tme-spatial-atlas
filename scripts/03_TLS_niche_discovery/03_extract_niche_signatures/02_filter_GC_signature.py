@@ -16,6 +16,7 @@ import json
 
 import numpy as np
 import os
+import sys
 
 from datetime import date
 
@@ -23,9 +24,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib as mpl
 import argparse
-
-# Custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
 
 mpl.rcParams['pdf.fonttype'] = 42
 
@@ -55,6 +53,9 @@ sample_list = args["samples"]
 project_dir = args["project_dir"]
 
 print(f'Samples in python: {sample_list}')
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import save_multi_image
 
 
 # --- Specify layer to use

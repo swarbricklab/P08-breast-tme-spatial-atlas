@@ -11,6 +11,7 @@
 import argparse
 import os
 import re
+import sys
 from datetime import date, datetime
 from collections.abc import Iterable
 
@@ -25,9 +26,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scanpy as sc
-
-# Import custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -55,6 +53,8 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import save_multi_image
 
 print(f'Samples in python: {sample_list}')
 
@@ -64,7 +64,7 @@ print(f'Samples in python: {sample_list}')
 if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
-    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_hd.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
@@ -113,7 +113,7 @@ threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 bin_size = 25  # um
 
-lr_dir = os.path.join(project_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', resolution, f'threshold_{threshold_adj}', f'{bin_size}um_bin', 'csv_files')
+lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 'csv_files')
 
 most_recent_dir_path = find_most_recent(lr_dir)
 
@@ -133,7 +133,7 @@ resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
 resolution_numbers = int(resolution_numbers)
 
 decon_level = 'subset'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
 
 for sample in sample_list:
     decon_file = f'{sample}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
@@ -147,7 +147,7 @@ for sample in sample_list:
 # --- Also load the revisited spot labels & add to adata
 # These distinguish whether a nearby spot is nearby to TLS_HEV or non_TLS_HEV
 
-lr_dir = os.path.join(project_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', resolution, f'threshold_{threshold_adj}', f'{bin_size}um_bin', 'csv_files')
+lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '03_plot_LR_per_sample', f'{bin_size}um_bin', 'csv_files')
 
 most_recent_dir_path = find_most_recent(lr_dir)
 
@@ -685,18 +685,15 @@ plt.suptitle(f'All samples - Cell type composition of spots sending {lr_adj} sig
 
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '03_check_composition_LTB_signaling_bins')
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '04_check_composition_LTB_signaling_bins')
 
 today = date.today()
 today = today.strftime("%Y%m%d")
 
-out_dir = os.path.join(qc_dir, 'other_signatures', 'HEV_analysis', 'all_samples', 'square_016um', f'threshold_{threshold_adj}', 'LR_analysis',
-                       'HEV_level', f'{bin_size}um_bin', 'cellular_enrichment', lr)
-
-os.makedirs(out_dir, exist_ok=True)
+os.makedirs(qc_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, today, 'plots')
+out_dir_plots = os.path.join(qc_dir, today, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Save plots
@@ -704,7 +701,7 @@ filename = f'All_samples_HEV_{lr}_cellular_enrichment.pdf'
 save_multi_image(os.path.join(out_dir_plots, filename))
 
 # Also save csv for future reference
-out_dir_csv = os.path.join(out_dir, today, 'csv_files')
+out_dir_csv = os.path.join(qc_dir, today, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 filename = f'All_samples_HEV_{lr}_cellular_enrichment.csv'

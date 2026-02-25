@@ -47,14 +47,15 @@ This allows job submission scripts to activate the correct environment automatic
 ### spatial-pilot
 - Used for Visium analysis.
 
-### tifffile
-- Used for image processing and reading TIFF files with the tifffile package.
-
 ### vis-hd
 - Used for Visium HD analysis.
 
 ### xen-hev
 - Used for Xenium analysis (e.g., TLS and HEV region identification).
+
+### shapely
+- Used for scripts that require spatial operations with the `shapely` package, advanced annotation placement with `adjusttext`, and set visualization with `upsetplot`.
+- Key packages: `shapely`, `adjusttext`, `upsetplot`
 
 ---
 
