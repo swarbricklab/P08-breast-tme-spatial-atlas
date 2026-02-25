@@ -107,7 +107,7 @@ def find_most_recent(dir):
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 resolution = 'square_016um'
-bin_size = 0  # um
+bin_size = 25  # um
 
 lr_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 
                         'csv_files')

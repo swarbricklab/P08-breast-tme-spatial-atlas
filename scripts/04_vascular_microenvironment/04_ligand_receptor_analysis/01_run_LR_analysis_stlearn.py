@@ -160,7 +160,7 @@ dist_file = f'{sample_id}_HEV_distances_all_spots.csv'
 distance_df = pd.read_csv(os.path.join(most_recent, dist_file))
 
 # For each HEV group, find all spots within 25 µm
-bin_size = 25
+bin_size = 0
 distance_col = 'nearest_016um_dist_um'
 # Filter the distance DataFrame to only include spots within the specified bin size
 distance_df = distance_df[distance_df[distance_col] <= bin_size]
