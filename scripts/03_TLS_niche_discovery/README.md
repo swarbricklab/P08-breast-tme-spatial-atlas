@@ -24,7 +24,7 @@ This directory contains scripts and workflows for identifying, scoring, and char
 
 - **04_map_niche_signatures/**  
   Scoring and spatial mapping of the refined niche signatures across the tissue.
-  - `01_score_signatures.py`: Score all tissue spots for the derived TLS niche gene signatures.
+  - `01_score_signatures.py`: Score all tissue spots for the derived TLS niche gene signatures. This script contains a parameter (`use_resource_signatures`) to either load newly generated signatures from the results directory (set to `False`) or use the gene signatures extracted by the original analysis as reported in the manuscript (set to `True`, loads from [../../resources/gene_lists/TLS_niche_signatures/niche_signatures.csv](../../resources/gene_lists/TLS_niche_signatures/niche_signatures.csv)).
   - `02_group_high_score_areas.py`: Group contiguous regions with high TLS niche scores to enable region quantification (e.g., count GC reactions per tissue).
 
 ## Workflow Overview
