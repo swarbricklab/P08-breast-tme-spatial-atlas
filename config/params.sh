@@ -16,14 +16,9 @@ h5ad_dir="$project_dir/data/anndata_objects" # Path to the h5ad files (anndata o
 log_dir="$project_dir/logs"
 mkdir -p $log_dir
 
-# Other arguments (for qc)
-min_count=1000
-min_gene=200
-min_spots=3
-
 # Environment to use
-environment="vis-hd"
+environment="spatial-pilot"
 
 # Visium sample sheet: contains the names of the visium samples
 config_dir="$project_dir/config"
-visium_sample_sheet="$config_dir/sample_sheet_visium_hd.csv"
+visium_sample_sheet="$config_dir/sample_sheet_visium.csv"
