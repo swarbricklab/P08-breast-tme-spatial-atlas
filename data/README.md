@@ -31,7 +31,7 @@ Pathologist annotations of tissue compartments and structures at the spot/bin le
 
 - **visium/** - Spot-level annotations for Visium samples. Annotations were performed in multiple layers (epithelial, immune, and stromal features annotated separately), with a final collapsed column (`single_layer`) providing a single annotation label per spot barcode.
 - **visium_hd/** - Bin-level annotations for Visium HD samples, performed on 8 µm bins. Each bin received a single annotation label (not done in layers).
-- **visium_lymph_nodes/** - Germinal center annotations for lymph node samples (CSV (spot-level) and GeoJSON formats).
+- **visium_lymph_nodes/** - Germinal center annotations for lymph node samples (CSV (spot-level) and GeoJSON formats). GeoJSON files can be visualized in [QuPath](https://qupath.github.io/) by first opening the corresponding H&E image, then dragging and dropping the GeoJSON file into QuPath.
 
 Annotations assign spatial locations to tissue compartments such as epithelial (e.g., invasive, in situ, normal), stroma (e.g., fibrous, adipose), immune infiltration, and blood vessels.
 
