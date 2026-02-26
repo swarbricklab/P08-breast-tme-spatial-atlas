@@ -57,7 +57,7 @@ qsub -N "${name}_all_samples" \
     -m a \
     -l walltime=01:00:00 \
     -l ncpus=$n_cores \
-    -l mem=150gb \
+    -l mem=50gb \
     -l storage=gdata/a56+gdata/px14+scratch/px14 \
     -V \
     -- $run_script_file $function_script_file $h5ad_dir $project_dir $environment $res_dir $visium_sample_sheet ${samples[@]}
