@@ -13,10 +13,8 @@ h5ad_dir=$2
 project_dir=$3
 sample_id=$4
 environment=$5
-min_gene=$6
-min_count=$7
-res_dir=$8
-visium_sample_sheet=$9
+res_dir=$6
+visium_sample_sheet=$7
 
 # Initialize Conda environment
 if [ -f /g/data/a56/conda/miniconda3/etc/profile.d/conda.sh ]; then
@@ -32,7 +30,5 @@ $function_script_file \
   --h5ad_dir $h5ad_dir \
   --sample_id $sample_id \
   --project_dir $project_dir \
-  --min_gene $min_gene \
-  --min_count $min_count \
   --res_dir $res_dir \
   --sample_sheet $visium_sample_sheet \

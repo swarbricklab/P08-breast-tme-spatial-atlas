@@ -43,10 +43,6 @@ parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
-
-parser.add_argument("--min_count", help="Min count for QC", type=int)
-parser.add_argument("--min_gene", help="Min gene for QC", type=int)
-parser.add_argument("--min_spots", help="Minimal spots per gene", type=int)
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())

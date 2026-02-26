@@ -28,8 +28,6 @@ parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
-parser.add_argument("--min_count", help="Minimal number of counts per spot", type=int)
-parser.add_argument("--min_gene", help="Minimal number of genes per spot", type=int)
 
 args = vars(parser.parse_args())
 
@@ -40,8 +38,6 @@ h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
 
-min_count=args["min_count"]
-min_gene=args["min_gene"]
 
 # --- Extract some info from the sample sheet
 
