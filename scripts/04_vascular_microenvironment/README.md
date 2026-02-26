@@ -6,7 +6,7 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
 
 - **01_identify_HEV_niches/** 
   Identification and spatial grouping of HEV structures.
-  - `01_score_signature.py`: Score Visium HD bins for HEV and TLS zone signatures.
+  - `01_score_signature.py`: Score Visium HD bins for HEV and TLS zone signatures. This script contains a parameter (`use_resource_signatures`) to either load newly generated signatures from the results directory (set to `False`) or use the gene signatures extracted by the original analysis as reported in the manuscript (set to `True`, loads from [../../resources/gene_lists/TLS_niche_signatures/niche_signatures.csv](../../resources/gene_lists/TLS_niche_signatures/niche_signatures.csv)).
   - `02a_group_HEV_bins.py`: Identify high-scoring HEV "seed" bins and group contiguous regions.
   - `02b_expand_HEV_groups.py`: Apply the "seed-and-expand" algorithm to include neighboring bins with lower HEV scores into discrete vascular structures.
   - `03a_identify_TLS_areas.py`: Segment and group continuous TLS regions.
