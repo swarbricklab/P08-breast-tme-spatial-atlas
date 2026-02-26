@@ -104,5 +104,6 @@ To reproduce the analysis:
 Each script includes:
 - Argparse-based command-line interface for flexible execution
 - Environment specifications in script headers (e.g., `# env: xen-hev`)
+- Conda environment YAML files can be found in [../environment/](../environment/)
 
 For specific analysis details and script execution order within each workflow, refer to the README files in each subdirectory.
