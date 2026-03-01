@@ -1,0 +1,11 @@
+md5: 8f46dc58757aadec4c4f2311196d31e4
+frozen: true
+deps:
+- path: data/processed_tidy
+  repo:
+    url: git@github.com:swarbricklab/P08-Spatial-Benchmarking-Data-for-publication.git
+    rev_lock: 5499e00703332093b02d3a61604727df769faad1
+outs:
+- hash: md5
+  path: processed
+  md5: 5758cfcab0fed00915a2d0dc46e6d5a0.dir

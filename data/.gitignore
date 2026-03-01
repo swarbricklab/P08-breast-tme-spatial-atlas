@@ -2,3 +2,5 @@
 /pathology_annotations
 /spatialdata_objects
 /images
+/processed
+.dt/tmp/
