@@ -50,6 +50,18 @@ tar -xzf GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz
 **Usage:**
 The raw count matrices are processed into an AnnData object using [01_create_GEO_miniatlas_object.py](../scripts/02_cell_type_mapping/visium_deconvolution/01_prepare_sc_ref/01_create_GEO_miniatlas_object.py), which creates `h5ad_dir/sc_ref/miniatlas_GEO.h5ad` for downstream cell type deconvolution and label transfer.
 
+### probe_set/
+
+Xenium gene panel information:
+
+- **xenium_panel.csv** - Complete list of genes included in the Xenium spatial transcriptomics panel
+  - `gene_name` - Gene symbol
+  - `ensembl_id` - Ensembl gene identifier
+  - `num_probesets` - Number of probe sets targeting this gene
+  - `panel_source` - Panel origin (Xenium_Prime_Human_5Kpan or Custom_Breast_100g)
+
+This file is used to subset the single-cell reference data to genes measured by Xenium for label transfer analysis (see [01_prepare_sc_ref_for_tangram.py](../scripts/02_cell_type_mapping/xenium_label_transfer/01_prepare_sc_ref_for_tangram.py)).
+
 ### plotting_colors/
 
 Standardized color palettes for consistent visualization (CSV format):
