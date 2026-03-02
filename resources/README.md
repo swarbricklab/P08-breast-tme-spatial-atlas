@@ -48,7 +48,7 @@ tar -xzf GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz
   - `genes.tsv` - Gene mapping from the original GEO dataset
 
 **Usage:**
-The raw count matrices are processed into an AnnData object using `scripts/02_cell_type_mapping/visium_deconvolution/01_prepare_sc_ref/01_create_GEO_miniatlas_object.py`, which creates `h5ad_dir/sc_ref/miniatlas_GEO.h5ad` for downstream cell type deconvolution and label transfer.
+The raw count matrices are processed into an AnnData object using [01_create_GEO_miniatlas_object.py](../scripts/02_cell_type_mapping/visium_deconvolution/01_prepare_sc_ref/01_create_GEO_miniatlas_object.py), which creates `h5ad_dir/sc_ref/miniatlas_GEO.h5ad` for downstream cell type deconvolution and label transfer.
 
 ### plotting_colors/
 
