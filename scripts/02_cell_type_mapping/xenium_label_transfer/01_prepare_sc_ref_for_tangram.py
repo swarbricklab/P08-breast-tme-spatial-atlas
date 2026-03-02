@@ -26,8 +26,10 @@ parser = argparse.ArgumentParser(description="Prepare sc reference for Tangram",
 
 # Required
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
-parser.add_argument("--annotation_level", help="Annotation level to use", default='subset')
 parser.add_argument("--sample_id", help="Sample ID (optional, for output organization)", default=None)
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--res_dir", help="Path to results output directory", default=None)
+parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 
 args = vars(parser.parse_args())
 
@@ -35,6 +37,8 @@ args = vars(parser.parse_args())
 # --- Arguments
 
 project_dir = args['project_dir']
+h5ad_dir = args['h5ad_dir']
+res_dir=args["res_dir"]
 
 
 # --- Load data
@@ -43,28 +47,24 @@ project_dir = args['project_dir']
 probe_set_dir = os.path.join(project_dir, 'resources', 'probe_set')
 
 print("Loading probe set files...")
-# Load the 5k panel metadata
-panel_5k = pd.read_csv(os.path.join(probe_set_dir, 'XeniumPrimeHuman5Kpan_tissue_pathways_metadata.csv'))
-# Load the 100 gene breast panel
-panel_100g = pd.read_csv(os.path.join(probe_set_dir, '23Q3D7_hBreast_100g_gene_list.csv'))
+# Load the full panel list
+filename = 'xenium_panel.csv'
+panel = pd.read_csv(os.path.join(probe_set_dir, filename))
 
-# Extract Ensembl IDs from both files
-genes_5k = panel_5k['gene_id'].values
-genes_100g = panel_100g['Ensembl ID'].values
+# Extract Ensembl IDs from the panel
+genes_in_adata = panel['ensembl_id'].values
 
 # Combine and get unique genes
-genes_in_adata = np.unique(np.concatenate([genes_5k, genes_100g]))
+genes_in_adata = np.unique(genes_in_adata)
 
 print(f"Total unique genes from probe sets: {len(genes_in_adata)}")
 
 # Also make an ensembl to gene symbol dict based on the csv files
-ensembl_to_symbol_5k = dict(zip(panel_5k['gene_id'], panel_5k['gene_name']))
-ensembl_to_symbol_100g = dict(zip(panel_100g['Ensembl ID'], panel_100g['Gene']))
-ensembl_to_symbol = {**ensembl_to_symbol_5k, **ensembl_to_symbol_100g}
+ensembl_to_symbol = dict(zip(panel['ensembl_id'], panel['gene_name']))
 
 # Load the sc_ref
-sc_ref_dir = os.path.join(project_dir, 'resources', 'sc_ref')
-ref_file = 'miniatlas_GEO_raw.h5ad'
+sc_ref_dir = os.path.join(h5ad_dir, 'sc_ref')
+ref_file = 'miniatlas_GEO.h5ad'
 
 print(f"Loading reference from {os.path.join(sc_ref_dir, ref_file)}")
 ref = ad.read_h5ad(os.path.join(sc_ref_dir, ref_file))
@@ -101,7 +101,7 @@ ref.layers['norm'] = sc.pp.normalize_total(ref, target_sum=1e4, inplace=False)['
 ref.layers['log_norm'] = sc.pp.log1p(ref.layers['norm'], copy=True)
 
 # Create output directory
-out_dir = os.path.join(project_dir, 'results', 'annotation', 'tangram', 'reference')
+out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', 'reference')
 os.makedirs(out_dir, exist_ok=True)
 
 # Loop through each annotation level
