@@ -120,8 +120,8 @@ if adata.var['dedup_name'].isnull().sum() > 0:
 
 # --- Store raw counts and normalize
 
-# Store raw counts in .raw slot
-adata.raw = adata
+# Store raw counts in a layer (more reliable than .raw for serialization)
+adata.layers['counts'] = adata.X.copy()
 
 # Normalize and log-transform, store in .X
 sc.pp.normalize_total(adata, target_sum=1e4)
