@@ -34,6 +34,8 @@ parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
 parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
+parser.add_argument("--res_dir", help="Path to results directory")
 
 
 args = vars(parser.parse_args())
@@ -44,6 +46,7 @@ project_dir = args["project_dir"]
 raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
+res_dir=args["res_dir"]
 
 outs_path=args["outs_path"]
 
@@ -53,16 +56,18 @@ os.makedirs(h5ad_dir, exist_ok=True)
 
 # --- Load the sample sheet
 
-sample_sheet = pd.read_csv(os.path.join(project_dir, 'config', 'sample_sheet.csv'))
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_xenium.csv')
 
-# Extract the slide id from the sample sheet
-xen_slide_id = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'xen_slide_id'].values[0]
-print(f"Xenium slide ID: {xen_slide_id}")
+sample_sheet = pd.read_csv(sample_sheet_path)
 
 
 # --- Load the previously created spatialdata object
 
-spat_dat_dir = os.path.join(project_dir, 'data', 'processed', 'spatialdata_objects', 'log_norm')
+spat_dat_dir = os.path.join(project_dir, 'data', 'spatialdata_objects', 'xenium', 'without_image')
 
 filename = f'{sample_id}.zarr'
 
@@ -77,8 +82,8 @@ sdata = sd.read_zarr(os.path.join(spat_dat_dir, filename))
 # --- Load the transformation matrix
 # Records how the image was aligned to the xenium coordinates
 
-alignment_dir = os.path.join(project_dir, 'resources', 'image_alignment', '5k_alignment', f'{sample_id}_alignment_files')
-transform_matrix = pd.read_csv(os.path.join(alignment_dir, 'matrix.csv'), header=None).to_numpy()
+alignment_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'alignment_matrix')
+transform_matrix = pd.read_csv(os.path.join(alignment_dir, f'{sample_id}_matrix.csv'), header=None).to_numpy()
 
 
 # --- Do an inverse transform to align the data with the image
@@ -93,7 +98,7 @@ affine_transformation = Affine(inv_transform_matrix, input_axes=('x', 'y'), outp
 # --- Because the image was cropped, we need to do an additional shift transformation
 
 # Load the crop coords
-image_dir = os.path.join(project_dir, 'data', 'images', sample_id, 'cropped_images')
+image_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'crop_coords')
 coords_file = f'{sample_id}_crop_coordinates.csv'
 
 coords_df = pd.read_csv(os.path.join(image_dir, coords_file))
@@ -137,7 +142,7 @@ for key, labels in sdata.labels.items():
 # --- Save the spatialdata object with new alignment
 
 # save AnnData object to *.h5ad file
-outs_dir = os.path.join(project_dir, 'data', 'processed', 'spatialdata_objects', 'aligned_with_HE')
+outs_dir = os.path.join(project_dir, 'data', 'spatialdata_objects', 'xenium')
 os.makedirs(outs_dir, exist_ok=True)
 
 print(f"Saving .h5ad files to {outs_dir}")

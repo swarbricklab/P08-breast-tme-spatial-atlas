@@ -28,6 +28,8 @@ parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
+parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
+parser.add_argument("--res_dir", help="Path to results directory")
 
 args = vars(parser.parse_args())
 
@@ -37,23 +39,13 @@ raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir=args["res_dir"]
 
-
-# --- Extract some info from the sample sheet
-
-# Extract the section_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
-
-joined_id = f'{external_id}-{sample_id}'
 
 # --- Load the raw anndata object
 
-input_adata_dir = os.path.join(project_dir, h5ad_dir, 'raw')
-adata = ad.read(os.path.join(input_adata_dir, f'{joined_id}_raw.h5ad'))
+input_adata_dir = os.path.join(h5ad_dir, 'visium', 'raw')
+adata = ad.read(os.path.join(input_adata_dir, f'{sample_id}_raw.h5ad'))
 
 
 # --- Do some very conservative filtering: only spots with 0 counts
@@ -102,12 +94,12 @@ sc.tl.leiden(adata, key_added='leiden', resolution=1)
 
 # --- Save output
 
-outs_dir = os.path.join(h5ad_dir, 'log_norm')
+outs_dir = os.path.join(h5ad_dir, 'visium')
 
 os.makedirs(outs_dir, exist_ok=True)
 
 print(f"Saving .h5ad files to {outs_dir}")
 
-ad.AnnData.write(adata, filename=os.path.join(outs_dir, f"{joined_id}_log_norm.h5ad"), compression='lzf')
+ad.AnnData.write(adata, filename=os.path.join(outs_dir, f"{sample_id}.h5ad"), compression='lzf')
 
 print("Script succesfully completed")
