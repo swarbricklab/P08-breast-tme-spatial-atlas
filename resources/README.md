@@ -21,6 +21,35 @@ Cell type reference information:
 
 - **miniatlas/** - Cell type hierarchies and metadata from the [single-cell reference atlas](https://doi.org/10.1038/s41588-021-00911-1) (major, minor, subset annotation levels)
 
+### sc_ref/
+
+Single-cell reference data for cell type deconvolution:
+
+**Data retrieval:**
+The single-cell reference data was imported with `dvc import-url` and is stored as a compressed archive. To access the data, download it directly from the source URL specified in `resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc`:
+
+```bash
+# Download from the URL in the .dvc file (GEO accession GSE176078)
+cd resources/sc_ref
+wget "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE176078&format=file&file=GSE176078%5FWu%5Fetal%5F2021%5FBRCA%5FscRNASeq%2Etar%2Egz"
+
+# Extract the tar archive to get the Wu_etal_2021_BRCA_scRNASeq directory
+tar -xzf GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz
+```
+
+**Contents:**
+- **Wu_etal_2021_BRCA_scRNASeq/** - Breast cancer single-cell RNA-seq data from [Wu et al., 2021](https://doi.org/10.1038/s41588-021-00911-1)
+  - `count_matrix_sparse.mtx` - Raw count matrix (sparse format)
+  - `count_matrix_genes.tsv` - Gene identifiers
+  - `count_matrix_barcodes.tsv` - Cell barcodes
+  - `metadata.csv` - Cell metadata with annotations
+- **ensembl_mapping/** - Gene symbol to Ensembl ID mapping files for resolving naming inconsistencies
+  - `map.csv` - Curated gene mapping file
+  - `genes.tsv` - Gene mapping from the original GEO dataset
+
+**Usage:**
+The raw count matrices are processed into an AnnData object using `scripts/02_cell_type_mapping/visium_deconvolution/01_prepare_sc_ref/01_create_GEO_miniatlas_object.py`, which creates `h5ad_dir/sc_ref/miniatlas_GEO.h5ad` for downstream cell type deconvolution and label transfer.
+
 ### plotting_colors/
 
 Standardized color palettes for consistent visualization (CSV format):
