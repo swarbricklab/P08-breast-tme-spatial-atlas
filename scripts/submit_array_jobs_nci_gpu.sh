@@ -19,7 +19,7 @@ source "../config/params.sh"
 
 # --- Paths to donwstream scripts
 
-run_script_file="$cwd/run_single_sample.sh" # downstream bash script that will run the python script
+run_script_file="$cwd/run_single_sample_job.sh" # downstream bash script that will run the python script
 function_script_file="$cwd/$file_name" # actual python script to be run
 
 
@@ -27,7 +27,7 @@ function_script_file="$cwd/$file_name" # actual python script to be run
 # Identify all from the sample sheet
 # Extract the section_id column
 samples=$(awk -F',' 'NR > 1 {print $3}' $visium_sample_sheet) 
-# samples="subset"
+# samples="major"
 
 echo "Identified samples: $samples"
 
