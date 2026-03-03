@@ -334,7 +334,7 @@ cropped_adata_dict = {}
 original_hires_key = 'original_hires'
 
 # Load images
-image_dir = os.path.join(project_dir, 'data', 'images', 'visium')
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'visium')
 
 for n, TLS in enumerate(TLS_coords):
     coords = TLS_coords[TLS]

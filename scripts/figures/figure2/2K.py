@@ -239,7 +239,7 @@ for score_name in score_names:
 # --- Load the full resolution image
 
 # Find the original high-res image
-image_dir = os.path.join(project_dir, 'data', 'images', 'visium')
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'visium')
 image_file = f'{sample_id}.ome.tif'
 image_file_path = os.path.join(image_dir, image_file)
 
