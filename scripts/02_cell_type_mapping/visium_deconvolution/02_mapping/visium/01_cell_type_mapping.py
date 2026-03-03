@@ -16,7 +16,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from datetime import date
 from datetime import datetime
 
 import cell2location
@@ -41,11 +40,11 @@ parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--res_dir", help="Path to results output directory", default=None)
 
 
 args = vars(parser.parse_args())
@@ -63,7 +62,7 @@ h5ad_dir = args['h5ad_dir']
 if args["sample_sheet"] is not None:
     sample_sheet_path = args["sample_sheet"]
 else:
-    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 
@@ -74,43 +73,14 @@ sample_sheet = pd.read_csv(sample_sheet_path)
 sc_ref = 'miniatlas_GEO'
 
 # Decide which level to run
-level = 'subset'
-
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
+level = 'major'
 
 # Apply the function
-if sc_ref == 'miniatlas_GEO':
-    model_dir = os.path.join(project_dir, 'results', 'cell2location', sc_ref, f'{level}_level', 'model')
-else:
-    model_dir = os.path.join(project_dir, 'resources', 'cell2location', 'pretrained_models', sc_ref,)
-    if 'miniatlas' in sc_ref:
-        model_dir = os.path.join(model_dir, f'{level}_level',)
-
-most_recent_dir_path = find_most_recent(model_dir)
+model_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 
 adata_file = f"reference_signatures/sc.h5ad"
-adata_ref = sc.read_h5ad(os.path.join(most_recent_dir_path, adata_file))
-mod = cell2location.models.RegressionModel.load(os.path.join(most_recent_dir_path, 'reference_signatures'), adata_ref)
+adata_ref = sc.read_h5ad(os.path.join(model_dir, adata_file))
+mod = cell2location.models.RegressionModel.load(os.path.join(model_dir, 'reference_signatures'), adata_ref)
 
 # Record parameters
 N_cells_per_location=20
@@ -120,7 +90,7 @@ max_epochs=30000
 train_size=1
 use_gpu=True
 
-parameters_log = {'N_cells_per_location': N_cells_per_location, 'detection_alpha': detection_alpha,'path_to_model': most_recent_dir_path, 'max_epochs': max_epochs, 
+parameters_log = {'N_cells_per_location': N_cells_per_location, 'detection_alpha': detection_alpha,'path_to_model': model_dir, 'max_epochs': max_epochs, 
                   'batch_size': str(batch_size), 'train_size':train_size, 'use_gpu': use_gpu, 'subset_level': level, 'sc_ref': sc_ref}
 
 
@@ -128,8 +98,10 @@ parameters_log = {'N_cells_per_location': N_cells_per_location, 'detection_alpha
 print(f'Running sample {sample_id}')
 
 # --- Load the visium data
-input_adata_dir = os.path.join(h5ad_dir, 'raw')
-adata_vis = ad.read(os.path.join(input_adata_dir, f'{sample_id}_raw.h5ad'))
+input_adata_dir = os.path.join(h5ad_dir, 'visium',)
+adata_vis = ad.read(os.path.join(input_adata_dir, f'{sample_id}.h5ad'))
+
+# Note: .X contains filtered raw counts (cell2location requires raw counts)
 
 # --- Visium preprocessing
 
@@ -148,15 +120,10 @@ adata_vis = adata_vis[:, ~adata_vis.var['MT_gene'].values]
 
 # --- Prepare for saving
 
-res_dir = os.path.join(project_dir, 'results')
-qc_dir = os.path.join(res_dir, 'cell2location', sc_ref,)
-if 'miniatlas' in sc_ref:
-    qc_dir = os.path.join(qc_dir, f'{level}_level',)
-
-qc_dir = os.path.join(qc_dir, sample_id)
+qc_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level', sample_id)
 os.makedirs(qc_dir, exist_ok=True)
 
-out_dir = os.path.join(qc_dir, f'n_cells_{N_cells_per_location}')
+out_dir = os.path.join(qc_dir)
 os.makedirs(out_dir, exist_ok=True)
 
 # Also make an output directory for the plots
@@ -241,7 +208,10 @@ adata_vis.write(os.path.join(out_dir, 'model_output', adata_file))
 # 5% quantile of the posterior distribution, representing the value of cell abundance that the model has high confidence in (aka ‘at least this amount is present’)
 adata_vis.obs[adata_vis.uns['mod']['factor_names']] = adata_vis.obsm['q05_cell_abundance_w_sf']
 abundance_df = adata_vis.obs[adata_vis.uns['mod']['factor_names']]
-abundance_df.to_csv(os.path.join(out_dir, 'model_output', 'q05_cell_abundance_w_sf.csv'))
+
+# Save one dir up
+out_dir_cell_abundance = os.path.dirname(out_dir)
+abundance_df.to_csv(os.path.join(out_dir_cell_abundance, f'{sample_id}_q05_cell_abundance_w_sf.csv'))
 
 # --- Assess mapping quality
 mod.plot_QC()

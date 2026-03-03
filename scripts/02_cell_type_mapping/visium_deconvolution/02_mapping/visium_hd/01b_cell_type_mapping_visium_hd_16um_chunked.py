@@ -18,12 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from datetime import date
-from datetime import datetime
-
 import cell2location
 import pyro
-import json
 
 # Set seed for reproducibility
 import scvi
@@ -49,6 +45,8 @@ parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--res_dir", help="Path to results output directory", default=None)
 
 args = vars(parser.parse_args())
 
@@ -61,49 +59,28 @@ h5ad_dir = args['h5ad_dir']
 
 # --- Extract some info from the sample sheet
 
-# Extract the section_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Determine sample sheet path
+if args["sample_sheet"] is not None:
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
+sample_sheet = pd.read_csv(sample_sheet_path)
 
 
 # --- Load the model
 
-# Use the model from the benchmarking cohort
+# Decide which sc reference to use
+sc_ref = 'miniatlas_GEO'
 
 # Decide which level to run
-level = 'subset'
+level = 'major'
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-# Apply the function
-model_dir = os.path.join(project_dir, 'resources', 'cell2location', 'model', f'{level}_level')
-most_recent_dir_path = find_most_recent(model_dir)
+model_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 
 adata_file = f"reference_signatures/sc.h5ad"
-adata_ref = sc.read_h5ad(os.path.join(most_recent_dir_path, adata_file))
-mod = cell2location.models.RegressionModel.load(os.path.join(most_recent_dir_path, 'reference_signatures'), adata_ref)
+adata_ref = sc.read_h5ad(os.path.join(model_dir, adata_file))
+mod = cell2location.models.RegressionModel.load(os.path.join(model_dir, 'reference_signatures'), adata_ref)
 
 # Export estimated expression in each cluster
 if 'means_per_cluster_mu_fg' in adata_ref.varm.keys():
@@ -122,9 +99,10 @@ inf_aver.iloc[0:5, 0:5]
 # Decide which resolution to use
 resolution = 'square_016um'
 
-input_adata_dir = os.path.join(h5ad_dir, resolution, 'raw')
-adata_vis = ad.read_h5ad(os.path.join(input_adata_dir, f'{sample_id}_raw.h5ad'))
+input_adata_dir = os.path.join(h5ad_dir, 'visium_hd', resolution)
+adata_vis = ad.read_h5ad(os.path.join(input_adata_dir, f'{sample_id}.h5ad'))
 
+# Note: .X contains raw counts (cell2location requires raw counts)
 
 # --- Visium preprocessing
 
@@ -147,9 +125,8 @@ inf_aver = inf_aver.loc[intersect, :].copy()
 
 # --- Prepare for saving
 
-res_dir = os.path.join(project_dir, 'results')
-qc_dir = os.path.join(res_dir, 'cell2location', f'{level}_level', sample_id)
-os.makedirs(qc_dir, exist_ok=True)
+out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{level}_level', resolution, sample_id)
+os.makedirs(out_dir, exist_ok=True)
 
 # Set ncells per location based on resolution
 cells_dict = {
@@ -161,9 +138,6 @@ if resolution in cells_dict:
     N_cells_per_location = cells_dict[resolution]
 else:
     N_cells_per_location = 10
-
-out_dir = os.path.join(qc_dir, resolution, f'n_cells_{N_cells_per_location}')
-os.makedirs(out_dir, exist_ok=True)
 
 # Also make an output directory for the plots
 out_dir_plots = os.path.join(out_dir, 'plots')
@@ -205,8 +179,8 @@ max_epochs=30000
 train_size=1
 use_gpu=True
 
-parameters_log = {'N_cells_per_location': N_cells_per_location, 'detection_alpha': detection_alpha,'path_to_model': most_recent_dir_path, 'max_epochs': max_epochs, 
-                  'batch_size': str(batch_size), 'train_size':train_size, 'use_gpu': use_gpu, 'subset_level': level, 'chunk_size': chunk_size,}
+parameters_log = {'N_cells_per_location': N_cells_per_location, 'detection_alpha': detection_alpha,'path_to_model': model_dir, 'max_epochs': max_epochs, 
+                  'batch_size': str(batch_size), 'train_size':train_size, 'use_gpu': use_gpu, 'subset_level': level, 'sc_ref': sc_ref, 'chunk_size': chunk_size,}
 
 chunk_sizes = adata_vis.obs["training_batch"].value_counts().to_dict()
 
@@ -322,7 +296,10 @@ factor_names = adata_vis_full.uns[f'mod_{first_batch}']['factor_names']
 
 adata_vis_full.obs[factor_names] = adata_vis_full.obsm['q05_cell_abundance_w_sf']
 abundance_df = adata_vis_full.obs[factor_names]
-abundance_df.to_csv(os.path.join(out_dir, 'model_output', 'q05_cell_abundance_w_sf.csv'))
+
+# Save one dir up
+out_dir_cell_abundance = os.path.dirname(out_dir)
+abundance_df.to_csv(os.path.join(out_dir_cell_abundance, f'{sample_id}_{level}_q05_cell_abundance_w_sf.csv'))
 
 
 # --- Finish
