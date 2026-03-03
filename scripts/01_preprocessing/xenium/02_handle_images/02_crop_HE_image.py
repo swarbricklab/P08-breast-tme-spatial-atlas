@@ -33,6 +33,8 @@ parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
 parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
+parser.add_argument("--res_dir", help="Path to results directory")
 
 
 args = vars(parser.parse_args())
@@ -42,6 +44,7 @@ args = vars(parser.parse_args())
 raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
+res_dir=args["res_dir"]
 
 outs_path=args["outs_path"]
 project_dir=args['project_dir']
@@ -50,7 +53,8 @@ project_dir=args['project_dir']
 # --- Load data
 
 # Load the file that has the pixel coordinates
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'with_images', f'{sample_id}_with_image.h5ad'))
+# Make sure to run 01_make_adata_objects_with_images.py first to create the anndata object with the images and pixel coordinates
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 
 # --- Calculate crop coordinates based on the spots
@@ -98,17 +102,10 @@ print(f"Crop coordinates: {coords}")
 
 # --- Crop the H&E image
 
-image_dir = os.path.join(project_dir, 'data', 'images', f'{sample_id}')
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'whole_slide_images', 'xenium')
 
 # Find the .ome.tif file in the directory
-image_file = [f for f in os.listdir(image_dir) if f.endswith('.ome.tif')]
-if len(image_file) == 0:
-    raise FileNotFoundError(f"No .ome.tif file found in {image_dir}")
-elif len(image_file) > 1:
-    raise ValueError(f"Multiple .ome.tif files found in {image_dir}: {image_file}")
-else:
-    image_file = image_file[0]
-
+image_file = f'{sample_id}_he_wsi.ome.tif'
 print(f"Using image file: {image_file}")
 image_path = os.path.join(image_dir, image_file)
 
@@ -130,10 +127,12 @@ with tifffile.TiffFile(image_path) as tif:
 
 # Save the cropped data as a new OME-TIFF
 filename = f'{sample_id}_cropped_HE'
-os.makedirs(f'{image_dir}/cropped_images', exist_ok=True)
+
+out_dir = os.path.join(res_dir, '01_preprocessing', 'xenium', 'cropped_images')
+os.makedirs(out_dir, exist_ok=True)
 
 tifffile.imwrite(
-    f'{image_dir}/cropped_images/{filename}.tif',
+    os.path.join(out_dir, f'{filename}.tif'),
     cropped_data,
 )
 
@@ -144,7 +143,7 @@ tifffile.imwrite(
 # cmd = (
 #     "export MODULEPATH=/g/data/a56/software/modules:$MODULEPATH; "
 #     "module load QuPath; "
-#     f"cd {image_dir}/cropped_images; "
+#     f"cd {out_dir}; "
 #     f"ndpi2ome {filename}.tif {filename}.ome.tif"
 # )
 
@@ -191,13 +190,14 @@ adata.uns['spatial'][sample_id]['images']['lowres'] = cropped_lowres
 
 # --- Save the adata object
 
-adata.write_h5ad(os.path.join(h5ad_dir, 'with_images', f'{sample_id}_with_image.h5ad'))
-
-sc.pl.spatial(adata, color='x_centroid', img_key='hires',)
+adata.write_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 # Also save the coords that were used for cropping
+out_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'crop_coords')
+os.makedirs(out_dir, exist_ok=True)
+
 coords_df = pd.DataFrame([[x_start, x_end, y_start, y_end]], columns=['x_start', 'x_end', 'y_start', 'y_end'])
-coords_df.to_csv(os.path.join(image_dir, 'cropped_images', f'{sample_id}_crop_coordinates.csv'), index=False)
+coords_df.to_csv(os.path.join(out_dir, f'{sample_id}_crop_coordinates.csv'), index=False)
 
 
 # --- Finish

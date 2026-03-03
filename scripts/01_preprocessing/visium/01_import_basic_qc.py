@@ -30,6 +30,8 @@ parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
+parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
+parser.add_argument("--res_dir", help="Path to results directory")
 
 args = vars(parser.parse_args())
 
@@ -39,6 +41,7 @@ raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir=args["res_dir"]
 
 
 # Make directories if they don't exist yet
@@ -48,29 +51,18 @@ os.makedirs(h5ad_dir, exist_ok=True)
 # --- Extract some info from the sample sheet
 
 # Extract the section_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
-
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
-
-# Create dictionary to store metadata
-metadata_dict = {}
-
-metadata_dict['section_id'] = sample_id
-metadata_dict['external_id'] = external_id
-
-# Patient id
-metadata_dict['donor_id'] = sample_sheet[sample_sheet['section_id'] == sample_id]['donor_id'].values[0].astype(str)
-
-# Visium experiment id
-metadata_dict['vis_exp_id'] = sample_sheet[sample_sheet['section_id'] == sample_id]['vis_exp_id'].values[0]
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet_xenium.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
 
 # --- Specify the path to spaceranger outs
 
-joined_id = f'{external_id}-{sample_id}'
-outs_path = os.path.join(raw_data_dir, joined_id, 'outs')
+outs_path = os.path.join(project_dir, 'data', 'processed', 'spaceranger_outs', 'visium', sample_id)
 
 # -- Load data
 
@@ -78,9 +70,11 @@ v2_spatial_file = outs_path + '/spatial/tissue_positions.csv'
 v1_spatial_file = outs_path + '/spatial/tissue_positions_list.csv'
 
 # if V1 spatial position file does not exist, create a new one
+created_v1_file = False
 if os.path.exists(v1_spatial_file) == False:
     v2_spatial_df = pd.read_csv(v2_spatial_file)
     v2_spatial_df.to_csv(path_or_buf = v1_spatial_file, header=None,index=False)
+    created_v1_file = True
 
 adata = sc.read_visium(
     path=outs_path,
@@ -90,8 +84,10 @@ adata = sc.read_visium(
 
 adata.var_names_make_unique()
 
-# Add the metadata to the anndata object for convenience
-adata.uns['metadata'] = metadata_dict
+# Clean up the temporary V1 spatial file if we created it
+if created_v1_file:
+    os.remove(v1_spatial_file)
+
 
 # --- Initial QC
 
@@ -135,13 +131,13 @@ adata.obs['no_counts'] = pd.Categorical(adata.obs['total_counts'], categories=['
 
 # --- Save output
 
-outs_dir = os.path.join(h5ad_dir, 'raw')
+outs_dir = os.path.join(h5ad_dir, 'visium', 'raw')
 
 os.makedirs(outs_dir, exist_ok=True)
 
 print(f"Saving .h5ad files to {outs_dir}")
 
-ad.AnnData.write(adata, filename=os.path.join(outs_dir, f"{joined_id}_raw.h5ad"))
+ad.AnnData.write(adata, filename=os.path.join(outs_dir, f"{sample_id}_raw.h5ad"))
 
 
 print("Script succesfully completed")

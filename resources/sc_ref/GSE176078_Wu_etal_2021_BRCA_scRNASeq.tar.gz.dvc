@@ -1,0 +1,13 @@
+md5: 5dd90db9b3a32d05ce04a894979c4cf1
+frozen: true
+deps:
+- checksum: '248109919490899808673843603360351308212'
+  size: 558829202
+  hash: md5
+  path: 
+    https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE176078&format=file&file=GSE176078%5FWu%5Fetal%5F2021%5FBRCA%5FscRNASeq%2Etar%2Egz
+outs:
+- md5: e6d9df4a627bdd60cb4898be2ede77cd
+  size: 558829202
+  hash: md5
+  path: GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz

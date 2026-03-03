@@ -114,7 +114,7 @@ transformed_sdata = sd.transform(sdata, to_coordinate_system='image_space')
 
 # --- Load the fulres H&E image
 
-image_dir = os.path.join(project_dir, 'data', 'images', 'xenium')
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'xenium')
 image_file = f'{sample_id}.ome.tif'
 
 # Need to set this or it won't let me import my image

@@ -27,34 +27,33 @@ parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
-parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--res_dir", help="Path to results output directory", default=None)
 
 
 args = vars(parser.parse_args())
 
 
 # --- Arguments
-raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 
-outs_path=args["outs_path"]
 project_dir=args['project_dir']
+h5ad_dir = args['h5ad_dir']
+res_dir=args["res_dir"]
 
 
 # --- Load data
 
 # Load the log_norm file
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample_id}_log_norm.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 to_keep = adata.obs_names
 
 # Load the cell feature matrix as an anndata object
-raw_data_dir_sample = os.path.join(raw_data_dir, sample_id)
+raw_data_dir_sample = os.path.join(project_dir, 'data', 'processed', 'xenium_outs', sample_id)
 
 # Load the cell feature matrix as an anndata object
 cell_feature_matrix = 'cell_feature_matrix.h5'
@@ -72,11 +71,11 @@ adata.X = adata_raw.to_df().loc[list(to_keep),].values
 level = 'subset'
 cell_type_key = f'celltype_{level}'
 
-ref_dir = os.path.join(project_dir, 'results', 'annotation', 'tangram', 'reference')
+ref_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', 'reference')
 
 # Load the processed reference
 print(f"Loading pre-processed reference...")
-ref = ad.read_h5ad(os.path.join(ref_dir, 'miniatlas_GEO_raw_processed.h5ad'))
+ref = ad.read_h5ad(os.path.join(ref_dir, 'miniatlas_GEO_processed.h5ad'))
 
 # Load the markers
 print(f"Loading markers...")
@@ -108,7 +107,7 @@ tg.pp_adatas(ref, adata, genes=markers)
 
 # --- Prepare for saving
 
-out_dir = os.path.join(project_dir, 'results', 'annotation', 'tangram', sample_id, f'{level}_level')
+out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 os.makedirs(out_dir, exist_ok=True)
 
 
@@ -152,13 +151,13 @@ annotation_df['pred_cell_type_prob'] = prob_df.max(axis=0)
 # Save probabilities df to gzipped csv
 prob_df = prob_df.T  # Transpose to have cell types as index
 prob_df.to_csv(
-    os.path.join(out_dir, f"{sample_id}_pred_cell_type_probabilities.csv.gz"),
+    os.path.join(out_dir, f"{sample_id}_{level}_pred_cell_type_probabilities.csv.gz"),
     compression='gzip'
 )
 
 # Save the annotation DataFrame to a csv
 annotation_df.to_csv(
-    os.path.join(out_dir, f"{sample_id}_pred_cell_types.csv"),
+    os.path.join(out_dir, f"{sample_id}_{level}_pred_cell_types.csv"),
 )
 
 print("Script succesfully completed")

@@ -32,6 +32,8 @@ parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
 parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
+parser.add_argument("--res_dir", help="Path to results directory")
 
 
 args = vars(parser.parse_args())
@@ -41,6 +43,7 @@ args = vars(parser.parse_args())
 raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
+res_dir=args["res_dir"]
 
 outs_path=args["outs_path"]
 project_dir=args['project_dir']
@@ -48,23 +51,25 @@ project_dir=args['project_dir']
 
 # --- Load the sample sheet
 
-sample_sheet = pd.read_csv(os.path.join(project_dir, 'config', 'sample_sheet.csv'))
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_xenium.csv')
 
-# Extract the slide id from the sample sheet
-xen_slide_id = sample_sheet.loc[sample_sheet['section_id'] == sample_id, 'xen_slide_id'].values[0]
-print(f"Xenium slide ID: {xen_slide_id}")
+sample_sheet = pd.read_csv(sample_sheet_path)
 
 
 # --- Load data
 
 # Load the log_norm file
-adata = ad.read_h5ad(os.path.join(h5ad_dir, 'log_norm', f'{sample_id}_log_norm.h5ad'))
+adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 
 # --- Load the transformation matrix
 
-alignment_dir = os.path.join(project_dir, 'resources', 'image_alignment', '5k_alignment', f'{sample_id}_alignment_files')
-transform_matrix = pd.read_csv(os.path.join(alignment_dir, 'matrix.csv'), header=None).to_numpy()
+alignment_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'alignment_matrix')
+transform_matrix = pd.read_csv(os.path.join(alignment_dir, f'{sample_id}_matrix.csv'), header=None).to_numpy()
 
 
 # --- Try to transform the coordinates of anndata by doing an inverse transform
@@ -101,16 +106,10 @@ adata.obsm['xenium_um_spatial'] = xenium_coords
 
 # --- Load the image
 
-image_dir = os.path.join(project_dir, 'data', 'images', f'{sample_id}')
-
-# Find the .ome.tif file in the directory
-image_file = [f for f in os.listdir(image_dir) if f.endswith('.ome.tif')]
-if len(image_file) == 0:
-    raise FileNotFoundError(f"No .ome.tif file found in {image_dir}")
-elif len(image_file) > 1:
-    raise ValueError(f"Multiple .ome.tif files found in {image_dir}: {image_file}")
-else:
-    image_file = image_file[0]
+# Load the original whole-slide image
+# This is the image that was aligned to the xenium coordinates, so the transformed coordinates should align with this image
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'whole_slide_images', 'xenium')
+image_file = f'{sample_id}_he_wsi.ome.tif'
 
 print(f"Using image file: {image_file}")
 image_path = os.path.join(image_dir, image_file)
@@ -163,10 +162,10 @@ adata.uns['spatial'] = {sample_id: {
 
 # --- Save the adata object with the image & transformed coordinates
 
-out_dir = os.path.join(h5ad_dir, 'with_images')
+out_dir = os.path.join(h5ad_dir, 'xenium')
 os.makedirs(out_dir, exist_ok=True)
 
-adata.write_h5ad(os.path.join(out_dir, f'{sample_id}_with_image.h5ad'))
+adata.write_h5ad(os.path.join(out_dir, f'{sample_id}.h5ad'))
 
 
 # --- Finish

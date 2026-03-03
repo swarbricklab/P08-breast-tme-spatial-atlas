@@ -341,7 +341,7 @@ original_hires_key = 'original_hires'
 aspect_ratio = 1
 
 # Find the original high-res image
-image_dir = os.path.join(project_dir, 'data', 'images', 'visium_hd')
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'visium_hd')
 
 for n, endo in enumerate(crop_areas):
     # Get the crop coordinates

@@ -9,11 +9,10 @@
 
 # --- Load packages
 import argparse
-import scanpy as sc
-import matplotlib.pyplot as plt
 import os
 
-from datetime import date
+import scanpy as sc
+import matplotlib.pyplot as plt
 
 # this line should go before importing cell2location
 os.environ["THEANO_FLAGS"] = 'device=cuda,floatX=float32,force_device=True'
@@ -42,6 +41,8 @@ parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--res_dir", help="Path to results output directory", default=None)
 
 args = vars(parser.parse_args())
 
@@ -49,25 +50,15 @@ args = vars(parser.parse_args())
 # --- Arguments
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+h5ad_dir=args["h5ad_dir"]
 
 
 # --- Prepare for saving
 
-# Decide which reference to use
-reference = 'miniatlas_GEO'
-
 # Decide which level to run
-level = 'subset'
+level = 'major'
 
-res_dir = os.path.join(project_dir, 'results', 'cell2location', reference, f'{level}_level')
-
-qc_dir = os.path.join(res_dir, 'model')
-os.makedirs(qc_dir, exist_ok=True)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir = os.path.join(qc_dir, today)
+out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 os.makedirs(out_dir, exist_ok=True)
 
 # Also make an output directory for the plots
@@ -78,22 +69,21 @@ os.makedirs(out_dir_plots, exist_ok=True)
 # --- Load the single-cell ref
 
 # Use the miniatlas downloaded from cellxgene
-resource_dir = os.path.join(project_dir, 'resources', 'cell2location')
+resource_dir = os.path.join(h5ad_dir, 'sc_ref')
+reference = 'miniatlas_GEO'
 
-ref_file_dict = {
-    'miniatlas_GEO': 'miniatlas_GEO/miniatlas_GEO_raw.h5ad',
-}
+ref_file = f'{reference}.h5ad'
 
-adata_ref = sc.read(os.path.join(resource_dir, ref_file_dict[reference]))
+adata_ref = sc.read(os.path.join(resource_dir, ref_file))
 
-# Check if there is raw data
-if adata_ref.raw is not None:
-    # Extract the raw data (cell2location wants raw data)
+# Extract raw counts from the counts layer (cell2location requires raw counts)
+if 'counts' in adata_ref.layers.keys():
+    adata_ref.X = adata_ref.layers['counts'].copy()
+elif adata_ref.raw is not None:
+    # Fallback to .raw if counts layer doesn't exist
     adata_ref = adata_ref.raw.to_adata()
 else:
-    # Raw data might be in a layer called counts
-    if 'counts' in adata_ref.layers.keys():
-        adata_ref.X = adata_ref.layers['counts']
+    raise ValueError("No raw counts found. Expected 'counts' layer or .raw attribute.")
 
 
 # --- Filter genes

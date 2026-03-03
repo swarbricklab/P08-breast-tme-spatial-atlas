@@ -30,6 +30,8 @@ parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
 parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
+parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
+parser.add_argument("--res_dir", help="Path to results directory")
 
 
 args = vars(parser.parse_args())
@@ -40,6 +42,7 @@ project_dir = args["project_dir"]
 raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
+res_dir=args["res_dir"]
 
 outs_path=args["outs_path"]
 
@@ -49,7 +52,7 @@ os.makedirs(h5ad_dir, exist_ok=True)
 
 # --- Load data
 
-raw_data_dir_sample = os.path.join(raw_data_dir, sample_id)
+raw_data_dir_sample = os.path.join(project_dir, 'data', 'processed', 'xenium_outs', sample_id)
 
 sdata = xenium(path=raw_data_dir_sample, n_jobs=8, cells_as_circles=False, morphology_mip=False, morphology_focus=False, transcripts=True)
 
@@ -104,7 +107,7 @@ sc.pp.log1p(sdata.tables['table'])
 # --- Save the spatialdata object
 
 # save AnnData object to *.h5ad file
-outs_dir = os.path.join(project_dir, 'data', 'processed', 'spatialdata_objects', 'log_norm')
+outs_dir = os.path.join(project_dir, 'data', 'spatialdata_objects', 'xenium', 'without_image')
 os.makedirs(outs_dir, exist_ok=True)
 
 print(f"Saving .h5ad files to {outs_dir}")

@@ -32,6 +32,8 @@ parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
+parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
+parser.add_argument("--res_dir", help="Path to results directory")
 
 args = vars(parser.parse_args())
 
@@ -41,6 +43,7 @@ raw_data_dir = args["raw_data_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir=args["res_dir"]
 
 
 # Make directories if they don't exist yet
@@ -50,31 +53,20 @@ os.makedirs(h5ad_dir, exist_ok=True)
 # --- Extract some info from the sample sheet
 
 # Extract the section_id
-sample_dir = os.path.join(project_dir, 'config')
-sample_sheet_file = 'sample_sheet.csv'
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet_visium_hd.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
-sample_sheet = pd.read_csv(os.path.join(sample_dir, sample_sheet_file))
-external_id = sample_sheet[sample_sheet['section_id'] == sample_id]['external_id'].values[0]
-
-# Create dictionary to store metadata
-metadata_dict = {}
-
-metadata_dict['section_id'] = sample_id
-metadata_dict['external_id'] = external_id
-
-# Patient id
-metadata_dict['donor_id'] = sample_sheet[sample_sheet['section_id'] == sample_id]['donor_id'].values[0].astype(str)
-
-# Visium experiment id
-metadata_dict['vis_exp_id'] = sample_sheet[sample_sheet['section_id'] == sample_id]['vis_exp_id'].values[0]
-
-# Visium experiment id
-metadata_dict['slide_type'] = sample_sheet[sample_sheet['section_id'] == sample_id]['slide_type'].values[0]
+sample_sheet = pd.read_csv(sample_sheet_path)
 
 
 # --- Specify the path to spaceranger outs
 
-outs_path = os.path.join(raw_data_dir, sample_id, 'outs')
+outs_path = os.path.join(project_dir, 'data', 'processed', 'spaceranger_outs', 'visium_hd', sample_id)
 
 # Deal with visium HD resolutions
 binned_outputs_path = os.path.join(outs_path, 'binned_outputs')
@@ -93,9 +85,11 @@ for resolution in resolutions:
     v1_spatial_file = outs_path_res + '/spatial/tissue_positions_list.csv'
 
     # if V1 spatial position file does not exist, create a new one
+    created_v1_file = False
     if os.path.exists(v1_spatial_file) == False:
         v2_spatial_df = pd.read_parquet(hd_spatial_file)
         v2_spatial_df.to_csv(path_or_buf = v1_spatial_file, header=None,index=False)
+        created_v1_file = True
 
     adata = sc.read_visium(
         path=outs_path_res,
@@ -104,9 +98,6 @@ for resolution in resolutions:
     )
 
     adata.var_names_make_unique()
-
-    # Add the metadata to the anndata object for convenience
-    adata.uns['metadata'] = metadata_dict
 
 
     # --- Initial QC
@@ -151,7 +142,7 @@ for resolution in resolutions:
 
     # --- Save output
 
-    outs_dir = os.path.join(h5ad_dir, resolution, 'raw')
+    outs_dir = os.path.join(h5ad_dir, 'visium_hd', resolution, 'raw')
 
     os.makedirs(outs_dir, exist_ok=True)
 
@@ -159,43 +150,8 @@ for resolution in resolutions:
 
     ad.AnnData.write(adata, filename=os.path.join(outs_dir, f"{sample_id}_raw.h5ad"))
 
-
-    # --- Also make an object from the raw feature bc matrix
-    # Has spots that were detected to not be 'on tissue'
-    # Good to check for diffusion (counts in these spots should be low)
-
-    adata = sc.read_visium(
-        path=outs_path_res,
-        count_file='raw_feature_bc_matrix.h5',
-        source_image_path=os.path.join(outs_path_res, 'spatial'),
-        library_id=sample_id
-    )
-
-    adata.var_names_make_unique()
-
-    # Calculate qc metrics
-    sc.pp.calculate_qc_metrics(adata, percent_top=None, log1p=False, inplace=True)
-
-
-    # --- For convenience: add the cytassist image to the object (if there is one)
-
-    cytassist_path = os.path.join(outs_path_res, 'spatial/cytassist_image.tiff')
-
-    if os.path.exists(cytassist_path):
-        # Read in the cytassist image
-        img = plt.imread(os.path.join(outs_path_res, 'spatial/cytassist_image.tiff'))
-        adata.uns['spatial'][sample_id]['images']['cytassist'] = img # Save the cytassist image
-        adata.uns['spatial'][sample_id]['scalefactors']['tissue_cytassist_scalef'] = 0.042 # Add scale factors for plotting with scanpy (note: this is an approximation, not exact)
-
-    # --- Save output
-
-    os.makedirs(os.path.join(h5ad_dir, resolution, 'raw_feature_bc_matrix'), exist_ok=True)
-    print(f"Saving .h5ad files to {h5ad_dir}")
-
-    ad.AnnData.write(adata, filename=os.path.join(h5ad_dir, resolution, "raw_feature_bc_matrix", f"{sample_id}_raw_feature_bc_matrix.h5ad"))
-
-    # Remove the fake v1 spatial file after making it (so that dvc doesn't think the data has changed)
-    if os.path.exists(v1_spatial_file):
+    # Clean up the temporary V1 spatial file if we created it
+    if created_v1_file:
         os.remove(v1_spatial_file)
         print(f"File '{v1_spatial_file}' deleted successfully.")
 

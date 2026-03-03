@@ -7,17 +7,17 @@ This directory contains scripts for cell type mapping in spatial transcriptomics
 - `visium_deconvolution/`
   - `01_prepare_sc_ref/`
     - `01_create_GEO_miniatlas_object.py`: Creates a single-cell reference object from the raw count matrix and metadata obtained from [GEO](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176078) and saves as `.h5ad`.
-    - `02_train_model.py`: Trains a cell2location model using the reference object.
+    - `02_train_model.py`: Trains a cell2location model using the reference object. **Requires GPU** - use `submit_array_jobs_nci_gpu.sh`.
   - `02_mapping/`
     - `visium/`
-      - `01_cell_type_mapping.py`: Maps cell types for standard Visium data using the trained model.
+      - `01_cell_type_mapping.py`: Maps cell types for standard Visium data using the trained model. **Requires GPU** - use `submit_array_jobs_nci_gpu.sh`.
     - `visium_hd/`
-      - `01a_cell_type_mapping_visium_hd_48um.py`: Maps cell types for Visium HD (48um resolution).
-      - `01b_cell_type_mapping_visium_hd_16um_chunked.py`: Maps cell types for Visium HD (16um resolution), splitting the object to avoid GPU memory issues.
+      - `01a_cell_type_mapping_visium_hd_48um.py`: Maps cell types for Visium HD (48um resolution). **Requires GPU** - use `submit_array_jobs_nci_gpu.sh`.
+      - `01b_cell_type_mapping_visium_hd_16um_chunked.py`: Maps cell types for Visium HD (16um resolution), splitting the object to avoid GPU memory issues. **Requires GPU** - use `submit_array_jobs_nci_gpu.sh`.
 
 - `xenium_label_transfer/`
-  - `01_prepare_sc_ref_for_tangram.py`: Prepares the single-cell reference for Tangram label transfer.
-  - `02_label_transfer_sc_ref.py`: Performs label transfer using Tangram.
+  - `01_prepare_sc_ref_for_tangram.py`: Prepares the single-cell reference for Tangram label transfer. *Note: This requires the reference object created by `visium_deconvolution/01_prepare_sc_ref/01_create_GEO_miniatlas_object.py` - run that script first if you don't have it yet.*
+  - `02_label_transfer_sc_ref.py`: Performs label transfer using Tangram. **Benefits from GPU** - can use `submit_array_jobs_nci_gpu.sh` for faster execution.
 
 
 ## Single-cell RNA-seq Reference Object

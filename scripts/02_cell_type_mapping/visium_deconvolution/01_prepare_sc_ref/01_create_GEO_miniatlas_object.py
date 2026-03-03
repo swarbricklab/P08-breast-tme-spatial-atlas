@@ -26,6 +26,8 @@ parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
+parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--res_dir", help="Path to results output directory", default=None)
 
 args = vars(parser.parse_args())
 
@@ -39,7 +41,7 @@ project_dir=args["project_dir"]
 
 # --- Path to miniatlas count matrix
 
-miniatlas_path = os.path.join(project_dir, 'resources', 'cell2location', 'miniatlas_GEO')
+miniatlas_path = os.path.join(project_dir, 'resources', 'sc_ref')
 subdir = 'Wu_etal_2021_BRCA_scRNASeq'
 count_matrix_file = 'count_matrix_sparse.mtx'
 genes_file = 'count_matrix_genes.tsv'
@@ -116,30 +118,10 @@ if adata.var['dedup_name'].isnull().sum() > 0:
 	print("!! The following ensembl ids are missing dedup names:", missing_ensembls)
 
 
-# --- Do some filtering similar to what was done in the paper
-
-# Annotate mitochondrial genes
-adata.var['mt'] = adata.var['dedup_name'].str.startswith('MT-', na=False)
-print(f"Mitochondrial genes: {adata.var['mt'].sum()}")
-
-# Calculate QC metrics
-sc.pp.calculate_qc_metrics(adata, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
-
-# Filter cells:
-# - gene count > 200
-# - UMI count > 250
-# - mitochondrial percentage < 20%
-print(f"Cells before filtering: {adata.n_obs}")
-sc.pp.filter_cells(adata, min_genes=200)
-sc.pp.filter_cells(adata, min_counts=250)
-adata = adata[adata.obs['pct_counts_mt'] < 20, :].copy()
-print(f"Cells after filtering: {adata.n_obs}")
-
-
 # --- Store raw counts and normalize
 
-# Store raw counts in .raw slot
-adata.raw = adata
+# Store raw counts in a layer (more reliable than .raw for serialization)
+adata.layers['counts'] = adata.X.copy()
 
 # Normalize and log-transform, store in .X
 sc.pp.normalize_total(adata, target_sum=1e4)
@@ -148,7 +130,10 @@ sc.pp.log1p(adata)
 
 # --- Save output
 
-out_file = 'miniatlas_GEO_raw.h5ad'
-adata.write(os.path.join(miniatlas_path, out_file))
+out_file = 'miniatlas_GEO.h5ad'
+out_dir = os.path.join(h5ad_dir, 'sc_ref')
+os.makedirs(out_dir, exist_ok=True)
+
+adata.write(os.path.join(out_dir, out_file))
 
 print("Script succesfully completed")

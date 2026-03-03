@@ -46,6 +46,14 @@ Use these scripts when each sample needs to be processed independently in parall
   - Submits parallel jobs for each sample with appropriate resource allocation
   - Each job processes a single sample via `run_single_sample_job.sh`
 
+- **`submit_array_jobs_nci_gpu.sh`** - GPU-enabled array job submission for computationally intensive tasks
+  ```bash
+  ./submit_array_jobs_nci_gpu.sh -s <path/to/script.py>
+  ```
+  - Same as `submit_array_jobs_nci.sh` but requests GPU resources (gpuvolta queue, 1 GPU per job)
+  - Use for scripts requiring GPU acceleration (e.g., deconvolution with cell2location, label transfer with tangram)
+  - Configured with 12 CPUs, 64GB RAM, 4-hour walltime per default
+
 - **`run_single_sample_job.sh`** - Wrapper script executed by each array job
   - Activates the specified conda environment
   - Runs the Python script for a single sample

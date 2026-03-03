@@ -137,7 +137,7 @@ spot_size = 1.5
 original_hires_key = 'original_hires'
 
 # Find the original high-res image
-image_dir = os.path.join(project_dir, 'data', 'images', 'visium')
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'visium')
 image_file = f'{sample_id}.ome.tif'
 image_file_path = os.path.join(image_dir, image_file)
 

@@ -170,7 +170,7 @@ for label, color in zip(color_df.index, color_df['color']):
 # --- Import the original high-resolution scan
 
 # Find the original high-res image
-image_dir = os.path.join(project_dir, 'data', 'images', 'visium_hd')
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'visium_hd')
 image_file = f'{sample_id}.ome.tif'
 image_file_path = os.path.join(image_dir, image_file)
 
