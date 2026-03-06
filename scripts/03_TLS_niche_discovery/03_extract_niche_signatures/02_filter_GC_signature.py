@@ -151,7 +151,7 @@ del adata_list
 all_subtypes = all_adata.obs[subtype_key].unique().tolist()
 
 # Define a desired order for plotting the subtypes
-subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 sorted_subtypes = sorted(all_subtypes, key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
 
 adata_per_subtype = {}

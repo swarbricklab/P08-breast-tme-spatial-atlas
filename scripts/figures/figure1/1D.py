@@ -146,7 +146,7 @@ subtype_dict = {key: value for key, value in subtype_dict.items() if key in samp
 all_subtypes = set(subtype_dict.values())
 
 # Define a desired order for plotting the subtypes
-subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 sorted_subtypes = sorted(all_subtypes, key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
 
 ncols = len(sorted_subtypes)
