@@ -198,7 +198,7 @@ os.makedirs(out_dir_plots, exist_ok=True)
 all_subtypes = set([subtype_dict[sample] for sample in sample_list if sample in subtype_dict])
 
 # Sort according to preferred plotting order
-subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 sorted_subtypes = sorted(all_subtypes, key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
 
 # Sort samples first by type (using sorted_types order) and then by sample ID

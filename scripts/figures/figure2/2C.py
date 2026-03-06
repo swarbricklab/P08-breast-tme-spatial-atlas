@@ -134,7 +134,7 @@ subtype_color_dict = color_lut['color'].to_dict()
 all_subtypes = set(subtype_dict[sample] for sample in sample_list if sample in subtype_dict)
 
 # Sort according to preferred plotting order
-subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 sorted_subtypes = sorted(all_subtypes, key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
 
 

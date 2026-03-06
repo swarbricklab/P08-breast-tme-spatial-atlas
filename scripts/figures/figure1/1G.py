@@ -128,7 +128,7 @@ for subtype in samples_by_subtype:
 print(samples_by_subtype)
 
 # Define a plotting order for subtypes
-subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 sorted_subtypes = sorted(samples_by_subtype.keys(), key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
 
 

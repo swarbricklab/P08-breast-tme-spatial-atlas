@@ -189,7 +189,7 @@ print("Ordered labels per layer:", ordered_labels_per_layer)
 # --- Prepare for plotting
 
 # Sort samples by subtype order
-subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 sorted_samples = sorted(sample_list, key=lambda x: subtype_order.index(subtype_dict[x]) if subtype_dict[x] in subtype_order else float('inf'))
 
 print(f"Sorted samples: {sorted_samples}")

@@ -223,7 +223,7 @@ all_adata = ad.concat(adata_list, merge='same')
 all_subtypes = all_adata.obs.subtype.unique()
 
 # Sort according to preferred plotting order
-subtype_order = ['Luminal A', 'Luminal B (ER+)', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
+subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 sorted_subtypes = sorted(all_subtypes, key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
 
 
