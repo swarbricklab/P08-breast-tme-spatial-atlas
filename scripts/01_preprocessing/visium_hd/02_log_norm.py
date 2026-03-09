@@ -89,6 +89,11 @@ for resolution in resolutions:
     # log transform
     adata.layers['log_norm'] = sc.pp.log1p(adata.layers['norm'], copy=True)
 
+    # Remove intermediate layers to save space (optional)
+    # Uncomment these lines if you want to reduce file size:
+    del adata.layers['norm']
+    del adata.layers['filtered_counts']
+
     # Only do the scaling & clustering for the lowest resolution (48 um)
     if '48' in resolution:
 
@@ -98,29 +103,30 @@ for resolution in resolutions:
         # Detect highly variable genes as well
         sc.pp.highly_variable_genes(adata, layer='log_norm', flavor='seurat', n_top_genes=2000)
 
-        if '48' in resolution:
+        # Optional: PCA, UMAP + clustering
+        # if '48' in resolution:
 
             # --- PCA, UMAP + clustering
 
-            seed = 42
+            # seed = 42
 
-            # create a new object
-            pca_obj = ad.AnnData(adata.layers['scaled'])
-            pca_obj.var = adata.var
-            sc.tl.pca(pca_obj, n_comps = 50, zero_center = True, svd_solver='arpack', random_state = seed, return_info = True, use_highly_variable = True)
+            # # create a new object
+            # pca_obj = ad.AnnData(adata.layers['scaled'])
+            # pca_obj.var = adata.var
+            # sc.tl.pca(pca_obj, n_comps = 50, zero_center = True, svd_solver='arpack', random_state = seed, return_info = True, use_highly_variable = True)
 
-            adata.uns['pca'] = pca_obj.uns['pca']
-            adata.obsm['X_pca'] = pca_obj.obsm['X_pca']
-            adata.varm['PCs'] = pca_obj.varm['PCs']
+            # adata.uns['pca'] = pca_obj.uns['pca']
+            # adata.obsm['X_pca'] = pca_obj.obsm['X_pca']
+            # adata.varm['PCs'] = pca_obj.varm['PCs']
 
-            # neighbourhood graph
-            sc.pp.neighbors(adata, n_pcs=50, random_state=seed)
+            # # neighbourhood graph
+            # sc.pp.neighbors(adata, n_pcs=50, random_state=seed)
 
-            # calculate umap
-            sc.tl.umap(adata, random_state=seed)
+            # # calculate umap
+            # sc.tl.umap(adata, random_state=seed)
 
-            # Leiden clustering
-            sc.tl.leiden(adata, key_added='leiden', resolution=1)
+            # # Leiden clustering
+            # sc.tl.leiden(adata, key_added='leiden', resolution=1)
 
 
     # --- Save output
@@ -131,6 +137,6 @@ for resolution in resolutions:
 
     print(f"Saving .h5ad files to {outs_dir}")
 
-    ad.AnnData.write(adata, filename=os.path.join(outs_dir, f"{sample_id}.h5ad"))
+    ad.AnnData.write(adata, filename=os.path.join(outs_dir, f"{sample_id}.h5ad"), compression='gzip')
 
 print("Script succesfully completed")

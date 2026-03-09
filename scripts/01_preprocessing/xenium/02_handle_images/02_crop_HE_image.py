@@ -190,7 +190,7 @@ adata.uns['spatial'][sample_id]['images']['lowres'] = cropped_lowres
 
 # --- Save the adata object
 
-adata.write_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
+adata.write_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'), compression='gzip')
 
 # Also save the coords that were used for cropping
 out_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'crop_coords')
