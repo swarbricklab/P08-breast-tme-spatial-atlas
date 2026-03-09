@@ -1,6 +1,6 @@
 outs:
-- md5: 166c71ce519dde6ab86bc1738d528460.dir
-  size: 128214661630
-  nfiles: 63
+- md5: ec2f6b7d55f8e60926d2e063aecc93eb.dir
+  size: 25276757093
+  nfiles: 62
   hash: md5
   path: anndata_objects
