@@ -12,7 +12,7 @@ The main analysis is organized into five sequential steps, each containing multi
 
 - **[02_cell_type_mapping/](02_cell_type_mapping/)** - Cell type deconvolution and annotation workflows. Maps single-cell reference signatures onto spatial data to infer cell type composition at each spatial location.
 
-- **[03_TLS_niche_discovery/](03_TLS_niche_discovery/)** - Identification and characterization of tertiary lymphoid structure (TLS) niches. Includes TLS scoring, spatial segmentation, internal architecture mapping (T cell zone, B cell zone, germinal centers, HEV), and extraction of niche-specific gene signatures.
+- **[03_TLS_niche_discovery/](03_TLS_niche_discovery/)** - Identification and characterization of tertiary lymphoid structure (TLS) niches in Visium data. Includes TLS scoring, spatial segmentation, internal architecture mapping (T cell zone, B cell zone, germinal centers, HEV), and extraction of niche-specific gene signatures.
 
 - **[04_vascular_microenvironment/](04_vascular_microenvironment/)** - High-resolution analysis of vascular niches using Visium HD (16 µm resolution). Includes HEV identification and segmentation, vessel classification (arterial, capillary, venous, lymphatic), comparative analysis of HEV vs. canonical venous structures, and ligand-receptor interaction analysis.
 
