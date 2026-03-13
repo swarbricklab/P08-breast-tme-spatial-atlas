@@ -86,7 +86,7 @@ These environments are based on official package documentation and should be kep
 - Used for gene set enrichment analysis with the gseapy package
 
 #### shapely
-- Used for scripts requiring spatial geometry operations, advanced annotation placement, and set visualization
+- Used for scripts requiring spatial geometry operations, advanced annotation placement, and set visualization. This environment is mainly used for figure generation rather than analysis.
 - Key packages: `shapely`, `adjusttext`, `upsetplot`
 
 ---
