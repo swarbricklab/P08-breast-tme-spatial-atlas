@@ -76,6 +76,10 @@ Use these scripts when all samples should be processed together (e.g., for cross
   - Executes the Python script with all samples passed as arguments
   - Useful for integration, cross-sample normalization, or comparative analyses
 
+**Note:** You can determine whether a script is designed for single-sample or multi-sample processing by checking its argparse arguments:
+- **Single-sample scripts** accept `--sample_id` (use with `submit_array_jobs_nci.sh`)
+- **Multi-sample scripts** accept `--samples` (use with `submit_multi_sample_job_nci.sh`)
+
 ### Usage Notes
 
 - Both submission scripts source parameters from `../config/params.sh`, which must be configured before running:
