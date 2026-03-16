@@ -169,14 +169,14 @@ for sample in sample_list:
 # --- Predefine GCs to plot
 
 # These are the selected examples for the figure
-selected_non_overlapping_per_sample = {
+selected_gcs_per_sample = {
     'P22_Vis': ['group5', 'group6'],
     'P24_Vis': ['group2', 'group4'],
     'P18_Vis': ['group1'],
     'P29_Vis_Rep1': ['group1'],
 }
 
-selected_samples = list(selected_non_overlapping_per_sample.keys())
+selected_samples = list(selected_gcs_per_sample.keys())
 
 # Filter sample_list to selected
 sample_list = [s for s in sample_list if s in selected_samples]
@@ -222,11 +222,11 @@ def move_plots_x_y(axs, x_offset_small=0.02, x_offset_large=0.10, y_offset=0.04,
 # --- Prepare for plotting
 
 # Calculate total GCs to plot
-total_non_overlapping_GCs = sum([len(v) for v in selected_non_overlapping_per_sample.values()])
+total_GCs = sum([len(v) for v in selected_gcs_per_sample.values()])
 
 # Define ncols & nrows
 ncols = 3 * 2  # Will make 2 plots per GC: H&E & GC score
-nrows = int(np.ceil(total_non_overlapping_GCs*2 / ncols))
+nrows = int(np.ceil(total_GCs*2 / ncols))
 
 # Define a vmax
 vmax = 0.8
@@ -292,11 +292,16 @@ for i, sample in enumerate(selected_samples):
     # Calculate the scale factor for the original hires image and add to the anndata object
     adata.uns['spatial'][sample]['scalefactors'][f'tissue_{original_hires_key}_scalef'] = size_fact * hires_fact
     
-    for j, gc_group in enumerate(selected_non_overlapping_per_sample[sample]):
+    for j, gc_group in enumerate(selected_gcs_per_sample[sample]):
         print(f'Plotting GC group: {gc_group}')
         
         # Subset the adata to the GC group to calculate crop coords
         adata_group_sub = adata[adata.obs[group_key] == gc_group]
+        
+        # Check if the group has any spots - if not, skip
+        if len(adata_group_sub) == 0:
+            print(f'Warning: {gc_group} has no spots in adata for {sample}, skipping...')
+            continue
         
         # Make sure border_size is equal despite differences in area
         desired_border = 8 * (vis_spot_diameter/microns_per_pixel)
@@ -411,7 +416,7 @@ cbar.set_ticklabels(['Low', 'High'])
 # Add a suptitle
 title_x = axs_grid_cleaned[0][0].get_position().x0 + (axs_grid_cleaned[0][-1].get_position().x1 - axs_grid_cleaned[0][0].get_position().x0)/2
 title_y = axs_grid_cleaned[0][0].get_position().y1 + 0.2
-plt.suptitle('GCs detected by GC signature not overlapping with TLS annotations', x=title_x, y=title_y, fontweight='bold')
+plt.suptitle('Selected GCs detected by GC signature', x=title_x, y=title_y, fontweight='bold')
 
 
 # --- Save the output
