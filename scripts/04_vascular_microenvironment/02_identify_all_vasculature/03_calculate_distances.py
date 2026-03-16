@@ -43,7 +43,6 @@ parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV", default=None)
 
-
 args = vars(parser.parse_args())
 
 
@@ -83,13 +82,20 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'] == str(tissue_id)]['clini
 # --- Load the adata object
 
 use_data = 'log_norm'
-# Need both the 48 & 16 res
-base_res = 'square_016um'
-target_res = 'square_008um'
 
+# Base resolution is always 016um (where vessels are classified)
+base_res = 'square_016um'
+
+# Target resolutions from argparse
+target_resolutions = ['square_008um', 'square_016um']
+
+print(f'Target resolutions: {target_resolutions}')
+
+# Collect all resolutions we need to load
 resolutions = [base_res]
-if target_res not in resolutions:
-    resolutions.append(target_res)
+for target_res in target_resolutions:
+    if target_res not in resolutions:
+        resolutions.append(target_res)
 
 adata_dict = {}
 
@@ -163,41 +169,7 @@ collapsed_col = vessel_classes[endothelial].apply(lambda row: row.first_valid_in
 adata_dict[base_res].obs['vessel_class'] = collapsed_col
 
 
-# --- Prepare for saving
-
-qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '03_calculate_distances')
-
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-threshold_adj = str(threshold).split('.')[-1]
-out_dir = os.path.join(qc_dir, target_res)
-
-os.makedirs(out_dir, exist_ok=True)
-
-# Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
-os.makedirs(out_dir_plots, exist_ok=True)
-
-# Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
-os.makedirs(out_dir_csv, exist_ok=True)
-
-
-# --- Figure out pixel to um scalefactor
-
-resolution_numbers = re.findall(r'\d+', target_res)[0]
-resolution_numbers = int(resolution_numbers)
-
-spot_diameter_um = resolution_numbers # Square size is whatever the resolution is 
-
-# Get a scalefactor for converting pixel coords to um
-spot_diameter_pixel = adata_dict[target_res].uns['spatial'][sample_id]['scalefactors']['spot_diameter_fullres']
-
-scalefactor_um = spot_diameter_um/spot_diameter_pixel
-
-
-# --- Calculate distances per vessel group
+# --- Define function to calculate distances
 
 # Function to calculate distances
 def calculate_distance(base_res, target_res, group_key):
@@ -205,6 +177,14 @@ def calculate_distance(base_res, target_res, group_key):
     base_res_short = base_res.split('_')[1]
     target_res_short = target_res.split('_')[1]
     adata = adata_dict[base_res]
+    
+    # Figure out pixel to um scalefactor
+    resolution_numbers = re.findall(r'\d+', target_res)[0]
+    resolution_numbers = int(resolution_numbers)
+    spot_diameter_um = resolution_numbers  # Square size is whatever the resolution is
+    spot_diameter_pixel = adata_dict[target_res].uns['spatial'][sample_id]['scalefactors']['spot_diameter_fullres']
+    scalefactor_um = spot_diameter_um/spot_diameter_pixel
+    
     coords = adata.obsm['spatial']  # Extract the spot coords
     groups = adata.obs[group_key]  # Group labels
     # Convert to DataFrame for easier manipulation
@@ -254,133 +234,176 @@ def calculate_distance(base_res, target_res, group_key):
     df_results[f'nearest_{base_res_short}_dist_um'] = df_results[f'nearest_{base_res_short}_dist'] * scalefactor_um
     return df_results
 
-# Save results in a dict
-dist_dict = {}
 
-for group_key in endothelial:
-    print(f'Calculating distances for {group_key}')
-    dist_dict[group_key] = calculate_distance(base_res, target_res, group_key)
+# --- Loop through target resolutions and calculate distances
 
+for target_res in target_resolutions:
+    print(f'\n=== Processing target resolution: {target_res} ===')
+    
+    # --- Prepare for saving
 
-# Also get a df with smallest distance to any vessel within a vessel type
-dist_dict_min_dist = {}
+    qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '03_calculate_distances')
 
-base_res_short = base_res.split('_')[1]
-target_res_short = target_res.split('_')[1]
+    today = date.today()
+    today = today.strftime("%Y%m%d")
 
-for group_key in endothelial:
-    print(f'Calculating minimal distances for {group_key}')
-    df_results = dist_dict[group_key]
-    df_min_dist = df_results.sort_values(f"nearest_{base_res_short}_dist_um").drop_duplicates(f"barcode_{target_res_short}", keep="first")
-    dist_dict_min_dist[group_key] = df_min_dist
+    threshold_adj = str(threshold).split('.')[-1]
+    out_dir = os.path.join(qc_dir, target_res)
 
+    os.makedirs(out_dir, exist_ok=True)
 
-# Make some plots to check it worked
-# --- Plot 1: All vessel groups together
+    # Save plots
+    out_dir_plots = os.path.join(out_dir, 'plots', today)
+    os.makedirs(out_dir_plots, exist_ok=True)
 
-ncols = len(endothelial)
-nrows = 1
-
-fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(8*ncols, 6*nrows),)
-
-for n, group_key in enumerate(endothelial):
-    # Set ax
-    ax = axs[n]
-    # Add to adata for plotting
-    df_min_dist = dist_dict_min_dist[group_key]
-    adata_dict[target_res].obs['dist_to_HEV_um'] = df_min_dist.set_index(f'barcode_{target_res_short}')[f'nearest_{base_res_short}_dist_um']
-    # Plot all HEV groups
-    adata_sub = adata_dict[base_res][adata_dict[base_res].obs[group_key].notna()]
-    sq.pl.spatial_scatter(adata_dict[target_res], color='dist_to_HEV_um', img_alpha=0.7,
-                    crop_coord=coords_dict_sq[target_res], title=f'{sample_id} ({subtype})\nHEV classification', ax=ax,
-                    shape='square', vmax=400)
-    sq.pl.spatial_scatter(adata_sub, color=group_key, img_alpha=0,
-                    crop_coord=coords_dict_sq[target_res], title=f'{sample_id} ({subtype})\n{group_key}\nDistance (µm)', ax=ax,
-                    shape='square', palette=ListedColormap(['white']), legend_loc=None)
-    ax.set_title(ax.get_title(), fontweight='bold')
+    # Also save the groupings as a .csv
+    out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+    os.makedirs(out_dir_csv, exist_ok=True)
 
 
-plt.suptitle(f'{sample_id} ({subtype}) - vessel groups - distance (um) to each {target_res} spot (threshold={threshold})', y=1.15, fontweight='bold', x=0.5)
+    # --- Figure out pixel to um scalefactor
+
+    resolution_numbers = re.findall(r'\d+', target_res)[0]
+    resolution_numbers = int(resolution_numbers)
+
+    spot_diameter_um = resolution_numbers # Square size is whatever the resolution is 
+
+    # Get a scalefactor for converting pixel coords to um
+    spot_diameter_pixel = adata_dict[target_res].uns['spatial'][sample_id]['scalefactors']['spot_diameter_fullres']
+
+    scalefactor_um = spot_diameter_um/spot_diameter_pixel
 
 
-# --- Plot 2: Distribution of distance values
+    # --- Calculate distances per vessel group
+    # Save results in a dict
+    dist_dict = {}
 
-# Enable gridlines behind the plot for all plots
-plt.rcParams['axes.axisbelow'] = True
-
-nrows = 1
-ncols = 4
-
-for group_key in endothelial:
-
-    df_min_dist = dist_dict_min_dist[group_key]
-
-    fig, axs = plt.subplots(nrows, ncols, figsize=(4*ncols, 4*nrows))
-
-    n=0
-    ax = axs[n]
-
-    sns.histplot(df_min_dist, x=f'nearest_{base_res_short}_dist_um', bins=40, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
-    ax.set_title(f'{group_key} distance', fontweight='bold')
-
-    # Now first 400 um only
-    n+=1
-    ax = axs[n]
-
-    df_min_dist_sub = df_min_dist[df_min_dist[f'nearest_{base_res_short}_dist_um'] < 400]
-    sns.histplot(df_min_dist_sub, x=f'nearest_{base_res_short}_dist_um', bins=40, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
-    ax.set_title('<400 µm', fontweight='bold')
-
-    # Now first 400 um only
-    n+=1
-    ax = axs[n]
-
-    sns.histplot(df_min_dist_sub, x=f'nearest_{base_res_short}_dist_um', bins=16, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
-    ax.set_title('<400µm - 25 µm bins', fontweight='bold')
-
-    plt.suptitle(f'{sample_id} ({subtype}) - {group_key} groups - distribution of distance measurements - {target_res} spot (threshold={threshold})', y=1.1, fontweight='bold', x=0.5)
-
-    plt.tight_layout()
-
-    # Now first 400 um only
-    n+=1
-    ax = axs[n]
-
-    sns.histplot(df_min_dist_sub, x=f'nearest_{base_res_short}_dist_um', bins=25, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
-    ax.set_title('<400µm - 16 µm bins', fontweight='bold')
-
-    plt.suptitle(f'{sample_id} ({subtype}) - {group_key} groups - distribution of distance measurements - {target_res} spot (threshold={threshold})', y=1.1, fontweight='bold', x=0.5)
-
-    plt.tight_layout()
-
-
-# --- Save output
-
-# Save plots
-filename = f'{sample_id}_vessel_distances.pdf'
-
-save_multi_image(os.path.join(out_dir_plots, filename))
-plt.close('all')
-
-# And save the distances
-# Actually don't save for the 008um resolution because the files are big and I doubt I will use them (don't have decon results)
-if target_res != 'square_008um':
-    os.makedirs(os.path.join(out_dir_csv, 'all_dist'), exist_ok=True)
     for group_key in endothelial:
-        filename = f'{sample_id}_{group_key.replace(" ", "_")}_distances_all_spots.csv'
+        print(f'Calculating distances for {group_key}')
+        dist_dict[group_key] = calculate_distance(base_res, target_res, group_key)
+
+
+    # Also get a df with smallest distance to any vessel within a vessel type
+    dist_dict_min_dist = {}
+
+    base_res_short = base_res.split('_')[1]
+    target_res_short = target_res.split('_')[1]
+
+    for group_key in endothelial:
+        print(f'Calculating minimal distances for {group_key}')
         df_results = dist_dict[group_key]
-        # The files are fairly large so I'll subset these dfs to be up to 400 µm bc it's unlikely I'll use the higher distances
-        if target_res != 'square_048um':
-            df_results = df_results[df_results[f'nearest_{base_res_short}_dist_um'] < 400]
-        df_results.to_csv(os.path.join(out_dir_csv, 'all_dist', filename), index=False)
+        df_min_dist = df_results.sort_values(f"nearest_{base_res_short}_dist_um").drop_duplicates(f"barcode_{target_res_short}", keep="first")
+        dist_dict_min_dist[group_key] = df_min_dist
 
-# Also save the distance for each spot to closest HEV
-os.makedirs(os.path.join(out_dir_csv, 'min_dist'), exist_ok=True)
 
-for group_key in endothelial:
-    filename = f'{sample_id}_distance_closest_{group_key.replace(" ", "_")}_per_spot.csv'
-    df_min_dist = dist_dict_min_dist[group_key]
-    df_min_dist.to_csv(os.path.join(out_dir_csv, 'min_dist', filename), index=False)
+    # Make some plots to check it worked
+    # --- Plot 1: All vessel groups together
+
+    ncols = len(endothelial)
+    nrows = 1
+
+    fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(8*ncols, 6*nrows),)
+
+    for n, group_key in enumerate(endothelial):
+        # Set ax
+        ax = axs[n]
+        # Add to adata for plotting
+        df_min_dist = dist_dict_min_dist[group_key]
+        adata_dict[target_res].obs['dist_to_HEV_um'] = df_min_dist.set_index(f'barcode_{target_res_short}')[f'nearest_{base_res_short}_dist_um']
+        # Plot all HEV groups
+        adata_sub = adata_dict[base_res][adata_dict[base_res].obs[group_key].notna()]
+        sq.pl.spatial_scatter(adata_dict[target_res], color='dist_to_HEV_um', img_alpha=0.7,
+                        crop_coord=coords_dict_sq[target_res], title=f'{sample_id} ({subtype})\nHEV classification', ax=ax,
+                        shape='square', vmax=400)
+        sq.pl.spatial_scatter(adata_sub, color=group_key, img_alpha=0,
+                        crop_coord=coords_dict_sq[target_res], title=f'{sample_id} ({subtype})\n{group_key}\nDistance (µm)', ax=ax,
+                        shape='square', palette=ListedColormap(['white']), legend_loc=None)
+        ax.set_title(ax.get_title(), fontweight='bold')
+
+
+    plt.suptitle(f'{sample_id} ({subtype}) - vessel groups - distance (um) to each {target_res} spot (threshold={threshold})', y=1.15, fontweight='bold', x=0.5)
+
+
+    # --- Plot 2: Distribution of distance values
+
+    # Enable gridlines behind the plot for all plots
+    plt.rcParams['axes.axisbelow'] = True
+
+    nrows = 1
+    ncols = 4
+
+    for group_key in endothelial:
+
+        df_min_dist = dist_dict_min_dist[group_key]
+
+        fig, axs = plt.subplots(nrows, ncols, figsize=(4*ncols, 4*nrows))
+
+        n=0
+        ax = axs[n]
+
+        sns.histplot(df_min_dist, x=f'nearest_{base_res_short}_dist_um', bins=40, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
+        ax.set_title(f'{group_key} distance', fontweight='bold')
+
+        # Now first 400 um only
+        n+=1
+        ax = axs[n]
+
+        df_min_dist_sub = df_min_dist[df_min_dist[f'nearest_{base_res_short}_dist_um'] < 400]
+        sns.histplot(df_min_dist_sub, x=f'nearest_{base_res_short}_dist_um', bins=40, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
+        ax.set_title('<400 µm', fontweight='bold')
+
+        # Now first 400 um only
+        n+=1
+        ax = axs[n]
+
+        sns.histplot(df_min_dist_sub, x=f'nearest_{base_res_short}_dist_um', bins=16, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
+        ax.set_title('<400µm - 25 µm bins', fontweight='bold')
+
+        plt.suptitle(f'{sample_id} ({subtype}) - {group_key} groups - distribution of distance measurements - {target_res} spot (threshold={threshold})', y=1.1, fontweight='bold', x=0.5)
+
+        plt.tight_layout()
+
+        # Now first 400 um only
+        n+=1
+        ax = axs[n]
+
+        sns.histplot(df_min_dist_sub, x=f'nearest_{base_res_short}_dist_um', bins=25, kde=False, ax=ax, alpha=0.8, linewidth=0.5, edgecolor='black')
+        ax.set_title('<400µm - 16 µm bins', fontweight='bold')
+
+        plt.suptitle(f'{sample_id} ({subtype}) - {group_key} groups - distribution of distance measurements - {target_res} spot (threshold={threshold})', y=1.1, fontweight='bold', x=0.5)
+
+        plt.tight_layout()
+
+
+    # --- Save output
+
+    # Save plots
+    filename = f'{sample_id}_vessel_distances.pdf'
+
+    save_multi_image(os.path.join(out_dir_plots, filename))
+    plt.close('all')
+
+    # And save the distances
+    # Actually don't save for the 008um resolution because the files are big and I doubt I will use them (don't have decon results)
+    if target_res != 'square_008um':
+        os.makedirs(os.path.join(out_dir_csv, 'all_dist'), exist_ok=True)
+        for group_key in endothelial:
+            filename = f'{sample_id}_{group_key.replace(" ", "_")}_distances_all_spots.csv'
+            df_results = dist_dict[group_key]
+            # The files are fairly large so I'll subset these dfs to be up to 400 µm bc it's unlikely I'll use the higher distances
+            if target_res != 'square_048um':
+                df_results = df_results[df_results[f'nearest_{base_res_short}_dist_um'] < 400]
+            df_results.to_csv(os.path.join(out_dir_csv, 'all_dist', filename), index=False)
+
+    # Also save the distance for each spot to closest HEV
+    os.makedirs(os.path.join(out_dir_csv, 'min_dist'), exist_ok=True)
+
+    for group_key in endothelial:
+        filename = f'{sample_id}_distance_closest_{group_key.replace(" ", "_")}_per_spot.csv'
+        df_min_dist = dist_dict_min_dist[group_key]
+        df_min_dist.to_csv(os.path.join(out_dir_csv, 'min_dist', filename), index=False)
+
+    print(f'Completed processing for {target_res}\n')
 
 
 # --- Finish
