@@ -266,7 +266,7 @@ for score_name in gene_lists_dict.keys():
 
     # Extract the layer you want to score on
 
-    score_obj = ad.AnnData(adata.X)
+    score_obj = ad.AnnData(adata.layers[use_layer])
     score_obj.obs_names = adata.obs_names
     score_obj.var_names = adata.var_names
 
