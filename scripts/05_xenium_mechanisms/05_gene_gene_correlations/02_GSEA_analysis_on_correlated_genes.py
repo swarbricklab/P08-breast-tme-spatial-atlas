@@ -50,7 +50,7 @@ sample_list = args["samples"]
 
 # --- Load the correlation results
 
-gene_of_i = 'SPP1'  # STING gene symbol
+gene_of_i = 'TMEM173'  # STING gene symbol
 
 # Find most recent results
 def find_most_recent(dir):
@@ -84,7 +84,7 @@ correlation_df = pd.read_csv(os.path.join(most_recent, 'csv_files', correlation_
 # --- Prepare for saving
 
 # Decide which gene set to use
-gene_set = 'GO_Biological_Process_2025'
+gene_set = 'GO_Molecular_Function_2025' # Options: 'GO_Biological_Process_2025', 'GO_Molecular_Function_2025'
 out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '05_gene_gene_correlations', '02_GSEA_analysis', f'{gene_of_i}_correlations')
 
 out_dir = os.path.join(out_dir, gene_set)
