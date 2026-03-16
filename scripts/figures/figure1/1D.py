@@ -13,7 +13,6 @@
 import json
 import os
 import sys
-from collections import defaultdict
 import argparse
 
 import pandas as pd
@@ -541,7 +540,7 @@ for ax in axs:
     # Also remove the xticklabels
     ax.set_xticklabels([])
 
-# --- Then the decon results
+# --- Then the decon results for just the TME
 
 offset = 0.05
 height_fraction = 0.95
@@ -549,72 +548,13 @@ height_fraction = 0.95
 fig = plt.gcf()  # Get the current figure
 
 # Create new axs under the previous ones
-new_axs = []
+new_axs_tme = []
 
 for n, ax in enumerate(axs):
     # Get the position of the current ax
     pos = ax.get_position()
     # Create a new ax below the current one
     new_ax = fig.add_axes([pos.x0, pos.y0 - pos.height*height_fraction - offset, pos.width, pos.height*height_fraction])
-    new_axs.append(new_ax)
-
-plot_stacked_barplot(axs=new_axs, barplot_dict=barplot_dict_decon, grid_spec=grid_spec, ylabel='Estimated frequencies', 
-                            ncols_legend=1, offset=0.005, col_height=0.05, color_dict=color_dict_decon, col_width=col_width,
-                            plot_subtype_cols=False)
-
-# Hash the epithelial cell types
-for ax in new_axs:
-    # Group patches by x-position (i.e., each stacked bar group)
-    bars_by_x = defaultdict(list)
-    for patch in ax.patches:
-        x = patch.get_x()
-        bars_by_x[x].append(patch)
-    # For each stack (x-position), style the top 2 bars
-    for x_val, bars in bars_by_x.items():
-        # Sort bars from top to bottom by y (top = higher y)
-        bars_sorted = sorted(bars, key=lambda p: p.get_y() + p.get_height(), reverse=True)
-        for n, patch in enumerate(bars_sorted):  # top 2 bars
-            if n in epithelial_index:
-                # patch.set_linewidth(1.5)
-                patch.set_hatch('//')
-
-# Adjust the margins of the plos
-for ax in new_axs:
-    xlim = ax.get_xlim()
-    ax.set_xlim(xlim[0] + 0.1, xlim[1] - 0.1)
-    ax.set_ylim(0, 1.02)  # Increase ylim a bit
-    # And remove the title
-    ax.set_title('')
-    # And remove the xticklabels
-    ax.set_xticklabels([])
-
-# Remove yticks after first
-for ax in new_axs:
-    if ax != new_axs[0]:
-        ax.set_yticks([])
-
-# Reverse the legend
-legend = new_axs[-1].get_legend()
-handles = legend.legendHandles[::-1]
-labels = unnested_categories_filtered
-
-# Automatically calculate ncols for legend
-# Want 8 per column
-ncols_legend = max(1, len(labels) // 8)
-
-new_axs[-1].legend(handles, labels, title_fontproperties={'weight':'bold'}, bbox_to_anchor=(1, 0.5), loc='center left', ncol=ncols_legend,
-                            frameon=False, alignment='left', handlelength=0.7,)
-
-# --- Then the decon results for just the TME
-
-# Create new axs under the previous ones
-new_axs_tme = []
-
-for n, ax in enumerate(new_axs):
-    # Get the position of the current ax
-    pos = ax.get_position()
-    # Create a new ax below the current one
-    new_ax = fig.add_axes([pos.x0, pos.y0 - pos.height - offset, pos.width, pos.height])
     new_axs_tme.append(new_ax)
 
 plot_stacked_barplot(axs=new_axs_tme, barplot_dict=barplot_dict_decon_non_epithelial, grid_spec=grid_spec, ylabel='Estimated frequencies', 
@@ -648,31 +588,27 @@ new_axs_tme[-1].legend(handles, labels, title_fontproperties={'weight':'bold'}, 
 
 plt.suptitle(f'All samples - {all_layers} annotations major categories collapsed to single layer', y=1.2, x=title_x, fontweight='bold')
 
-# Draw a line from the bottom of the last row to the top of the second row
+# Draw vertical labels for each row
 # Just to the left of the first column of plots
-top_ax = new_axs[0]
-bottom_ax = new_axs_tme[0]
 
-# Draw a line above the first to third axs in the first row
-# Get subplot positions in figure coordinates
-start_box = top_ax.get_position()
-end_box = bottom_ax.get_position()
-
-# Define rectangle dimensions
-y1 = start_box.y1
-y0 = end_box.y0
-height = abs(y1 - y0)
-
-# Define x0 position (left side of the rectangle)
+# First get the x0 position (left side of the rectangle)
 fig = plt.gcf()  # Get the current figure
 fig.canvas.draw()
-bbox = top_ax.get_tightbbox(fig.canvas.get_renderer())
+bbox = axs[0].get_tightbbox(fig.canvas.get_renderer())
 inv_trans = fig.transFigure.inverted()
 bbox_fig = inv_trans.transform(bbox)
 left_edge = bbox_fig[0][0]  # x0 is the left in figure coordinates
 
 x0 = left_edge - 0.02  # bottom of the rectangle (just above the subplot)
 width = 0.005            # set width manually
+
+# --- Label for deconvolution (TME row)
+ax_tme = new_axs_tme[0]
+
+# Define rectangle dimensions
+y1 = ax_tme.get_position().y1
+y0 = ax_tme.get_position().y0
+height = abs(y1 - y0)
 
 # Create rectangle
 highlight_rect = mpl.patches.Rectangle(
@@ -700,7 +636,7 @@ fig.text(
     rotation=90,
 )
 
-# Same for the top row
+# --- Label for pathology annotations (top row)
 ax = axs[0]
 
 # Define rectangle dimensions

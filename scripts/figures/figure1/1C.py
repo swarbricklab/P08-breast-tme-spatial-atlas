@@ -49,7 +49,6 @@ parser.add_argument("-r", "--res_dir",
                     help="Path to results directory (optional)")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files") # Not necessary for this script
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--path_combo_of_interest", help="Pathology layer combinations to be plotted (e.g. epithelial_immune)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
 args = vars(parser.parse_args())

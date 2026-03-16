@@ -2,6 +2,9 @@
 
 # --- Load packages
 
+import sys
+import os
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
@@ -9,12 +12,9 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
-
 import scanpy.plotting.palettes as sc_palettes
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from helper_functions import generate_color_variations
 
 
