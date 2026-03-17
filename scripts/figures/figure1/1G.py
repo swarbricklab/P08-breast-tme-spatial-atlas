@@ -318,20 +318,54 @@ title_dict = {
 }
 
 fig = plt.figure(figsize=(2, 2))
-ax = plt.subplot(1, 1, 1)
+
+# Create prevalence axis on the left
+prevalence_ax = fig.add_axes([0.08, 0.2, 0.6, 0.6])
+prevalence_ax.set_title(f'Prevalence', fontweight='bold', fontsize=10)
+
+# Plot the count bars horizontally
+sns.barplot(y=b_t_ratio_annotated_df['subtype'], x=b_t_ratio_annotated_df['n_annotated_spots'], hue=b_t_ratio_annotated_df['subtype'], 
+            ax=prevalence_ax, width=0.8, edgecolor='black', linewidth=1, order=sorted_subtypes, 
+            palette=color_dict, saturation=1, orient='h', err_kws={'color': 'black', 'linewidth': 1}, capsize=0.3)
+
+# Add stripplot to prevalence
+sns.stripplot(data=b_t_ratio_annotated_df, y='subtype', x='n_annotated_spots', color="black", 
+              order=sorted_subtypes, jitter=0.3, size=2, ax=prevalence_ax)
+
+# Adjust colors for prevalence bars
+for i, bar in enumerate(prevalence_ax.patches):
+    fill_color = bar.get_facecolor()
+    fill_color = list(fill_color)
+    darkened_color = fill_color.copy()
+    for j in range(len(darkened_color)-1):
+        darkened_color[j] *= 0.8
+    fill_color[-1] = alpha
+    bar.set_color(tuple(fill_color))
+    bar.set_edgecolor(tuple(darkened_color))
+
+prevalence_ax.set_xlabel('Prop. spots', fontsize=10)
+prevalence_ax.set_ylabel('')
+
+# Increase the xlim a bit
+xlim = prevalence_ax.get_xlim()
+prevalence_ax.set_xlim(0, xlim[1] * 1.1)
+
+# Create B/T ratio axis on the right (same width as prevalence)
+prevalence_pos = prevalence_ax.get_position()
+ratio_ax = fig.add_axes([prevalence_pos.x1 + 0.05, prevalence_pos.y0, prevalence_pos.width, prevalence_pos.height])
 
 # Create horizontal boxplot
 sns.boxplot(b_t_ratio_annotated_df, y='subtype', x='B_T_ratio_annotated', showfliers=False, linewidth=1, 
-            whiskerprops=whisker_props, medianprops=median_props, width=0.8, ax=ax, 
+            whiskerprops=whisker_props, medianprops=median_props, width=0.8, ax=ratio_ax, 
             palette=color_dict, saturation=1, legend=False, hue='subtype', order=sorted_subtypes, 
             orient='h', gap=0)
 
 # Add stripplot
 sns.stripplot(data=b_t_ratio_annotated_df, y='subtype', x='B_T_ratio_annotated', color="black", 
-              order=sorted_subtypes, jitter=True, size=3, ax=ax)
+              order=sorted_subtypes, jitter=0.3, size=2, ax=ratio_ax)
 
-# Adjust colors
-for i, bar in enumerate(ax.patches):
+# Adjust colors for B/T ratio boxes
+for i, bar in enumerate(ratio_ax.patches):
     fill_color = bar.get_facecolor()
     fill_color = list(fill_color)
     darkened_color = fill_color.copy()
@@ -342,57 +376,25 @@ for i, bar in enumerate(ax.patches):
     bar.set_edgecolor(tuple(darkened_color))
 
 # Set labels
-ax.set_ylabel('')
-ax.set_xlabel('log2(B/T cell ratio)')
-ax.set_title(f'B/T cell ratio', fontweight='bold', fontsize=10)
+ratio_ax.set_ylabel('')
+ratio_ax.set_xlabel('log2(B/T cell ratio)', fontsize=10)
+ratio_ax.set_title(f'B/T cell ratio', fontweight='bold', fontsize=10)
+
+# Remove yticklabels from ratio axis
+ratio_ax.set_yticklabels([])
 
 # Draw vertical line at x=0
-ax.axvline(0, color='lightgray', linestyle='-', linewidth=4, zorder=0)
-
-# Adjust axis position
-ax_pos = ax.get_position()
-ax.set_position([ax_pos.x0, ax_pos.y0, 0.7, 0.6])
-
-# Add horizontal count bars to the right
-ax_pos = ax.get_position()
-count_ax_width = ax_pos.width * 0.4
-count_ax_h = fig.add_axes([ax_pos.x1 + 0.05, ax_pos.y0, count_ax_width, ax_pos.height])
-count_ax_h.set_title(f'Prevalence', fontweight='bold', fontsize=10)
-
-# Plot the count bars horizontally
-sns.barplot(y=b_t_ratio_annotated_df['subtype'], x=b_t_ratio_annotated_df['n_annotated_spots'], hue=b_t_ratio_annotated_df['subtype'], 
-            ax=count_ax_h, width=0.8, edgecolor='black', linewidth=1, order=sorted_subtypes, 
-            palette=color_dict, saturation=1, orient='h', err_kws={'color': 'black', 'linewidth': 1}, capsize=0.3)
-
-# Adjust colors
-for i, bar in enumerate(count_ax_h.patches):
-    fill_color = bar.get_facecolor()
-    fill_color = list(fill_color)
-    darkened_color = fill_color.copy()
-    for j in range(len(darkened_color)-1):
-        darkened_color[j] *= 0.8
-    fill_color[-1] = alpha
-    bar.set_color(tuple(fill_color))
-    bar.set_edgecolor(tuple(darkened_color))
-
-count_ax_h.set_xlabel('Prop. spots', fontsize=10)
-count_ax_h.set_ylabel('')
-# Remove yticklabels
-count_ax_h.set_yticklabels([])
-
-# Increase the xlim a bit
-xlim = count_ax_h.get_xlim()
-count_ax_h.set_xlim(0, xlim[1] * 1.1)
+ratio_ax.axvline(0, color='lightgray', linestyle='-', linewidth=4, zorder=0)
 
 # Set a shared title centered above the 2 axs
-title_x = (ax.get_position().x0 + count_ax_h.get_position().x1) / 2
-title_y = ax.get_position().y1 + 0.15
+title_x = (prevalence_pos.x0 + ratio_ax.get_position().x1) / 2
+title_y = prevalence_pos.y1 + 0.15
 fig.text(title_x, title_y, 'TLS/aggregates', 
          ha='center', fontsize=12, fontweight='bold')
 
 # Add overall title
-title_x = (ax.get_position().x0 + count_ax_h.get_position().x1) / 2
-title_y = ax.get_position().y1 + 0.4
+title_x = (prevalence_pos.x0 + ratio_ax.get_position().x1) / 2
+title_y = prevalence_pos.y1 + 0.4
 plt.suptitle(f'All samples - B/T cell proportion in {annotations_of_interest}-annotated spots (annotation_level={level})', 
             y=title_y, x=title_x, fontweight='bold', fontsize=12)
 

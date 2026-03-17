@@ -4,7 +4,7 @@
 # Plot the TLS niche signatures on lymph node sample P12_LN_Vis
 # Shows H&E, GC annotations (from pathology), and niche signatures
 # With overview + 2 zoomed areas (Primary follicle, Secondary follicle)
-# This creates Figure 2K
+# This creates Figure 2I
 
 # --- Define environment
 # env: shapely
@@ -27,17 +27,15 @@ import matplotlib as mpl
 from matplotlib.colors import to_rgb
 from matplotlib.colors import ListedColormap
 from matplotlib_scalebar.scalebar import ScaleBar
-import matplotlib.patheffects as path_effects
 
 import geopandas as gpd
-import PIL
 import tifffile
 
 mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot TLS model overview for Figure 2A",
+parser = argparse.ArgumentParser(description="Plot TLS model overview for Figure 2I",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")
@@ -54,10 +52,14 @@ h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_id = args["sample_id"]
 
+# Override sample_id
+sample_id = "P12_LN_Vis"
+
 print(f'Sample: {sample_id}')
 
 sys.path.append(os.path.join(project_dir, 'scripts'))
 from helper_functions import auto_crop_scanpy
+
 
 # --- Load sample sheet
 
@@ -69,9 +71,11 @@ else:
 sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
+
 # --- Load adata object
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
+
 
 # --- Load tissue annotations
 
@@ -92,10 +96,13 @@ if os.path.exists(tissue_annot_file):
 else:
     print(f"No tissue annotations found for {sample_id}")
 
+
 # --- Calculate crop coords for optimal presentation
 
 coords = auto_crop_scanpy(adata, border_size=0.2)
-
+# Adjust the overview coords based on width_to_height_ratio
+# Will be defined later after we load width_to_height_ratio
+# This will be updated after width_to_height_ratio is set
 # --- Set spot size for large capture area (11 mm)
 
 spot_size = 1.8
@@ -217,7 +224,7 @@ def create_colormap(R, G, B):
     vals[:, 3] = alphas
     return ListedColormap(vals)
 
-# Define colors per score
+# Define some colors per score
 color_dict = {
     'GC': mpl.colors.cnames["cyan"],
     'B_cell_zone': mpl.colors.cnames["cornflowerblue"],
@@ -282,8 +289,39 @@ crop_coords = {
     'Secondary follicle': [35077, 18986],
 }
 
-width = 3612  # width in full resolution pixels
+# Width to height ratio for crop areas (1 = square, 2 = width is 2x height, etc.)
+width_to_height_ratio = 1.6
+
+# Base dimension (used as height)
+height = 3612
+width = int(height * width_to_height_ratio)
+
+# Calculate offset to center the crop
+# If ratio != 1, we need to adjust x coordinate to keep crop centered
+width_offset = int((width - height) / 2)
+
+height_hires = height * hires_factor
 width_hires = width * hires_factor
+
+# Adjust the overview coords based on width_to_height_ratio
+# coords format is (xmin, xmax, ymin, ymax)
+if width_to_height_ratio != 1:
+    # Calculate current dimensions
+    coords_width = coords[1] - coords[0]
+    coords_height = coords[3] - coords[2]
+    # Calculate center point
+    center_x = (coords[0] + coords[1]) / 2
+    center_y = (coords[2] + coords[3]) / 2
+    # Use the smaller dimension as height, then calculate new width
+    new_height = min(coords_width, coords_height)
+    new_width = new_height * width_to_height_ratio
+    # Recalculate coords centered on the same point
+    coords = (
+        int(center_x - new_width / 2),
+        int(center_x + new_width / 2),
+        int(center_y - new_height / 2),
+        int(center_y + new_height / 2)
+    )
 
 # --- Helper functions for plotting
 
@@ -312,10 +350,11 @@ def move_plots_x_y(axs, x_offset=0.02, y_offset=0.02, remove_title=True):
 def crop_image(img, coords):
     """Crop the image with safe coordinates"""
     # Clip the coordinates to ensure they are within the image boundaries
-    x_min = max(coords[0], 0)
-    x_max = min(coords[1], img.shape[1])
-    y_min = max(coords[2], 0)
-    y_max = min(coords[3], img.shape[0])
+    # Convert to int to ensure they can be used as slice indices
+    x_min = int(max(coords[0], 0))
+    x_max = int(min(coords[1], img.shape[1]))
+    y_min = int(max(coords[2], 0))
+    y_max = int(min(coords[3], img.shape[0]))
     # Crop the image using the clipped coordinates
     crop_img = img[y_min:y_max, x_min:x_max]
     return crop_img, (x_min, x_max, y_min, y_max)
@@ -328,6 +367,7 @@ def crop_and_subset_anndata(
     original_hires_key,
     zoom_coord_fulres,
     width_fulres,
+    height_fulres,
     fulres_fact
 ):
     """
@@ -338,7 +378,7 @@ def crop_and_subset_anndata(
         zoom_coord_fulres[0],
         zoom_coord_fulres[0] + width_fulres,
         zoom_coord_fulres[1],
-        zoom_coord_fulres[1] + width_fulres
+        zoom_coord_fulres[1] + height_fulres
     ]
     crop_img, adjusted_coords = crop_image(img, coords_group)
     # Calculate the height and width of the cropped image
@@ -405,10 +445,12 @@ ax.add_artist(scalebar)
 
 # Add rectangles to mark the zoom areas
 for area, crop_coord in crop_coords.items():
-    # Adjust the coordinates for the now cropped image
-    crop_x = crop_coord[0] * hires_factor
+    # Adjust the coordinates to center the crop when width != height
+    # Original crop_coord is top-left for a square, we adjust x to keep center the same
+    adjusted_x = crop_coord[0] - width_offset
+    crop_x = adjusted_x * hires_factor
     crop_y = crop_coord[1] * hires_factor
-    rect = mpl.patches.Rectangle((crop_x, crop_y), width_hires, width_hires, 
+    rect = mpl.patches.Rectangle((crop_x, crop_y), width_hires, height_hires, 
                                   linewidth=2, edgecolor='black', facecolor='none')
     ax.add_patch(rect)
 
@@ -447,9 +489,10 @@ if gdf is not None:
 
 # Add rectangles to mark the zoom areas
 for area, crop_coord in crop_coords.items():
-    crop_x = crop_coord[0] * hires_factor
+    adjusted_x = crop_coord[0] - width_offset
+    crop_x = adjusted_x * hires_factor
     crop_y = crop_coord[1] * hires_factor
-    rect = mpl.patches.Rectangle((crop_x, crop_y), width_hires, width_hires, 
+    rect = mpl.patches.Rectangle((crop_x, crop_y), width_hires, height_hires, 
                                   linewidth=2, edgecolor='black', facecolor='none')
     ax.add_patch(rect)
 
@@ -477,9 +520,10 @@ ax.add_artist(scalebar)
 
 # Add rectangles to mark the zoom areas
 for area, crop_coord in crop_coords.items():
-    crop_x = crop_coord[0] * hires_factor
+    adjusted_x = crop_coord[0] - width_offset
+    crop_x = adjusted_x * hires_factor
     crop_y = crop_coord[1] * hires_factor
-    rect = mpl.patches.Rectangle((crop_x, crop_y), width_hires, width_hires, 
+    rect = mpl.patches.Rectangle((crop_x, crop_y), width_hires, height_hires, 
                                   linewidth=2, edgecolor='black', facecolor='none')
     ax.add_patch(rect)
 
@@ -491,6 +535,8 @@ for i, (area, crop_coord) in enumerate(crop_coords.items()):
     
     # Panel 1: H&E zoomed
     ax = axs[i + 1][0]
+    # Adjust crop coordinate to center when width != height
+    adjusted_crop_coord = [crop_coord[0] - width_offset, crop_coord[1]]
     # Crop the H&E image
     adata_sub, crop_img, (xmin, ymin, width_crop, height_crop) = crop_and_subset_anndata(
         adata=adata,
@@ -498,8 +544,9 @@ for i, (area, crop_coord) in enumerate(crop_coords.items()):
         img=img,
         sample_id=sample_id,
         original_hires_key=original_hires_key,
-        zoom_coord_fulres=crop_coord,
+        zoom_coord_fulres=adjusted_crop_coord,
         width_fulres=width,
+        height_fulres=height,
         fulres_fact=fulres_fact
     )
     sc.pl.spatial(adata_sub, color=None, ax=ax, bw=False, alpha_img=1,
@@ -522,8 +569,8 @@ for i, (area, crop_coord) in enumerate(crop_coords.items()):
             if poly.geom_type == 'Polygon':
                 x, y = poly.exterior.xy
                 # Transform coordinates to match the cropped image
-                x = [coord - crop_coord[0] for coord in x]
-                y = [coord - crop_coord[1] for coord in y]
+                x = [coord - adjusted_crop_coord[0] for coord in x]
+                y = [coord - adjusted_crop_coord[1] for coord in y]
                 # Check whether any of the coordinates are outside the crop area
                 if (max(x) < xmin or min(x) > xmin + width_crop or
                     max(y) < ymin or min(y) > ymin + height_crop):
@@ -615,7 +662,7 @@ for i, (label, cmap) in enumerate(cmap_dict.items()):
     cbar.ax.tick_params(labelsize=20)
     # Limit to 2 xticks
     cbar.ax.set_xticks([0, vmax])
-    cbar.ax.set_xticklabels(['Low', 'High'])
+    cbar.ax.set_xticklabels([0, vmax])
     # Remove the xticks if not the bottom colorbar
     if i < len(cmap_dict) - 1:
         cbar.ax.set_xticklabels([])
@@ -635,7 +682,7 @@ plt.suptitle(f'{sample_id} - GC annotations + TLS niche signatures',
 out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
-filename = 'Fig_2K.pdf'
+filename = 'Fig_2I.pdf'
 
 plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')
 plt.close('all')

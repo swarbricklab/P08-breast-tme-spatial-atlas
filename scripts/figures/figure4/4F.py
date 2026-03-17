@@ -55,6 +55,8 @@ h5ad_dir = args["h5ad_dir"]
 sample_id = args["sample_id"]
 project_dir = args["project_dir"]
 
+# Override sample_id
+sample_id = 'P29_HD'
 
 # --- Extract some info from the sample sheet
 

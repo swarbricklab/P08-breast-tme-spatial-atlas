@@ -53,6 +53,9 @@ h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_id = args["sample_id"]
 
+# Override sample id
+sample_id = 'P24_Vis'
+
 print(f'Sample: {sample_id}')
 
 sys.path.append(os.path.join(project_dir, 'scripts'))

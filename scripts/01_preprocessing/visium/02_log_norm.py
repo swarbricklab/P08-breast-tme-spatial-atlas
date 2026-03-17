@@ -43,6 +43,19 @@ project_dir=args["project_dir"]
 res_dir=args["res_dir"]
 
 
+# --- Extract some info from the sample sheet
+
+# Use sample_sheet argument if provided, else default
+if args.get("sample_sheet"):
+    sample_sheet_path = args["sample_sheet"]
+else:
+    sample_dir = os.path.join(project_dir, 'config')
+    sample_sheet_file = 'sample_sheet_visium.csv'
+    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
+
+sample_sheet = pd.read_csv(sample_sheet_path)
+
+
 # --- Load the raw anndata object
 
 input_adata_dir = os.path.join(h5ad_dir, 'visium', 'raw')

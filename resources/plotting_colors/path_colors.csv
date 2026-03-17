@@ -1,0 +1,5 @@
+path_layer,color,color_adj
+epithelial,#1f77b4,#30749e
+immune,#ff7f0e,#f4944d
+stroma,#2ca02c,#65c190
+additional_features,#9467bd,#a471b1

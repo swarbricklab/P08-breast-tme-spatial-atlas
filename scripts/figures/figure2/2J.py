@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2J: barplot showing number of germinal centers per clinical subtype
-# GCs identified by signature scoring
+# Plot GC score distribution per annotation as a ridgeplot for lymph node samples
+# This creates Figure 2J
 
 # --- Define environment
 # env: spatial-pilot
@@ -10,17 +10,18 @@
 # --- Load packages
 import argparse
 import os
-import pandas as pd
-import matplotlib.pyplot as plt
 from datetime import datetime
-import seaborn as sns
-import matplotlib as mpl
 
-mpl.rcParams['pdf.fonttype'] = 42
+import matplotlib.pyplot as plt
+from matplotlib import patheffects
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from mycolorpy import colorlist as mcp
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Plot GC score distribution per annotation for Figure 2J",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -36,51 +37,25 @@ args = vars(parser.parse_args())
 
 # Arguments
 project_dir = args["project_dir"]
-h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
 
-# --- Extract some info from the sample sheet
 
-# Use sample_sheet argument if provided, else default
+# --- Load sample sheet
+
 if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
-    sample_dir = os.path.join(project_dir, 'config')
-    sample_sheet_file = 'sample_sheet_visium.csv'
-    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_lymph_nodes.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 
-# --- Also get some tissue metadata
+# --- Function to find the most recent results
 
-resource_dir = os.path.join(project_dir, 'resources')
-metadata_file = 'tissue_metadata.csv'
-
-tissue_metadata = pd.read_csv(os.path.join(resource_dir, metadata_file))
-
-# Merge the two DataFrames on the common column 'tissue_id'
-merged_df = pd.merge(sample_sheet, tissue_metadata, on='tissue_id')
-
-# Create a sample - subtype dictionary
-subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
-
-# And make a sample patient LUT
-sample_donor_lut = {}
-
-for sample in sample_list:
-    sample_donor_lut[sample] = sample_lut.loc[sample, 'donor_id']
-
-
-# --- Load the GC numbers
-
-GC_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '02_group_high_score_areas', 'GC_score',)
-
-# Find most recent results
 def find_most_recent(dir):
     # Find most recent results
     subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
@@ -98,149 +73,198 @@ def find_most_recent(dir):
         most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
         most_recent_dir_path = os.path.join(dir, most_recent_dir)
         print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
     else:
         print("No valid directories found.")
+        most_recent_dir_path = None
+    return most_recent_dir_path
 
-most_recent_dir_path = find_most_recent(GC_group_dir)
 
-GC_number_dict = {}
+# --- Load GC annotations and scores, create plotting dataframe
+
+# Only plot annotated GCs
+annotations_of_interest = ['germinal_centre']
+annotation_key = 'annotation'
+GC_key = 'GC_score_20'
+
+# Get paths
+GC_annotations_dir = os.path.join(project_dir, 'data', 'pathology_annotations', 'visium_lymph_nodes')
+GC_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures',
+                          '01_score_signatures', 'lymph_nodes', 'GC_score')
+most_recent_scores_dir = find_most_recent(GC_res_dir)
+
+# Load data per sample and merge
+df_list = []
 
 for sample in sample_list:
-    sample_file = os.path.join(most_recent_dir_path, 'csv_files', f'{sample}_GC_groups.csv')
-    if os.path.isfile(sample_file):
-        GC_number_dict[sample] = pd.read_csv(sample_file, index_col=0)
+    # Load GC scores (this has all spots)
+    scores_file = os.path.join(most_recent_scores_dir, 'csv_files', f'{sample}_GC_score.csv')
+    if os.path.exists(scores_file):
+        scores_df = pd.read_csv(scores_file, index_col=0)
     else:
-        print(f"Warning: {sample_file} not found, skipping.")
+        print(f'Warning: {scores_file} not found')
+        continue
+    
+    # Load GC annotations (this only has annotated spots)
+    annotations_file = os.path.join(GC_annotations_dir, f'{sample}_GC_annotations.csv')
+    if os.path.exists(annotations_file):
+        annotations_df = pd.read_csv(annotations_file, index_col=0)
+        # Left merge to keep all spots from scores_df
+        merged_df = pd.merge(scores_df[[GC_key]], annotations_df[[annotation_key]], 
+                             left_index=True, right_index=True, how='left')
+    else:
+        print(f'Warning: {annotations_file} not found, all spots will be marked as no_annotation')
+        merged_df = scores_df[[GC_key]].copy()
+        merged_df[annotation_key] = None
+    
+    merged_df['sample_id'] = sample
+    df_list.append(merged_df)
 
-group_key = 'group_too_small_removed'
+# Concatenate all samples
+GC_plotting_df = pd.concat(df_list, ignore_index=True)
 
-# Count number of unique groups per sample
-GC_numbers = pd.DataFrame([
-    {'sample': sample, 'number': df[group_key].nunique()}
-    for sample, df in GC_number_dict.items()
-])
+# Record spots with no annotation
+na_fill = 'no_annotation'
+GC_plotting_df[annotation_key] = GC_plotting_df[annotation_key].fillna(na_fill)
 
-# Add subtype information
-GC_numbers['subtype'] = GC_numbers['sample'].map(subtype_dict)
-
-
-# --- Normalize numbers to 5000 spots, to account for differences in total number of spots per sample
-
-TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
-
-# Apply function
-most_recent_dir_path = find_most_recent(TLS_res_dir)
-
-# Read in the results & add to anndata
-for sample in sample_list:
-    TLS_file_name = f'{sample}_TLS_model.csv'
-    TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
-    total_spots = len(TLS_results)
-    GC_numbers.loc[GC_numbers['sample'] == sample, 'number_norm'] = GC_numbers.loc[GC_numbers['sample'] == sample, 'number'] / total_spots * 5000
-
-
-# --- Read in colors per subtype
-
-color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
-color_file = 'SCSubtype_colors.csv'
-
-color_lut = pd.read_csv(os.path.join(color_dir, color_file))
-color_lut = color_lut.set_index('subtype')
-
-alpha = 0.7
-
-subtype_color_dict = color_lut['color'].to_dict()
+# Also overwrite annotations not in the annotations of interest
+GC_plotting_df[annotation_key] = np.where(GC_plotting_df[annotation_key].isin(annotations_of_interest), 
+                                          GC_plotting_df[annotation_key], na_fill)
 
 
-# --- Prepare for plotting the result per subtype: define a plotting order based on subtype
+# --- Prepare for plotting
 
-# Extract all subtypes
-all_subtypes = GC_numbers['subtype'].unique()
+plotting_order = annotations_of_interest + [na_fill]
 
-# Sort according to preferred plotting order
-subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
-sorted_subtypes = sorted(all_subtypes, key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
+# Define some colors
+cmap = "BuPu"
+anno_color_list = mcp.gen_color(cmap=cmap, n=(len(annotations_of_interest) + 3))[2:-1]
+
+# Reverse the list
+anno_color_list = anno_color_list[::-1]
+
+# Make a new color dict
+color_lut_anno = {}
+for n, annotation in enumerate(annotations_of_interest):
+    color_lut_anno[annotation] = anno_color_list[n]
+
+# Add other
+color_lut_anno[na_fill] = 'lightgray'
 
 
-# --- Plot 1: Barplot by subtype
+# --- Plotting functions
 
-# Set fontsize
-plt.rcParams.update({'font.size': 14})
+# Add labels
+def label(label, ax, fontsize=8, y=0.08):
+    effects = [patheffects.Stroke(linewidth=2, foreground='white'), patheffects.Normal()]
+    ax.text(0, y, label, color='black', fontsize=fontsize,
+            ha="left", va="center", transform=ax.transAxes, path_effects=effects)
 
-# Disable the grid for all plots
-plt.rcParams['axes.grid'] = False
-err_kws={"color": 'black', 'linewidth': 0.8}
+
+# Function to add some lines
+def add_lines(ax, indicate_threshold=True, add_text=True, ymax=0.5, fontsize=8, 
+              text_height=0.4, threshold=0):
+    # Make some vertical lines
+    # Indicate 0
+    ax.axvline(0, ymin=0, ymax=ymax, linestyle='--', linewidth=0.8, c='gray', zorder=-1)
+    if indicate_threshold:
+        # Indicate the GC threshold
+        ax.axvline(threshold, ymin=0, ymax=ymax, linestyle='-', linewidth=0.8, c='red', 
+                   zorder=-1, alpha=0.6)
+        if add_text:
+            # Create white outline effect
+            effects = [patheffects.Stroke(linewidth=2, foreground='white'), patheffects.Normal()]
+            ax.text(x=threshold+0.02*ax.get_xlim()[1], y=text_height*ax.get_ylim()[1], 
+                    s=f'{threshold}', fontsize=fontsize, path_effects=effects)
+
+
+def make_ridgeplot(df, x, plot_axs, group_key, group_order, xlabel=None, 
+                   title='GC score per annotation', y_label=0.05, adjust=0.5, cut=3,
+                   add_numbers=False, fontsize=8, title_y=1):
+    for n, group in enumerate(group_order):
+        # Subset df
+        df_sub = df[df[group_key] == group]
+        # Get ax
+        ax = plot_axs[n]
+        # Make distribution plot for that subtype
+        color = color_lut_anno[group]
+        sns.kdeplot(df_sub, x=x, hue=group_key, fill=True, ax=ax, palette=[color], 
+                    legend=False, alpha=0.6, cut=cut)
+        # Modify ax
+        # Hide the y-axis and its labels
+        ax.yaxis.set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        # Get the current x-tick labels
+        ax.tick_params(axis='x', labelsize=8)
+        if xlabel is None:
+            xlabel = x
+        ax.set_xlabel(xlabel, fontsize=9)
+        if add_numbers:
+            total = len(df_sub[x].dropna())
+            reformat = reformat_number(total)
+            text = f'n = {reformat}'
+            effects = [patheffects.Stroke(linewidth=2, foreground='white'), patheffects.Normal()]
+            ax.text(1, y_label, text, color='black', fontsize=fontsize,
+                    ha="right", va="center", transform=ax.transAxes, path_effects=effects)
+    # Make them overlap a bit
+    plt.subplots_adjust(hspace=-adjust)
+    # Plot the subtype label
+    for n, subtype in enumerate(group_order):
+        label(subtype, plot_axs[n], y=y_label, fontsize=fontsize)
+    # Add title
+    plot_axs[0].set_title(title, fontweight='bold', fontsize=9, y=title_y)
+
+
+# Function to reformat numbers
+def reformat_number(number):
+    if number >= 1000000:
+        # Divide the number by 1,000,000 and format it to one decimal place
+        formatted_number = "{:.1f}m".format(number / 1000000)
+    elif number >= 1000:
+        # Divide the number by 1000 and format it to one decimal place
+        formatted_number = "{:.1f}k".format(number / 1000)
+    else:
+        formatted_number = str(round(number, 1))
+    return formatted_number
+
+
+# --- Plot: Ridgeplot split by annotation type
 
 # Plotting
-fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(3, 0.6*len(sorted_subtypes)))
+sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0), 'axes.linewidth':1})
 
-# Make a horizontal barplot
-sns.barplot(GC_numbers, y='subtype', x='number_norm', hue='subtype', palette=subtype_color_dict, order=sorted_subtypes,
-            linewidth=0.8, ax=ax, saturation=1, err_kws=err_kws, edgecolor='black', capsize=.4, )
+# Make axs
+nrows = len(plotting_order)
+ncols = 1
 
-# Adjust alpha for facecolors
-for bar in ax.patches:
-    # Get the current facecolor
-    r, g, b, _ = bar.get_facecolor()
-    # Set new facecolor with alpha
-    bar.set_facecolor((r, g, b, alpha))  # Set alpha to 0.5
-    # Optionally, ensure the edgecolor remains opaque
-    bar.set_edgecolor('black')
+fig, axs = plt.subplots(ncols=ncols, nrows=nrows, figsize=(3, 0.8*nrows), 
+                        sharex='all', sharey='all')
 
-# Plot the individual dots on the boxplot
-sns.stripplot(GC_numbers, y='subtype', x='number_norm', color='black', jitter=True, size=3,
-                marker='o', ax=ax)
+make_ridgeplot(GC_plotting_df, x=GC_key, plot_axs=axs, group_key=annotation_key, 
+               group_order=plotting_order, y_label=0.1, 
+               title="GC score per annotation", add_numbers=True,
+               title_y=1, adjust=0.2)
 
-# Set xlabel
-ax.set_xlabel('# GCs / 5000 spots')
-ax.set_ylabel('Subtype')
+# Add some lines
+for n, ax in enumerate(axs):
+    add_lines(ax, indicate_threshold=False, ymax=0.8, text_height=0.7)
 
-ax.set_title('GC frequency', fontweight='bold')
-
-# Add an ax on the right for number of samples per subtype
-count_ax = fig.add_axes([ax.get_position().x1 + 0.02, ax.get_position().y0, ax.get_position().width/3, ax.get_position().height])
-
-# Calculate number of samples per subtype
-subtype_counts = GC_numbers['subtype'].value_counts().reindex(sorted_subtypes)
-sns.barplot(x=subtype_counts.values, y=subtype_counts.index, ax=count_ax, palette=subtype_color_dict, order=sorted_subtypes,
-            saturation=1, edgecolor='black', linewidth=0.8)
-
-# Make the same adjustments as before
-for bar in count_ax.patches:
-    # Get the current facecolor
-    r, g, b, _ = bar.get_facecolor()
-    # Set new facecolor with alpha
-    bar.set_facecolor((r, g, b, alpha))  # Set alpha to 0.5
-    # Optionally, ensure the edgecolor remains opaque
-    bar.set_edgecolor('black')
-
-# Set top & right spines invisible
-count_ax.spines['top'].set_visible(False)
-count_ax.spines['right'].set_visible(False)
-
-# Remove yticks & ylabel
-count_ax.set_yticks([])
-count_ax.set_ylabel('')
-
-# Set xlabel
-count_ax.set_xlabel('# samples')
-
-# Annotate bars with counts
-for i, bar in enumerate(count_ax.patches):
-    width = bar.get_width()
-    count_ax.text(width + count_ax.get_xlim()[1]*0.1, bar.get_y() + bar.get_height() / 2,
-                  f'{int(width)}', ha='left', va='center', fontsize=12)
-
-plt.suptitle(f'Number of spatially separate GCs normalized by total spots', y=1.1, fontweight='bold')
+plt.suptitle('Lymph node samples - GC score distribution per annotation', 
+             y=1.15, fontweight='bold', fontsize=10)
 
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_2J.pdf'
 plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')
 
-print("Script succesfully completed")
+print(f'Figure saved to {os.path.join(out_dir, filename)}')
+
+
+# --- Finish
+
+print("Script successfully completed")

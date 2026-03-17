@@ -21,6 +21,19 @@ This allows job submission scripts to activate the correct environment automatic
 
 ---
 
+## Notes on Reproducibility
+
+The analyses for Visium, Visium HD, and Xenium data were performed in separate environments (`spatial-pilot`, `vis-hd`, `xen-hev`) to ensure compatibility during development. **For reproducibility, you can use a single combined environment** (e.g., merging the dependencies from `spatial-pilot`, `vis-hd`, and `xen-hev`) to run all spatial transcriptomics analyses, though package versions may differ slightly from those used in the original analysis.
+
+However, we recommend keeping the following environments separate as they are based on official package documentation and have specific version requirements:
+- **cell2location**: For spatial deconvolution
+- **tangram**: For mapping single-cell data to spatial coordinates
+- **spatdat**: For SpatialData object creation and manipulation
+
+Both Environment Definition Files (EDF) and Environment Snapshot Files (ESF) are provided for full reproducibility.
+
+---
+
 ## Structure
 
 - **EDF/**: Environment Definition Files. Use these YAML files to create new conda environments:
@@ -35,26 +48,45 @@ This allows job submission scripts to activate the correct environment automatic
 
 ## Environments
 
-### cell2location
-- Used for deconvolution of Visium data with cell2location package.
+### Platform-Specific Analysis Environments (can be combined)
 
-### gseapy
-- Used for gene set enrichment analysis with the gseapy package.
+These environments were used separately during development but can be merged into a single environment for simplified reproduction:
 
-### spatdat
-- Used for creation and handling of SpatialData objects.
+#### spatial-pilot
+- Used for Visium analysis
+- Core packages: scanpy, squidpy, cell2location (inference only)
 
-### spatial-pilot
-- Used for Visium analysis.
+#### vis-hd
+- Used for Visium HD analysis
+- Core packages: scanpy, squidpy
 
-### vis-hd
-- Used for Visium HD analysis.
+#### xen-hev
+- Used for Xenium analysis (e.g., TLS and HEV region identification)
+- Core packages: scanpy, squidpy
 
-### xen-hev
-- Used for Xenium analysis (e.g., TLS and HEV region identification).
+### Specialized Tool Environments (recommended to keep separate)
 
-### shapely
-- Used for scripts that require spatial operations with the `shapely` package, advanced annotation placement with `adjusttext`, and set visualization with `upsetplot`.
+These environments are based on official package documentation and should be kept separate due to specific version requirements:
+
+#### cell2location
+- Used for spatial deconvolution model training
+- Based on official cell2location installation instructions
+
+#### tangram
+- Used for mapping single-cell reference data to spatial coordinates
+- Based on official Tangram installation instructions
+
+#### spatdat
+- Used for creation and handling of SpatialData objects (Xenium data)
+- Based on official SpatialData installation instructions
+
+### Utility Environments
+
+#### gseapy
+- Used for gene set enrichment analysis with the gseapy package
+
+#### shapely
+- Used for scripts requiring spatial geometry operations, advanced annotation placement, and set visualization. This environment is mainly used for figure generation rather than analysis.
 - Key packages: `shapely`, `adjusttext`, `upsetplot`
 
 ---

@@ -1,0 +1,15 @@
+name: tangram
+
+channels:
+  - conda-forge
+  - bioconda
+  - pypi
+
+dependencies:
+  - python>=3.8
+  - anndata
+  - scanpy
+  - arpack
+  - pip
+  - pip:
+      - tangram-sc

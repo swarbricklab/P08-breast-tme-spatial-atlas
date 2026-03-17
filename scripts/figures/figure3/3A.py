@@ -51,6 +51,9 @@ project_dir = args["project_dir"]
 
 print(f'Sample: {sample_id}')
 
+# Overwrite sample_id
+sample_id = 'P29_HD'
+
 sys.path.append(os.path.join(project_dir, 'scripts'))
 from helper_functions import auto_crop_scanpy
 

@@ -60,6 +60,8 @@ sample_id=args["sample_id"]
 res_dir = args['res_dir']
 project_dir = args['project_dir']
 
+# Override sample_id
+sample_id = 'P29_Xe5k'
 
 # --- Extract some info from the sample sheet
 # Use sample_sheet argument if provided, else default

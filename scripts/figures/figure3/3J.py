@@ -57,7 +57,7 @@ if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
     sample_dir = os.path.join(project_dir, 'config')
-    sample_sheet_file = 'sample_sheet.csv'
+    sample_sheet_file = 'sample_sheet_visium_hd.csv'
     sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
 
 sample_sheet = pd.read_csv(sample_sheet_path)

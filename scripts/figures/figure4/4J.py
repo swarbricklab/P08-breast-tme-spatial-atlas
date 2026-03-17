@@ -1,36 +1,38 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4J: gene expression in HEVs as function of distance to TLS
-# Shows spatial gradients of LTBR expression relative to TLS structures
+# Plot the top 10 cell types enriched in spots sending LTB signals to HEVs (Figure 4J)
 
 # --- Define environment
-# env: xen-hev
+# env: vis-hd
 
 # --- Load packages
 import argparse
 import os
+import re
 from datetime import datetime
-import sys
-import anndata as ad
+from collections.abc import Iterable
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
-
-import pandas as pd
-import numpy as np
+from scipy import stats
 
 import seaborn as sns
-from scipy import stats
-from statsmodels.stats.multitest import multipletests
+
+import anndata as ad
+import matplotlib as mpl
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scanpy as sc
+
+sc.set_figure_params(facecolor="white", figsize=(8, 8))
+sc.settings.verbosity = 3
 
 mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Plot cellular enrichment in LTB-sending bins for Figure 4J",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -50,48 +52,36 @@ h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
 
-# Import function script as a module
-sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms',))
-import plotting_functions
+print(f'Samples in python: {sample_list}')
 
 
 # --- Extract some info from the sample sheet
-
 # Use sample_sheet argument if provided, else default
 if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
-    sample_dir = os.path.join(project_dir, 'config')
-    sample_sheet_file = 'sample_sheet_xenium.csv'
-    sample_sheet_path = os.path.join(sample_dir, sample_sheet_file)
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_hd.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
-
-# Also load tissue metadata
-metadata_dir = os.path.join(project_dir, 'resources',)
-tissue_metadata_file = 'tissue_metadata.csv'
-tissue_metadata = pd.read_csv(os.path.join(metadata_dir, tissue_metadata_file))
-
-# Make a section_id to subtype mapping
-section_to_subtype = tissue_metadata.set_index('tissue_id')['clinical_subtype'].to_dict()
-# Map section_id to subtype
-sample_sheet['subtype'] = sample_sheet['tissue_id'].map(section_to_subtype)
-
-subtype_dict = sample_sheet.set_index('section_id')['subtype'].to_dict()
+sample_lut = sample_sheet.set_index('section_id')
 
 
-# --- Load the anndata objects
+# --- Also get some tissue metadata
 
-adata_dict = {}
+resource_dir = os.path.join(project_dir, 'resources')
+metadata_file = 'tissue_metadata.csv'
 
-for sample in sample_list:
-    adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample}.h5ad'))
-    adata_dict[sample] = adata
+tissue_metadata = pd.read_csv(os.path.join(resource_dir, metadata_file))
+
+# Merge the two DataFrames on the common column 'tissue_id'
+merged_df = pd.merge(sample_sheet, tissue_metadata, on='tissue_id')
+# Create a sample - subtype dictionary
+subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
 
 
-# --- Load the HEV distance to TLS calculations
+# --- Load the stlearn adata objects
 
-# Find most recent results
+# Function to find the most recent results
 def find_most_recent(dir):
     # Find most recent results
     subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
@@ -109,397 +99,356 @@ def find_most_recent(dir):
         most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
         most_recent_dir_path = os.path.join(dir, most_recent_dir)
         print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
     else:
         print("No valid directories found.")
+    return most_recent_dir_path
 
-distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
-most_recent_distance = find_most_recent(distance_dir)
+# Find most recent results
+resolution = 'square_016um'
+threshold = 0.5
+threshold_adj = str(threshold).split('.')[-1]
+bin_size = 25  # um
 
-distance_dict = {}
+lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 'csv_files')
 
-for sample in sample_list:
-    distance_file = f'{sample}_HEV_niches_info.csv'
-    distance_df = pd.read_csv(os.path.join(most_recent_distance, 'csv_files', distance_file))
-    # Prepend sample name to niche_id
-    distance_df['niche_id'] = sample + '_' + distance_df['niche_id'].astype(str)
-    # Make a mapping dict of distance to TLS
-    distance_dict[sample] = distance_df.set_index('niche_id')['min_distance_to_TLS'].to_dict()
-    # Also load HEV niche barcode and add to adata
-    filename = f'{sample}_HEV_niches_cell_to_niche.csv'
-    niche_barcode_df = pd.read_csv(os.path.join(most_recent_distance, 'csv_files', filename), index_col=0)
-    niche_barcode_df.dropna(subset=['niche_id'], inplace=True)
-    # Prepend sample name to niche_id
-    niche_barcode_df['niche_id'] = sample + '_' + niche_barcode_df['niche_id'].astype(str)
-    adata_dict[sample].obs['niche_id'] = niche_barcode_df['niche_id']
+most_recent_dir_path = find_most_recent(lr_dir)
 
-# Extract an unnested distance mapping dict
-unnested_distance_dict = {}
-for sample in sample_list:
-    unnested_distance_dict.update(distance_dict[sample])
-
-
-# --- Also load cell annotations
-
-# Decide which annotation levels to use
-level = 'subset'
+adata_dict_stlearn = {}
 
 for sample in sample_list:
-    annotation_file = f'{sample}_{level}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium')
-    annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
-    # Add to adata
-    adata_dict[sample].obs[level] = annotations['pred_cell_type']
+    # Load the anndata object
+    filename = f'{sample}_HEV_LR_analysis_stlearn.h5ad'
+    adata_dict_stlearn[sample] = ad.read_h5ad(os.path.join(most_recent_dir_path, filename))
 
 
-# --- For the gene of interest, calculate average expression per HEV niche across all samples
+# --- Load and add the decon results
 
-gene_of_interest = 'LTBR'
+decon_resolution = resolution
 
-# Decide on stat display mode and posthoc mode
-stat_display_mode = 'brackets'  # 'text', 'brackets', 'hybrid'
-posthoc_mode = 'baseline'  # 'baseline' (all vs first bin) or 'neighbor' (neighbor vs neighbor)
+resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
+resolution_numbers = int(resolution_numbers)
 
-# Subset adatas to HEV niches only
+decon_level = 'subset'
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
+
 for sample in sample_list:
-    adata = adata_dict[sample]
-    adata_hev = adata[adata.obs['niche_id'].notna()]
-    adata_dict[sample] = adata_hev
-
-# Extract a single adata object with all samples
-adata_list = list(adata_dict.values())
-all_adata = ad.concat(adata_list, merge='same')
-
-# Calculate average expression per HEV niche
-spp1_avg = pd.DataFrame()
-
-# Calculate average expression in ACKR1+ endothelial cells only
-adata_sub = all_adata[all_adata.obs[level] == 'Endothelial ACKR1'].copy()
-spp1_avg[f'avg_{gene_of_interest}_expression_ACKR1'] = adata_sub.to_df()[[gene_of_interest]].groupby(adata_sub.obs['niche_id']).mean()
-
-# Add distance to TLS info
-spp1_avg['min_distance_to_TLS'] = spp1_avg.index.map(unnested_distance_dict)
-
-# Add niche_id as a column
-spp1_avg['niche_id'] = spp1_avg.index
+    decon_file = f'{sample}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
+    decon_res = pd.read_csv(os.path.join(decon_dir, decon_file), index_col=0)
+    # Convert to proportions within each spot
+    decon_res = decon_res.div(decon_res.sum(axis=1), axis=0)
+    cell_types = list(decon_res.columns)
+    adata_dict_stlearn[sample].obs[cell_types] = decon_res
 
 
-# --- Bin HEVs into distance bins
+# --- Also load the revisited spot labels & add to adata
+# These distinguish whether a nearby spot is nearby to TLS_HEV or non_TLS_HEV
 
-# Define bins and labels
-bins = [-0.1, 0, 100, 200, np.inf]
+lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '03_plot_LR_per_sample', f'{bin_size}um_bin', 'csv_files')
 
-labels = []
-for i in range(len(bins) - 1):
-    left = bins[i]
-    right = bins[i + 1]
-    if right == np.inf:
-        labels.append(f'>{int(left)}')
-    elif left == -0.1 and right == 0:
-        labels.append('0')
+most_recent_dir_path = find_most_recent(lr_dir)
+
+for sample in sample_list:
+    spot_label_file = f'{sample}_HEV_spot_grouping.csv'
+    label_df = pd.read_csv(os.path.join(most_recent_dir_path, spot_label_file), index_col=0)
+    adata_dict_stlearn[sample].obs['nearby_spots_revisited'] = label_df['nearby_spots_revisited']
+
+
+# --- Load the miniatlas classifications
+
+# These are needed to check the alignment between major and minor levels
+miniatlas_dir = os.path.join(project_dir, 'resources', 'cell_types', 'miniatlas')
+miniatlas_file = 'miniatlas_subset_classifications.csv'
+
+miniatlas_df = pd.read_csv(os.path.join(miniatlas_dir, miniatlas_file),)
+
+# Also define a dict with shorter names for the subset level cell types
+miniatlas_sub_dict = miniatlas_df.set_index('miniatlas_subset')[['miniatlas_subset_short']].to_dict()
+
+# Order miniatlas_major by lineage
+lineage_order = ['Epithelial', 'Immune', 'Stromal']
+
+major_cell_types = miniatlas_df[f'miniatlas_major'].dropna().unique().tolist()
+
+# Sort based on lineage first (recorded in the miniatlas df)
+def get_lineage(cell_type, level='major'):
+    if cell_type in miniatlas_df[f'miniatlas_{level}'].values:
+        lineage = miniatlas_df[miniatlas_df[f'miniatlas_{level}'] == cell_type]['lineage'].values[0]
     else:
-        labels.append(f'{int(left)}-{int(right)}')
+        lineage = 'other'
+    return lineage
 
-# Now use these labels in pd.cut
-spp1_avg['TLS_distance_bin'] = pd.cut(
-    spp1_avg['min_distance_to_TLS'],
-    bins=bins,
-    labels=labels,
-    include_lowest=True,
-    right=True
-)
-
-# Count how many hevs per bin
-hev_counts = spp1_avg['TLS_distance_bin'].value_counts().sort_index()
+major_cell_types_sorted = sorted(major_cell_types, key=lambda x: (lineage_order.index(get_lineage(x)) if get_lineage(x) in lineage_order else len(lineage_order), x))
 
 
-# --- Load the HEV colors
+# --- Load plotting colors
 
 color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
-filename = 'TLS_HEV_colors.csv'
 
-hev_colors_df = pd.read_csv(os.path.join(color_dir, filename), index_col=0)
-color_dict = hev_colors_df['color'].to_dict()
+# Use the major level for colors
+color_level = 'major'
+color_file = f'miniatlas_{color_level}_colors.csv'
 
-# Take the 2 most extreme colors for the distance bins
-n_colors = len(labels)
-color_list = [color_dict['near_TLS_HEV'], color_dict['non_TLS_HEV']]
+color_dict = pd.read_csv(os.path.join(color_dir, color_file), index_col=0).to_dict()['color']
 
-cmap = mpl.colors.LinearSegmentedColormap.from_list('HEV_distance_cmap', colors=color_list, N=n_colors)
-
-# Extract palette
-color_dict_bins = {label: cmap(i / (n_colors - 1)) for i, label in enumerate(labels)}
-
-
-# --- Calculate stats for all three groups
-
-# Define the columns to analyze
-columns_to_analyze = [
-    f'avg_{gene_of_interest}_expression_ACKR1',
-]
-
-stats_results = {}
-
-for col in columns_to_analyze:
-    # 1. Spearman Correlation (Trend Test)
-    corr_df = spp1_avg.dropna(subset=['min_distance_to_TLS', col])
-    r_val, p_val_corr = stats.spearmanr(corr_df['min_distance_to_TLS'], corr_df[col])
-    
-    # 2. Kruskal-Wallis (Group Difference Test)
-    groups = []
-    for label in labels:
-        values = spp1_avg[spp1_avg['TLS_distance_bin'] == label][col].values
-        values = values[~np.isnan(values)]
-        groups.append(values)
-    
-    stat, p_val_kw = stats.kruskal(*groups)
-    
-    # Store results
-    stats_results[col] = {
-        'r': r_val,
-        'p_corr': p_val_corr,
-        'kw_stat': stat,
-        'p_kw': p_val_kw
-    }
-    
-    print(f"\n{col}:")
-    print(f"  Spearman Correlation: r={r_val:.3f}, p={p_val_corr:.2e}")
-    print(f"  Kruskal-Wallis: H={stat:.3f}, p={p_val_kw:.2e}")
+# Add the other levels to the color_dict
+for cell_type in miniatlas_df[f'miniatlas_{decon_level}'].unique():
+    if cell_type not in color_dict.keys():
+        # Check that the value is not nan
+        if pd.isna(cell_type):
+            continue
+        print(f'Adding color for {cell_type}')
+    # Get the corresponding major cell type
+    major_type = miniatlas_df[miniatlas_df[f'miniatlas_{decon_level}'] == cell_type][f'miniatlas_major'].values
+    # Find which value is in the color_dict
+    major_type_in_dict = [m for m in major_type if m in color_dict.keys()]
+    if len(major_type_in_dict) > 0:
+        color_dict[cell_type] = color_dict[major_type_in_dict[0]]
+    else:
+        color_dict[cell_type] = 'lightgrey'
 
 
-# --- Post-hoc tests: Mann-Whitney U between groups
+# --- Find the spots that send LTB signals
 
-# Define comparison pairs based on mode
-if posthoc_mode == 'baseline':
-    # All bins vs first bin
-    baseline = '0'
-    comparison_pairs = [
-        ('0', '0-100'),
-        ('0', '100-200'),
-        ('0', '>200')
-    ]
-elif posthoc_mode == 'neighbor':
-    # Neighbor vs neighbor
-    comparison_pairs = [
-        ('0', '0-100'),
-        ('0-100', '100-200'),
-        ('100-200', '>200')
-    ]
+adata = adata_dict_stlearn[sample_list[0]]
 
-# Store results for each column
-posthoc_results = {}
+# Extract all significant lrs as list
+lr = 'LTB_LTBR'
 
-for col in columns_to_analyze:
-    p_values = []
-    
-    # 1. Run the pairwise tests
-    for group1, group2 in comparison_pairs:
-        # Get the data for the two groups
-        data1 = spp1_avg[spp1_avg['TLS_distance_bin'] == group1][col].dropna()
-        data2 = spp1_avg[spp1_avg['TLS_distance_bin'] == group2][col].dropna()
-        
-        # Run Mann-Whitney U
-        stat, p = stats.mannwhitneyu(data1, data2)
-        p_values.append(p)
-    
-    # 2. Correct for multiple testing (Bonferroni)
-    # 'reject' tells you if it's significant (True/False)
-    reject, p_adjusted, _, _ = multipletests(p_values, alpha=0.05, method='bonferroni')
-    
-    # Store results
-    posthoc_results[col] = {
-        'comparison_pairs': comparison_pairs,
-        'p_adjusted': p_adjusted,
-        'reject': reject
-    }
-    
-    # 3. Print results
-    print(f"\n{col}:")
-    for (group1, group2), p_adj, is_sig in zip(comparison_pairs, p_adjusted, reject):
-        sig_str = "*" if is_sig else "ns"
-        print(f"  {group1} vs {group2}: p_adj = {p_adj:.2e} ({sig_str})")
+print(f'Analyzing LR: {lr}')
+
+avg_comp_dict = {}
+
+for sample in sample_list:
+    adata = adata_dict_stlearn[sample]
+    # Check if the LR is in the adata object
+    if 'lr_summary' not in adata.uns or lr not in adata.uns['lr_summary'].index:
+        print(f'LR {lr} not found in {sample}. Skipping...')
+        continue
+    # Get the list of all LR pair names
+    lr_pairs = adata.uns['lr_summary']
+    # Find the index of the LR pair of interest
+    if isinstance(lr_pairs, pd.DataFrame):
+        lr_index = lr_pairs.index.get_loc(lr)
+    else:
+        if isinstance(lr_pairs, Iterable):
+            lr_index = lr_pairs.index(lr)
+        else:
+            raise ValueError("lr_pairs should be either a DataFrame or a list of LR pairs.")
+    # Get adjusted p-values and scores
+    p_adj_matrix = adata.obsm['p_adjs'][:, lr_index]
+    sig_mask = p_adj_matrix < 0.05
+    barcodes_sig = adata.obs_names[sig_mask]
+    if len(barcodes_sig) == 0:
+        continue  # No significant spots found
+    # Subset to significant barcodes
+    adata_sub = adata[adata.obs_names.isin(barcodes_sig)]
+    # Subset to nearby spots near TLS-HEV as these appear to be main senders
+    # Going to exclude the non-TLS HEV nearby spots bc these will have very different composition
+    adata_sub = adata_sub[adata_sub.obs['nearby_spots_revisited'] == 'nearby_near_TLS_HEV']
+    # Calculate average composition of these spots
+    avg_comp = adata_sub.obs[cell_types].mean()
+    # Also calculate the average comp of all nearby spots for comparison
+    adata_nearby = adata[adata.obs['nearby_spots_revisited'] == 'nearby_near_TLS_HEV']
+    # Remove the spots sending LTB signals
+    adata_nearby = adata_nearby[~adata_nearby.obs_names.isin(barcodes_sig)]
+    avg_comp_all = adata_nearby.obs[cell_types].mean()
+    # Calculate fold change
+    fold_change = avg_comp / avg_comp_all
+    # Make log2 fold change
+    fold_change = np.log2(fold_change.replace(0, np.nan))  # Replace 0 with NaN to avoid -inf
+    # Also record the absolute change
+    abs_change = avg_comp - avg_comp_all
+    # Make a df with all info
+    avg_comp_df = pd.DataFrame({
+        'cell_type': cell_types,
+        'avg_composition_sending_nearby': avg_comp.values,
+        'avg_composition_all_nearby': avg_comp_all.values,
+        'LFC': fold_change.values,
+        'abs_change': abs_change.values,
+        'sample_id': sample,
+    })
+    avg_comp_dict[sample] = avg_comp_df
+
+# Extract a single df for all samples
+all_avg_comp_df = pd.concat(avg_comp_dict.values(), ignore_index=True)
+
+# Sort by median LFC
+all_avg_comp_df['cell_type'] = pd.Categorical(all_avg_comp_df['cell_type'], 
+                                              categories=all_avg_comp_df.groupby('cell_type')['LFC'].median().sort_values(ascending=False).index,
+                                              ordered=True)
+
+sorted_cell_types = all_avg_comp_df['cell_type'].cat.categories.tolist()
 
 
-# --- Functions for plotting
+# --- Statistical testing for enrichment/depletion per cell type
 
-def add_stat_annotation(ax, x1, x2, h, text, fontsize=10):
+def analyze_cell_type_enrichment(lfc_values, cell_name):
     """
-    Draws a simple horizontal line between x1 and x2 at height h, with text on top.
+    Performs a one-sample t-test on LFC values to check for significant
+    enrichment (mean > 0) or depletion (mean < 0).
     """
-    line_h = h
-    text_h = h
-    # Draw the line (just x1 to x2 at height line_h)
-    ax.plot([x1, x2], [line_h, line_h], lw=1.0, c='black')
-    # Add the text
-    ax.text((x1 + x2) * 0.5, text_h, text, ha='center', va='bottom', 
-            color='black', fontsize=fontsize)
+    print(f"--- Analyzing {cell_name} ---")
+    n = len(lfc_values)
+    if n < 3: 
+        print(f"Cannot perform t-test: only {n} samples. Need at least 3.")
+        return None, None, None
+    # Perform the one-sample t-test
+    t_statistic, p_value = stats.ttest_1samp(lfc_values, popmean=0)
+    # Get the mean LFC
+    mean_lfc = np.mean(lfc_values)
+    print("\n")
+    return t_statistic, p_value, mean_lfc
+
+stat_df = pd.DataFrame(columns=['cell_type', 't_statistic', 'p_value', 'mean_correlation'])
+
+for cell_type in sorted_cell_types:
+    LFC_df = all_avg_comp_df[all_avg_comp_df['cell_type'] == cell_type]['LFC'].values
+    t_statistic, p_value, mean_correlation = analyze_cell_type_enrichment(LFC_df, cell_type)
+    stat_df = stat_df._append({'cell_type': cell_type, 't_statistic': t_statistic, 'p_value': p_value, 'mean_correlation': mean_correlation}, ignore_index=True)
+
+alpha = 0.05
+stat_df['significant'] = stat_df['p_value'] < alpha
 
 
-# --- Plot 1: Make a boxplot of SPP1 expression vs distance to TLS
+# --- Get top 10 cell types for plotting
 
-# Add info whether HEV is close to TLS or not
-ncols = 1
+median_LFC = all_avg_comp_df.groupby('cell_type')['LFC'].median()
+top10_cell_types = median_LFC[median_LFC > 0].sort_values(ascending=False).head(10).index.tolist()
+
+# Filter df
+all_avg_comp_df_top10 = all_avg_comp_df[all_avg_comp_df['cell_type'].isin(top10_cell_types)]
+
+# Reorder the cell types based on median LFC
+all_avg_comp_df_top10['cell_type'] = pd.Categorical(all_avg_comp_df_top10['cell_type'],
+                                                categories=top10_cell_types,
+                                                ordered=True)
+
+
+# --- Plot: Top 10 enriched cell types (Figure 4J)
+
+sc.set_figure_params(fontsize=10)
 
 # Properties for boxplot
 whisker_props = {'color': 'black'}
 median_props = {'color': 'black'}
 
-# Set fontsize
-plt.rcParams.update({'font.size': 10})
+fig, ax = plt.subplots(figsize=(5, 3))
 
-# Set grid behind
-plt.rcParams['axes.axisbelow'] = True
+sns.boxplot(data=all_avg_comp_df_top10, x='cell_type', y='LFC', showfliers=False, linewidth=1, whiskerprops=whisker_props, 
+                        medianprops=median_props, width=0.8, palette=color_dict, ax=ax, saturation=1)
 
-fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(3, 1.8))
+sns.stripplot(data=all_avg_comp_df_top10, x='cell_type', y='LFC', color='black', jitter=True, size=3,
+                        marker='o', ax=ax)
 
-if ncols == 1:
-    axs = [axs]
+# Beautify the plot
+for bar in ax.patches: # Adjust the colors of the boxplot
+    # Get the RGBA values of the fill color
+    fill_color = bar.get_facecolor()
+    fill_color = list(fill_color)
+    darkened_color = fill_color.copy()
+    for i in range(len(darkened_color)-1):
+        darkened_color[i] *= 0.8
+    fill_color[-1] = 0.8 # make the fill color a bit transparent
+    bar.set_color(tuple(fill_color))
+    bar.set_edgecolor(tuple(darkened_color))
 
-# First plot ACKR1 only
-sns.stripplot(data=spp1_avg, x='TLS_distance_bin', y=f'avg_{gene_of_interest}_expression_ACKR1', color='black', jitter=True, size=2,
-                marker='o', ax=axs[0],)
+# Automatically resize based on number of xticks
+n_ticks = len(ax.get_xticks())
+ax_pos = ax.get_position()
+ax.set_position([ax_pos.x0, ax_pos.y0, 0.05*n_ticks, ax_pos.height*0.5])
 
-sns.boxplot(data=spp1_avg, x='TLS_distance_bin', y=f'avg_{gene_of_interest}_expression_ACKR1', ax=axs[0], showfliers=False, linewidth=1, linecolor='black',
-            whiskerprops=whisker_props, medianprops=median_props, saturation=1, zorder=10, dodge=False,
-            legend=False, hue='TLS_distance_bin', palette=color_dict_bins)
+# Rotate xlabels
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90,)
 
-axs[0].set_title(f'HEV {gene_of_interest}\n(ACKR1+ endothelial)', fontweight='bold', fontsize=10)
+# Adjust xticklabels using miniatlas_short notations
+new_labels = [miniatlas_sub_dict['miniatlas_subset_short'].get(label.get_text(), label.get_text()) for label in ax.get_xticklabels()]
+ax.set_xticklabels(new_labels)
 
-ymax = 0
+# Add thick gray line at y=0
+ax.axhline(0, color='lightgray', linewidth=2, zorder=0)
 
-for ax in axs:
-    plotting_functions.beautify_plot(ax)
-    ax.set_ylabel(f'{gene_of_interest} expression\n(Average)')
-    ymax = max(ymax, ax.get_ylim()[1])
-    # Automatically resize plots based on number of x-ticks
-    ax_pos = ax.get_position()
-    ax.set_position([ax_pos.x0, ax_pos.y0, 0.1 * len(ax.get_xticks()), ax_pos.height])
-    # Rotate xlabels
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-    # Set xlabels
-    ax.set_xlabel('Distance to TLS (µm)')
+# Add an asterisk for significant cell types or p-value for non-significant
+ylim = ax.get_ylim()
+range_y = ylim[1] - ylim[0]
 
-plotting_functions.move_plots_x_y([axs], x_offset=0.4, y_offset=0.0, remove_ylabels=False, remove_xlabels=False, remove_title=False)
+offset = range_y * 0.02  # 2% of the y-axis range
 
-# Set same ylims
-for ax in axs:
-    ax.set_ylim(0, ymax)
-    # Add grid
-    ax.grid(which='major', axis='y', linestyle='-', color='lightgrey')
-
-# Add ax with count bars on top of each ax
-for ax in axs:
-    count_ax = plt.gcf().add_axes([ax.get_position().x0, ax.get_position().y1 + 0.02, ax.get_position().width, ax.get_position().height * 0.3])
-    sns.barplot(x=hev_counts.index, y=hev_counts.values, color='lightgrey', edgecolor='black', ax=count_ax, hue=hev_counts.index, palette=color_dict_bins,
-                   saturation=1)
-    # Annotate counts
-    for n, p in enumerate(count_ax.patches):
-        count_ax.annotate(f'{int(p.get_height())}', (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='bottom', fontsize=8)
-    # Adjust ylim to fit counts
-    count_ax.set_ylim(0, hev_counts.values.max() * 1.4)
-    # Add title from main plot to count_ax instead
-    count_ax.set_title(ax.get_title(), fontweight='bold')
-    ax.set_title('')  # Remove title from main ax
-    # Remove xticks
-    count_ax.set_xticks([])
-    # Remove top and right spines
-    count_ax.spines['top'].set_visible(False)
-    count_ax.spines['right'].set_visible(False)
-    # Adjust labels
-    count_ax.set_xlabel('')
-    count_ax.set_ylabel('Count')
-    # Beautify
-    plotting_functions.beautify_plot(count_ax)
-
-# Add stats to each subplot based on display mode
-if stat_display_mode in ['text', 'hybrid']:
-    for i, (ax, col) in enumerate(zip(axs, columns_to_analyze)):
-        r_val = stats_results[col]['r']
-        p_val_kw = stats_results[col]['p_kw']
-        
-        # Format KW pvalue
-        if p_val_kw < 0.001:
-            pval_text = 'p < 0.001'
-        elif p_val_kw > 0.01:
-            pval_text = f'p = {p_val_kw:.2f}'
+for i, cell_type in enumerate(top10_cell_types):
+    cell_stats = stat_df[stat_df['cell_type'] == cell_type]
+    if not cell_stats.empty:
+        # Get the y position of the top whisker
+        cell_data = all_avg_comp_df[all_avg_comp_df['cell_type'] == cell_type]['LFC']
+        whisker_top = cell_data.max()
+        if cell_stats['significant'].values[0]:
+            # Place the asterisk slightly above the whisker
+            ax.text(i, whisker_top + offset, '*', ha='center', va='bottom', color='darkred', fontsize=9, fontweight='bold')
         else:
-            pval_text = f'p = {p_val_kw:.3f}'
-        
-        ax.text(0.05, 0.95, 
-                f'Sp. r = {r_val:.2f}\nKW {pval_text}', 
-                transform=ax.transAxes, 
-                ha='left', va='top', fontsize=8,
-                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='none', alpha=0.7))
+            # Place the p-value above the whisker, rounded to 3 digits
+            pval = cell_stats['p_value'].values[0]
+            ax.text(i, whisker_top + offset, f"{pval:.3f}".lstrip('0'), ha='center', va='bottom', color='black', fontsize=7)
 
-# Define index mapping for bins
-bin_indices = {'0': 0, '0-100': 1, '100-200': 2, '>200': 3}
+# Increase ymax a bit to make space for asterisks/p-values
+ax.set_ylim(top=ax.get_ylim()[1]*1.2)
 
-# Draw brackets if in bracket or hybrid mode
-if stat_display_mode in ['brackets', 'hybrid']:
-    # Draw brackets for all three subplots
-    for i, (ax, col) in enumerate(zip(axs, columns_to_analyze)):
-        # Get the post-hoc results for this column
-        comparison_pairs = posthoc_results[col]['comparison_pairs']
-        p_adjusted = posthoc_results[col]['p_adjusted']
-        reject = posthoc_results[col]['reject']
-        
-        # Get global max for calculating h_step (relative spacing between brackets)
-        global_y_max = spp1_avg[col].max()
-        h_step = global_y_max * 0.15    # Step up for each subsequent bracket
-        
-        # For hybrid mode, only draw the first comparison
-        comparisons_to_draw = 1 if stat_display_mode == 'hybrid' else len(comparison_pairs)
-        
-        # Track the current maximum height (for stacking brackets)
-        current_max_h = 0
-        bracket_count = 0
-        
-        # Draw brackets ONLY for significant comparisons
-        for idx, ((group1, group2), p_adj, is_sig) in enumerate(zip(comparison_pairs, p_adjusted, reject)):
-            if idx >= comparisons_to_draw:
-                break
-            
-            # Get x-coordinates
-            x1 = bin_indices[group1]
-            x2 = bin_indices[group2]
-            
-            # Calculate the local max for just the groups being compared
-            # This allows lower brackets when the max value is elsewhere
-            data1 = spp1_avg[spp1_avg['TLS_distance_bin'] == group1][col].dropna()
-            data2 = spp1_avg[spp1_avg['TLS_distance_bin'] == group2][col].dropna()
-            local_y_max = max(data1.max(), data2.max())
-            
-            # Start this bracket just above the local max
-            h_local_start = local_y_max * 1.05
-            
-            # But also make sure it's above any previous brackets (to avoid overlap)
-            h = max(h_local_start, current_max_h + h_step)
-            
-            # Update the current max height for next bracket
-            current_max_h = h
-            
-            # Define text (*, **, ***, or ns)
-            if p_adj < 0.001: sig_text = "***"
-            elif p_adj < 0.01: sig_text = "**"
-            elif p_adj < 0.05: sig_text = "*"
-            else: sig_text = "ns"
-            # Draw it on the specific subplot
-            add_stat_annotation(ax, x1, x2, h, sig_text, fontsize=8)
-            bracket_count += 1
-        
-        # Adjust ylim to fit brackets
-        if bracket_count > 0:
-            # In hybrid mode, need extra space for text annotation at top
-            ylim_multiplier = 1.5 if stat_display_mode == 'hybrid' else 1.1
-            ax.set_ylim(top=current_max_h * ylim_multiplier)
-        
-        # Prevent top ytick from being too close to ylim (prevents overlap with count_ax)
-        ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', prune='upper'))
+# Calculate equal positioning x & y
+offset = 0.04
+aspect = ax.get_position().width / ax.get_position().height
+x_pos = 1 - offset / aspect
+y_pos = 1 - offset
 
-title_x = (axs[0].get_position().x0 + axs[-1].get_position().x1) / 2
-title_y = count_ax.get_position().y1 + 0.4
+# Add some text at top right of ax explaining * p<0.05
+stat_df_top10 = stat_df[stat_df['cell_type'].isin(top10_cell_types)]
+if stat_df_top10['significant'].any():
+    # Increase ymax a bit to make space for asterisks
+    ax.set_ylim(top=ax.get_ylim()[1]*1.1)
+    ax.text(x_pos, y_pos, '* p<0.05', ha='right', va='top', transform=ax.transAxes, fontsize=8, color='darkred',
+                bbox=dict(boxstyle='round', facecolor='white', alpha=0.5))
 
-plt.suptitle(f'All samples - Average {gene_of_interest} Expression (average per HEV niche) by HEV Proximity to TLS', fontweight='bold', y=title_y, x=title_x)
+# Create legend handles (colored boxes with labels)
+cell_types_plotted_top10 = all_avg_comp_df_top10['cell_type'].unique().tolist()
+
+# Find matching major labels using miniatlas_df
+miniatlas_subset_to_major = miniatlas_df.set_index('miniatlas_subset')['miniatlas_major'].to_dict()
+major_cell_types_plotted_top10 = []
+for ct in cell_types_plotted_top10:
+    if ct in miniatlas_subset_to_major:
+        major_ct = miniatlas_subset_to_major[ct]
+        if major_ct not in major_cell_types_plotted_top10:
+            major_cell_types_plotted_top10.append(major_ct)
+
+labels_top10 = [label for label in major_cell_types_sorted if label in major_cell_types_plotted_top10]
+
+handles_top10 = [
+    mpl.patches.Patch(facecolor=color_dict[label], label=label, edgecolor='black', linewidth=0.8)
+    for label in labels_top10 if label in color_dict
+]
+
+legend = ax.legend(handles=handles_top10, bbox_to_anchor=(1, 0.5), loc='center left', frameon=False, handlelength=0.8, fontsize=10)
+
+# Make the legend boxes look the same as the barplot
+for legpatch in legend.get_patches():
+        fill_color = legpatch.get_facecolor()
+        fill_color = list(fill_color)
+        darkened_color = fill_color.copy()
+        for i in range(len(darkened_color)-1):
+            darkened_color[i] *= 0.8
+        fill_color[-1] = 0.8 # make the fill color a bit transparent
+        legpatch.set_color(tuple(fill_color))
+        legpatch.set_edgecolor(tuple(darkened_color))
+        legpatch.set_linewidth(1)
+
+lr_adj = lr.replace('_', '→').replace('LTB', 'LTβ').replace('LTBR', 'LTβR')
+ax.set_title(f'Cellular enrichment\nBins sending {lr_adj} signals to HEVs', fontweight='bold')
+
+# Set labels
+ax.set_ylabel('LFC', fontweight='bold')
+ax.set_xlabel('Cell type', fontweight='bold')
+
+# Position title
+title_x = ax.get_position().x0 + ax.get_position().width / 2
+title_y = ax.get_position().y1 + 0.3
+
+plt.suptitle(f'All samples - Cell type composition of spots sending {lr_adj} signals in nearby_TLS_HEV vs all_TLS_HEV (bin_size={bin_size}µm)', fontsize=10, x=title_x, y=title_y, fontweight='bold')
 
 
 # --- Save the output
@@ -508,9 +457,11 @@ out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_4J.pdf'
+
 plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')
 
 
 # --- Finish
 
 print("Script successfully completed")
+print(f'Saved plot to: {os.path.join(out_dir, filename)}')
