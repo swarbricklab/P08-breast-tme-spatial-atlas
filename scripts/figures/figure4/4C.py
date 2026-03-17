@@ -310,22 +310,15 @@ min_size = size_min*0.98
 
 # --- Plot 1: Dotplot of STING signature scores in HEV vs non-HEV niches, with count annotations on top
 
-# Also, split the IFN scores into production & response to better see trends
+# Group signatures by type for plotting
 signature_type_dict_zscore = {
     'STING': signature_type_dict['STING'],
-    'Type I IFN\nProduction': [],
-    'Type I IFN\nResponse': [],
+    'Type I IFN\nResponse': signature_type_dict['Type I IFN'],
 }
-
-for sig in signature_type_dict['Type I IFN']:
-    if 'production' in sig.lower():
-        signature_type_dict_zscore['Type I IFN\nProduction'].append(sig)
-    else:
-        signature_type_dict_zscore['Type I IFN\nResponse'].append(sig)
 
 # Create a color dict for signature type
 signature_types = signature_type_dict_zscore.keys()
-color_palette = ['#f16912', '#440155', '#817dba']
+color_palette = ['#f16912', '#440155']
 
 signature_type_color_dict = {sig_type: color_palette[n] for n, sig_type in enumerate(signature_types)}
 
