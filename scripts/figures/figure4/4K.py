@@ -498,7 +498,7 @@ major_present = [list(set([get_major(c, level) for c in cells_present]))][0]
 # Filter major_sorted for corresponding cell types still present
 major_sorted = [m for m in major_cell_types_sorted if m in major_present]
 
-# Sort cells by total cell number
+# Sort cells by total cell number (may be overridden by clustering later)
 cells_sorted = all_adata_sub.obs[annotation_key].value_counts().index.tolist()
 
 all_adata_sub.obs[annotation_key] = pd.Categorical(
@@ -506,9 +506,6 @@ all_adata_sub.obs[annotation_key] = pd.Categorical(
     categories=cells_sorted,
     ordered=True
 )
-
-# Extract colors for the sorted cells
-color_list = [color_dict[cell] if cell in color_dict else 'lightgrey' for cell in cells_sorted]
 
 
 # --- Prepare for plotting
@@ -559,6 +556,53 @@ lr_pairs = [(gene_rename_dict.get(lig, lig), gene_rename_dict.get(rec, rec)) for
 cells_of_interest = []
 
 n_keys = len(top_genes_dict)
+
+# Clustering option for heatmap
+cluster_columns = True  # If True, cell types will be ordered by hierarchical clustering
+
+# If cluster_columns is True, override cells_sorted with hierarchical clustering order
+# Store dendrogram for later plotting
+dendrogram_info = None
+if cluster_columns:
+
+    # Pre-compute dendrogram for clustering (if enabled) to avoid recomputation warnings
+    all_genes_for_dend = [gene for genes in top_genes_dict.values() for gene in genes]
+    all_adata_sub.obs[annotation_key] = all_adata_sub.obs[annotation_key].astype('category')
+
+    # Create a subset adata to make sure it's only using these genes
+    tmp_adata = all_adata_sub[:, all_genes_for_dend].copy()
+    sc.tl.dendrogram(tmp_adata, groupby=annotation_key, var_names=all_genes_for_dend, use_rep='X')
+    dend_key = f'dendrogram_{annotation_key}'
+    all_adata_sub.uns[dend_key] = tmp_adata.uns[dend_key]
+    
+    # Create a throwaway matrixplot with all genes to get clustering order
+    temp_fig, temp_ax = plt.subplots(figsize=(1, 1))
+    temp_dp = sc.pl.matrixplot(
+        all_adata_sub,
+        var_names=all_genes_for_dend,
+        groupby=annotation_key,
+        ax=temp_ax,
+        show=False,
+        swap_axes=True,
+        dendrogram=True,
+    )
+    # Extract the cell type order from clustering from the mainplot_ax
+    cells_sorted = temp_dp['mainplot_ax'].get_xticklabels()
+    cells_sorted = [label.get_text() for label in cells_sorted]
+    # Store dendrogram info
+    dendrogram_info = temp_dp.get('group_extra_ax', None)
+    # Close the temporary figure
+    plt.close(temp_fig)
+
+    # Set the categorical order for cell types
+    all_adata_sub.obs[annotation_key] = pd.Categorical(
+        all_adata_sub.obs[annotation_key],
+        categories=cells_sorted,
+        ordered=True
+    )
+
+# Extract colors for the sorted cells (after clustering if enabled)
+color_list = [color_dict[cell] if cell in color_dict else 'lightgrey' for cell in cells_sorted]
 
 
 # --- Plot 1: Heatmap of gene expression per cell type, with ligand-receptor pairs joined by brackets
@@ -652,11 +696,68 @@ for n, ax in enumerate(heatmap_axs):
         color='black',
     )
 
-# Add barplot showing total cell numbers on top of top heatmap ax
+# Add dendrogram if clustering was performed (directly above heatmap)
 top_ax = heatmap_axs[0]
-bar_ax = plt.axes([0.1, 0.1, 0.2, 0.2])
 top_ax_pos = top_ax.get_position()
-bar_ax.set_position([top_ax_pos.x0, top_ax_pos.y1 + 0.01, top_ax_pos.width, top_ax_pos.height/len(top_ax.get_yticks())*3])
+dend_ax = None
+if cluster_columns:
+    # Create dendrogram axis directly above the top heatmap (no gap)
+    dend_height = top_ax_pos.height / len(top_ax.get_yticks()) * 2
+    dend_ax = fig.add_axes([top_ax_pos.x0, top_ax_pos.y1, top_ax_pos.width, dend_height])
+    
+    # Recreate dendrogram with all genes for proper clustering
+    all_genes_for_dend = [gene for genes in top_genes_dict.values() for gene in genes]
+    temp_dp = sc.pl.matrixplot(
+        all_adata_sub,
+        var_names=all_genes_for_dend,
+        groupby=annotation_key,
+        show=False,
+        swap_axes=True,
+        dendrogram=True,
+    )
+    
+    # Copy dendrogram to our axis
+    if 'group_extra_ax' in temp_dp:
+        dend_source = temp_dp['group_extra_ax']
+        # Copy all elements from source dendrogram to our axis
+        for line in dend_source.get_lines():
+            dend_ax.plot(line.get_xdata(), line.get_ydata(), 
+                    color='black', linewidth=1)
+        # For dotplots, align xlim to the xtick positions (cell types)
+        xticks = top_ax.get_xticks()
+        if len(xticks) > 0:
+            dend_buffer = 0.3
+            # Extend slightly beyond first and last tick for visual padding
+            dend_ax.set_xlim(xticks[0] - 0.5 - dend_buffer, xticks[-1] + 0.5 + dend_buffer)
+        else:
+            # Fallback to using xlim directly
+            dend_ax.set_xlim(top_ax.get_xlim())
+        dend_ax.set_ylim(dend_source.get_ylim())
+    
+    # Clean up dendrogram axis
+    dend_ax.set_xticks([])
+    dend_ax.set_yticks([])
+    dend_ax.spines['top'].set_visible(False)
+    dend_ax.spines['right'].set_visible(False)
+    dend_ax.spines['bottom'].set_visible(False)
+    dend_ax.spines['left'].set_visible(False)
+    dend_ax.set_xlabel('')
+    dend_ax.set_ylabel('')
+    
+    plt.close(temp_dp['mainplot_ax'].figure)
+
+# Add barplot showing total cell numbers on top of top heatmap ax
+bar_ax = plt.axes([0.1, 0.1, 0.2, 0.2])
+gap = 0.01
+bar_height = top_ax_pos.height / len(top_ax.get_yticks()) * 3
+
+if dend_ax is not None:
+    # Position bar_ax above dendrogram with extra gap for xticks
+    dend_pos = dend_ax.get_position()
+    bar_ax.set_position([top_ax_pos.x0, dend_pos.y1 + 1.5*gap, top_ax_pos.width, bar_height])
+else:
+    # Position bar_ax above top heatmap
+    bar_ax.set_position([top_ax_pos.x0, top_ax_pos.y1 + gap, top_ax_pos.width, bar_height])
 
 # Get cell counts
 cell_counts = all_adata_sub.obs[annotation_key].value_counts().reindex(cells_sorted)
