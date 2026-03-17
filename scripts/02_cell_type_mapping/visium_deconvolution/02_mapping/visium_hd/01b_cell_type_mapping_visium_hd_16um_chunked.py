@@ -63,7 +63,7 @@ h5ad_dir = args['h5ad_dir']
 if args["sample_sheet"] is not None:
     sample_sheet_path = args["sample_sheet"]
 else:
-    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_hd.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 

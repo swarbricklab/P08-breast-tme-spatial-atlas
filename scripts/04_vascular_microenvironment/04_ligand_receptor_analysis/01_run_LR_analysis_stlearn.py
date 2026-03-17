@@ -55,7 +55,7 @@ from helper_functions import auto_crop_scanpy, save_multi_image
 
 
 # --- Get some info from the sample sheet
-# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet_visium_hd.csv
 if args["sample_sheet"] is not None:
     sample_sheet_path = args["sample_sheet"]
 else:

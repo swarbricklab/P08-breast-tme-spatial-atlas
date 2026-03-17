@@ -58,11 +58,11 @@ import plotting_functions
 
 
 # --- Get some info from the sample sheet
-# Use --sample_sheet if provided, otherwise default to config/sample_sheet.csv
+# Use --sample_sheet if provided, otherwise default to config/sample_sheet_visium_hd.csv
 if args["sample_sheet"] is not None:
     sample_sheet_path = args["sample_sheet"]
 else:
-    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium_hd.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 tissue_id = sample_sheet[sample_sheet['section_id'] == sample_id]['tissue_id'].values[0]

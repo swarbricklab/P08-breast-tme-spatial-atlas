@@ -58,7 +58,7 @@ from helper_functions import save_multi_image
 if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
-    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet.csv')
+    sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 
