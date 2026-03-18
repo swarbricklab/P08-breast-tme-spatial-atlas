@@ -95,19 +95,6 @@ inv_transform_matrix = np.linalg.inv(transform_matrix)
 affine_transformation = Affine(inv_transform_matrix, input_axes=('x', 'y'), output_axes=('x', 'y'))
 
 
-# --- Because the image was cropped, we need to do an additional shift transformation
-
-# Load the crop coords
-image_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'crop_coords')
-coords_file = f'{sample_id}_crop_coordinates.csv'
-
-coords_df = pd.read_csv(os.path.join(image_dir, coords_file))
-coords = coords_df.iloc[0].to_list()
-x_start, x_end, y_start, y_end = coords
-
-# Create the separate shift transformation
-shift_transformation = Translation([-y_start, -x_start], axes=('y', 'x'))
-
 # Microns per pixel
 microns_per_pixel = 0.2125  # Assuming 0.2125 microns per pixel, can be found in experiment.xenium file
 
@@ -115,8 +102,9 @@ microns_per_pixel = 0.2125  # Assuming 0.2125 microns per pixel, can be found in
 # Define scaling to go from microns to pixels
 scaling = Scale([1/microns_per_pixel, 1/microns_per_pixel], axes=('x', 'y'))
 
-# Combine the affine and shift transformations into a sequence
-combined_transformation = Sequence([scaling, affine_transformation, shift_transformation])
+# Combine the scaling and affine transformations into a sequence
+# The alignment matrix already accounts for the crop shift
+combined_transformation = Sequence([scaling, affine_transformation])
 
 
 # --- Apply the transformation to all elements in the SpatialData object

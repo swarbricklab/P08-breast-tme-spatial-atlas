@@ -106,10 +106,9 @@ adata.obsm['xenium_um_spatial'] = xenium_coords
 
 # --- Load the image
 
-# Load the original whole-slide image
 # This is the image that was aligned to the xenium coordinates, so the transformed coordinates should align with this image
-image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'whole_slide_images', 'xenium')
-image_file = f'{sample_id}_he_wsi.ome.tif'
+image_dir = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'xenium')
+image_file = f'{sample_id}.ome.tif'
 
 print(f"Using image file: {image_file}")
 image_path = os.path.join(image_dir, image_file)
