@@ -287,7 +287,9 @@
 │   │       ├── P32_LN_Vis_GC_annotations.geojson
 │   │       └── P32_LN_Vis_tissue_annotations.csv
 │   ├── processed
+│   │   ├── .gitignore
 │   │   ├── spaceranger_outs
+│   │   │   ├── .gitignore
 │   │   │   ├── visium
 │   │   │   │   ├── P01_Vis
 │   │   │   │   │   ├── cloupe.cloupe
@@ -1687,70 +1689,11 @@
 │   │   └── xenium_outs
 │   │       ├── P17_Xe5k
 │   │       │   ├── .end-of-run
-│   │       │   ├── analysis
-│   │       │   │   ├── clustering
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── clusters.csv
-│   │       │   │   ├── diffexp
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── differential_expression.csv
-│   │       │   │   ├── pca
-│   │       │   │   │   └── gene_expression_10_components
-│   │       │   │   │       ├── components.csv
-│   │       │   │   │       ├── dispersion.csv
-│   │       │   │   │       ├── features_selected.csv
-│   │       │   │   │       ├── projection.csv
-│   │       │   │   │       └── variance.csv
-│   │       │   │   └── umap
-│   │       │   │       └── gene_expression_2_components
-│   │       │   │           └── projection.csv
 │   │       │   ├── analysis.zarr.zip
 │   │       │   ├── analysis_summary.html
-│   │       │   ├── cell_boundaries.csv.gz
 │   │       │   ├── cell_boundaries.parquet
-│   │       │   ├── cell_feature_matrix
-│   │       │   │   ├── barcodes.tsv.gz
-│   │       │   │   ├── features.tsv.gz
-│   │       │   │   └── matrix.mtx.gz
 │   │       │   ├── cell_feature_matrix.h5
 │   │       │   ├── cell_feature_matrix.zarr.zip
-│   │       │   ├── cells.csv.gz
 │   │       │   ├── cells.parquet
 │   │       │   ├── cells.zarr.zip
 │   │       │   ├── experiment.xenium
@@ -1762,76 +1705,16 @@
 │   │       │   │   ├── morphology_focus_0001.ome.tif
 │   │       │   │   ├── morphology_focus_0002.ome.tif
 │   │       │   │   └── morphology_focus_0003.ome.tif
-│   │       │   ├── nucleus_boundaries.csv.gz
 │   │       │   ├── nucleus_boundaries.parquet
 │   │       │   ├── transcripts.parquet
 │   │       │   └── transcripts.zarr.zip
 │   │       ├── P22_Xe5k
 │   │       │   ├── .end-of-run
-│   │       │   ├── analysis
-│   │       │   │   ├── clustering
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── clusters.csv
-│   │       │   │   ├── diffexp
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── differential_expression.csv
-│   │       │   │   ├── pca
-│   │       │   │   │   └── gene_expression_10_components
-│   │       │   │   │       ├── components.csv
-│   │       │   │   │       ├── dispersion.csv
-│   │       │   │   │       ├── features_selected.csv
-│   │       │   │   │       ├── projection.csv
-│   │       │   │   │       └── variance.csv
-│   │       │   │   └── umap
-│   │       │   │       └── gene_expression_2_components
-│   │       │   │           └── projection.csv
 │   │       │   ├── analysis.zarr.zip
 │   │       │   ├── analysis_summary.html
-│   │       │   ├── cell_boundaries.csv.gz
 │   │       │   ├── cell_boundaries.parquet
-│   │       │   ├── cell_feature_matrix
-│   │       │   │   ├── barcodes.tsv.gz
-│   │       │   │   ├── features.tsv.gz
-│   │       │   │   └── matrix.mtx.gz
 │   │       │   ├── cell_feature_matrix.h5
 │   │       │   ├── cell_feature_matrix.zarr.zip
-│   │       │   ├── cells.csv.gz
 │   │       │   ├── cells.parquet
 │   │       │   ├── cells.zarr.zip
 │   │       │   ├── experiment.xenium
@@ -1843,76 +1726,16 @@
 │   │       │   │   ├── morphology_focus_0001.ome.tif
 │   │       │   │   ├── morphology_focus_0002.ome.tif
 │   │       │   │   └── morphology_focus_0003.ome.tif
-│   │       │   ├── nucleus_boundaries.csv.gz
 │   │       │   ├── nucleus_boundaries.parquet
 │   │       │   ├── transcripts.parquet
 │   │       │   └── transcripts.zarr.zip
 │   │       ├── P24_Xe5k
 │   │       │   ├── .end-of-run
-│   │       │   ├── analysis
-│   │       │   │   ├── clustering
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── clusters.csv
-│   │       │   │   ├── diffexp
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── differential_expression.csv
-│   │       │   │   ├── pca
-│   │       │   │   │   └── gene_expression_10_components
-│   │       │   │   │       ├── components.csv
-│   │       │   │   │       ├── dispersion.csv
-│   │       │   │   │       ├── features_selected.csv
-│   │       │   │   │       ├── projection.csv
-│   │       │   │   │       └── variance.csv
-│   │       │   │   └── umap
-│   │       │   │       └── gene_expression_2_components
-│   │       │   │           └── projection.csv
 │   │       │   ├── analysis.zarr.zip
 │   │       │   ├── analysis_summary.html
-│   │       │   ├── cell_boundaries.csv.gz
 │   │       │   ├── cell_boundaries.parquet
-│   │       │   ├── cell_feature_matrix
-│   │       │   │   ├── barcodes.tsv.gz
-│   │       │   │   ├── features.tsv.gz
-│   │       │   │   └── matrix.mtx.gz
 │   │       │   ├── cell_feature_matrix.h5
 │   │       │   ├── cell_feature_matrix.zarr.zip
-│   │       │   ├── cells.csv.gz
 │   │       │   ├── cells.parquet
 │   │       │   ├── cells.zarr.zip
 │   │       │   ├── experiment.xenium
@@ -1924,76 +1747,16 @@
 │   │       │   │   ├── morphology_focus_0001.ome.tif
 │   │       │   │   ├── morphology_focus_0002.ome.tif
 │   │       │   │   └── morphology_focus_0003.ome.tif
-│   │       │   ├── nucleus_boundaries.csv.gz
 │   │       │   ├── nucleus_boundaries.parquet
 │   │       │   ├── transcripts.parquet
 │   │       │   └── transcripts.zarr.zip
 │   │       ├── P26_Xe5k
 │   │       │   ├── .end-of-run
-│   │       │   ├── analysis
-│   │       │   │   ├── clustering
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── clusters.csv
-│   │       │   │   ├── diffexp
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── differential_expression.csv
-│   │       │   │   ├── pca
-│   │       │   │   │   └── gene_expression_10_components
-│   │       │   │   │       ├── components.csv
-│   │       │   │   │       ├── dispersion.csv
-│   │       │   │   │       ├── features_selected.csv
-│   │       │   │   │       ├── projection.csv
-│   │       │   │   │       └── variance.csv
-│   │       │   │   └── umap
-│   │       │   │       └── gene_expression_2_components
-│   │       │   │           └── projection.csv
 │   │       │   ├── analysis.zarr.zip
 │   │       │   ├── analysis_summary.html
-│   │       │   ├── cell_boundaries.csv.gz
 │   │       │   ├── cell_boundaries.parquet
-│   │       │   ├── cell_feature_matrix
-│   │       │   │   ├── barcodes.tsv.gz
-│   │       │   │   ├── features.tsv.gz
-│   │       │   │   └── matrix.mtx.gz
 │   │       │   ├── cell_feature_matrix.h5
 │   │       │   ├── cell_feature_matrix.zarr.zip
-│   │       │   ├── cells.csv.gz
 │   │       │   ├── cells.parquet
 │   │       │   ├── cells.zarr.zip
 │   │       │   ├── experiment.xenium
@@ -2005,76 +1768,16 @@
 │   │       │   │   ├── morphology_focus_0001.ome.tif
 │   │       │   │   ├── morphology_focus_0002.ome.tif
 │   │       │   │   └── morphology_focus_0003.ome.tif
-│   │       │   ├── nucleus_boundaries.csv.gz
 │   │       │   ├── nucleus_boundaries.parquet
 │   │       │   ├── transcripts.parquet
 │   │       │   └── transcripts.zarr.zip
 │   │       ├── P29_Xe5k
 │   │       │   ├── .end-of-run
-│   │       │   ├── analysis
-│   │       │   │   ├── clustering
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── clusters.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── clusters.csv
-│   │       │   │   ├── diffexp
-│   │       │   │   │   ├── gene_expression_graphclust
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_10_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_2_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_3_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_4_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_5_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_6_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_7_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   ├── gene_expression_kmeans_8_clusters
-│   │       │   │   │   │   └── differential_expression.csv
-│   │       │   │   │   └── gene_expression_kmeans_9_clusters
-│   │       │   │   │       └── differential_expression.csv
-│   │       │   │   ├── pca
-│   │       │   │   │   └── gene_expression_10_components
-│   │       │   │   │       ├── components.csv
-│   │       │   │   │       ├── dispersion.csv
-│   │       │   │   │       ├── features_selected.csv
-│   │       │   │   │       ├── projection.csv
-│   │       │   │   │       └── variance.csv
-│   │       │   │   └── umap
-│   │       │   │       └── gene_expression_2_components
-│   │       │   │           └── projection.csv
 │   │       │   ├── analysis.zarr.zip
 │   │       │   ├── analysis_summary.html
-│   │       │   ├── cell_boundaries.csv.gz
 │   │       │   ├── cell_boundaries.parquet
-│   │       │   ├── cell_feature_matrix
-│   │       │   │   ├── barcodes.tsv.gz
-│   │       │   │   ├── features.tsv.gz
-│   │       │   │   └── matrix.mtx.gz
 │   │       │   ├── cell_feature_matrix.h5
 │   │       │   ├── cell_feature_matrix.zarr.zip
-│   │       │   ├── cells.csv.gz
 │   │       │   ├── cells.parquet
 │   │       │   ├── cells.zarr.zip
 │   │       │   ├── experiment.xenium
@@ -2086,76 +1789,16 @@
 │   │       │   │   ├── morphology_focus_0001.ome.tif
 │   │       │   │   ├── morphology_focus_0002.ome.tif
 │   │       │   │   └── morphology_focus_0003.ome.tif
-│   │       │   ├── nucleus_boundaries.csv.gz
 │   │       │   ├── nucleus_boundaries.parquet
 │   │       │   ├── transcripts.parquet
 │   │       │   └── transcripts.zarr.zip
 │   │       └── P32_Xe5k
 │   │           ├── .end-of-run
-│   │           ├── analysis
-│   │           │   ├── clustering
-│   │           │   │   ├── gene_expression_graphclust
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_10_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_2_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_3_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_4_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_5_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_6_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_7_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   ├── gene_expression_kmeans_8_clusters
-│   │           │   │   │   └── clusters.csv
-│   │           │   │   └── gene_expression_kmeans_9_clusters
-│   │           │   │       └── clusters.csv
-│   │           │   ├── diffexp
-│   │           │   │   ├── gene_expression_graphclust
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_10_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_2_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_3_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_4_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_5_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_6_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_7_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   ├── gene_expression_kmeans_8_clusters
-│   │           │   │   │   └── differential_expression.csv
-│   │           │   │   └── gene_expression_kmeans_9_clusters
-│   │           │   │       └── differential_expression.csv
-│   │           │   ├── pca
-│   │           │   │   └── gene_expression_10_components
-│   │           │   │       ├── components.csv
-│   │           │   │       ├── dispersion.csv
-│   │           │   │       ├── features_selected.csv
-│   │           │   │       ├── projection.csv
-│   │           │   │       └── variance.csv
-│   │           │   └── umap
-│   │           │       └── gene_expression_2_components
-│   │           │           └── projection.csv
 │   │           ├── analysis.zarr.zip
 │   │           ├── analysis_summary.html
-│   │           ├── cell_boundaries.csv.gz
 │   │           ├── cell_boundaries.parquet
-│   │           ├── cell_feature_matrix
-│   │           │   ├── barcodes.tsv.gz
-│   │           │   ├── features.tsv.gz
-│   │           │   └── matrix.mtx.gz
 │   │           ├── cell_feature_matrix.h5
 │   │           ├── cell_feature_matrix.zarr.zip
-│   │           ├── cells.csv.gz
 │   │           ├── cells.parquet
 │   │           ├── cells.zarr.zip
 │   │           ├── experiment.xenium
@@ -2167,7 +1810,6 @@
 │   │           │   ├── morphology_focus_0001.ome.tif
 │   │           │   ├── morphology_focus_0002.ome.tif
 │   │           │   └── morphology_focus_0003.ome.tif
-│   │           ├── nucleus_boundaries.csv.gz
 │   │           ├── nucleus_boundaries.parquet
 │   │           ├── transcripts.parquet
 │   │           └── transcripts.zarr.zip

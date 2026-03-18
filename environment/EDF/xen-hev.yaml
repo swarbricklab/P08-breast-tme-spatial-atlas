@@ -30,3 +30,4 @@ dependencies:
     - mycolorpy
     - kaleido
     - pyalluvial
+    - pyarrow

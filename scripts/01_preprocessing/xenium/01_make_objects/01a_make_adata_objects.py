@@ -72,8 +72,9 @@ adata = sc.read_10x_h5(
 
 # -- Load cell info
 
-cells_file = 'cells.csv.gz'
-cells_df = pd.read_csv(os.path.join(raw_data_dir_sample, cells_file))
+# Note: make sure pyarrow is installed in the environment to read parquet files (e.g. pip install pyarrow)
+cells_file = 'cells.parquet'
+cells_df = pd.read_parquet(os.path.join(raw_data_dir_sample, cells_file))
 cells_df.set_index(adata.obs_names, inplace=True)
 
 # Add to anndata obs
