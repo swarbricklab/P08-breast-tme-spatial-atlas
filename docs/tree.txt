@@ -1,8 +1,6 @@
 .
 ├── data
 │   ├── anndata_objects
-│   │   ├── sc_ref
-│   │   │   └── miniatlas_GEO.h5ad
 │   │   ├── visium
 │   │   │   ├── P01_Vis.h5ad
 │   │   │   ├── P02_Vis.h5ad
@@ -180,100 +178,52 @@
 │   │       │       ├── P26_Xe5k.ome.tif
 │   │       │       ├── P29_Xe5k.ome.tif
 │   │       │       └── P32_Xe5k.ome.tif
-│   │       ├── alignment_files
-│   │       │   ├── visium
-│   │       │   │   ├── .gitignore
-│   │       │   │   ├── P01_Vis_alignment.json
-│   │       │   │   ├── P02_Vis_alignment.json
-│   │       │   │   ├── P03_Vis_alignment.json
-│   │       │   │   ├── P04_Vis_alignment.json
-│   │       │   │   ├── P05_Vis_alignment.json
-│   │       │   │   ├── P06_Vis_alignment.json
-│   │       │   │   ├── P07_Vis_alignment.json
-│   │       │   │   ├── P08_Vis_alignment.json
-│   │       │   │   ├── P09_Vis_alignment.json
-│   │       │   │   ├── P10_Vis_alignment.json
-│   │       │   │   ├── P11_Vis_alignment.json
-│   │       │   │   ├── P12_Vis_alignment.json
-│   │       │   │   ├── P13_Vis_alignment.json
-│   │       │   │   ├── P14_Vis_alignment.json
-│   │       │   │   ├── P15_Vis_alignment.json
-│   │       │   │   ├── P16_Vis_alignment.json
-│   │       │   │   ├── P17_Vis_alignment.json
-│   │       │   │   ├── P18_Vis_alignment.json
-│   │       │   │   ├── P19_Vis_alignment.json
-│   │       │   │   ├── P20_Vis_alignment.json
-│   │       │   │   ├── P21_Vis_alignment.json
-│   │       │   │   ├── P22_Vis_alignment.json
-│   │       │   │   ├── P23_Vis_alignment.json
-│   │       │   │   ├── P24_Vis_alignment.json
-│   │       │   │   ├── P25_Vis_alignment.json
-│   │       │   │   ├── P26_Vis_alignment.json
-│   │       │   │   ├── P27_Vis_alignment.json
-│   │       │   │   ├── P28_Vis_alignment.json
-│   │       │   │   ├── P29_LN_Vis_alignment.json
-│   │       │   │   ├── P29_Vis_Rep1_alignment.json
-│   │       │   │   ├── P29_Vis_Rep2_alignment.json
-│   │       │   │   ├── P30_Vis_alignment.json
-│   │       │   │   ├── P31_Vis_alignment.json
-│   │       │   │   ├── P32_LN_Vis_alignment.json
-│   │       │   │   └── P32_Vis_alignment.json
-│   │       │   └── xenium
-│   │       │       ├── .gitignore
-│   │       │       ├── P17_Xe5k_alignment_files
-│   │       │       │   ├── keypoints.csv
-│   │       │       │   └── matrix.csv
-│   │       │       ├── P22_Xe5k_alignment_files
-│   │       │       │   ├── keypoints.csv
-│   │       │       │   └── matrix.csv
-│   │       │       ├── P24_Xe5k_alignment_files
-│   │       │       │   ├── keypoints.csv
-│   │       │       │   └── matrix.csv
-│   │       │       ├── P26_Xe5k_alignment_files
-│   │       │       │   ├── keypoints.csv
-│   │       │       │   └── matrix.csv
-│   │       │       ├── P29_Xe5k_alignment_files
-│   │       │       │   ├── keypoints.csv
-│   │       │       │   └── matrix.csv
-│   │       │       └── P32_Xe5k_alignment_files
-│   │       │           ├── keypoints.csv
-│   │       │           └── matrix.csv
-│   │       └── whole_slide_images
+│   │       └── alignment_files
 │   │           ├── visium
 │   │           │   ├── .gitignore
-│   │           │   ├── P01_Vis_he_wsi.ndpi
-│   │           │   ├── P02_Vis_he_wsi.ndpi
-│   │           │   ├── P03_Vis_he_wsi.ndpi
-│   │           │   ├── P04_Vis_he_wsi.ndpi
-│   │           │   ├── P05_Vis_he_wsi.ndpi
-│   │           │   ├── P06_Vis_he_wsi.ndpi
-│   │           │   ├── P07_Vis_he_wsi.ndpi
-│   │           │   ├── P08_Vis_he_wsi.ndpi
-│   │           │   ├── P09_Vis_he_wsi.ndpi
-│   │           │   ├── P10_Vis_he_wsi.ndpi
-│   │           │   ├── P11_Vis_he_wsi.ndpi
-│   │           │   ├── P13_Vis_he_wsi.ndpi
-│   │           │   ├── P14_Vis_he_wsi.ndpi
-│   │           │   ├── P15_Vis_he_wsi.ndpi
-│   │           │   ├── P16_Vis_he_wsi.ndpi
-│   │           │   ├── P17_Vis_he_wsi.ndpi
-│   │           │   ├── P18_Vis_he_wsi.ndpi
-│   │           │   ├── P19_Vis_he_wsi.ndpi
-│   │           │   ├── P20_Vis_he_wsi.ndpi
-│   │           │   ├── P21_Vis_he_wsi.ndpi
-│   │           │   ├── P22_Vis_he_wsi.ndpi
-│   │           │   ├── P23_Vis_he_wsi.ndpi
-│   │           │   ├── P24_Vis_he_wsi.ndpi
-│   │           │   ├── P29_Vis_Rep1_he_wsi.ndpi
-│   │           │   └── P31_Vis_he_wsi.ndpi
+│   │           │   ├── P01_Vis_alignment.json
+│   │           │   ├── P02_Vis_alignment.json
+│   │           │   ├── P03_Vis_alignment.json
+│   │           │   ├── P04_Vis_alignment.json
+│   │           │   ├── P05_Vis_alignment.json
+│   │           │   ├── P06_Vis_alignment.json
+│   │           │   ├── P07_Vis_alignment.json
+│   │           │   ├── P08_Vis_alignment.json
+│   │           │   ├── P09_Vis_alignment.json
+│   │           │   ├── P10_Vis_alignment.json
+│   │           │   ├── P11_Vis_alignment.json
+│   │           │   ├── P12_Vis_alignment.json
+│   │           │   ├── P13_Vis_alignment.json
+│   │           │   ├── P14_Vis_alignment.json
+│   │           │   ├── P15_Vis_alignment.json
+│   │           │   ├── P16_Vis_alignment.json
+│   │           │   ├── P17_Vis_alignment.json
+│   │           │   ├── P18_Vis_alignment.json
+│   │           │   ├── P19_Vis_alignment.json
+│   │           │   ├── P20_Vis_alignment.json
+│   │           │   ├── P21_Vis_alignment.json
+│   │           │   ├── P22_Vis_alignment.json
+│   │           │   ├── P23_Vis_alignment.json
+│   │           │   ├── P24_Vis_alignment.json
+│   │           │   ├── P25_Vis_alignment.json
+│   │           │   ├── P26_Vis_alignment.json
+│   │           │   ├── P27_Vis_alignment.json
+│   │           │   ├── P28_Vis_alignment.json
+│   │           │   ├── P29_LN_Vis_alignment.json
+│   │           │   ├── P29_Vis_Rep1_alignment.json
+│   │           │   ├── P29_Vis_Rep2_alignment.json
+│   │           │   ├── P30_Vis_alignment.json
+│   │           │   ├── P31_Vis_alignment.json
+│   │           │   ├── P32_LN_Vis_alignment.json
+│   │           │   └── P32_Vis_alignment.json
 │   │           └── xenium
 │   │               ├── .gitignore
-│   │               ├── P17_Xe5k_he_wsi.ome.tif
-│   │               ├── P22_Xe5k_he_wsi.ome.tif
-│   │               ├── P24_Xe5k_he_wsi.ome.tif
-│   │               ├── P26_Xe5k_he_wsi.ome.tif
-│   │               ├── P29_Xe5k_he_wsi.ome.tif
-│   │               └── P32_Xe5k_he_wsi.ome.tif
+│   │               ├── P17_Xe5k_matrix.csv
+│   │               ├── P22_Xe5k_matrix.csv
+│   │               ├── P24_Xe5k_matrix.csv
+│   │               ├── P26_Xe5k_matrix.csv
+│   │               ├── P29_Xe5k_matrix.csv
+│   │               └── P32_Xe5k_matrix.csv
 │   ├── pathology_annotations
 │   │   ├── visium
 │   │   │   ├── P01_Vis_pathology_annotations.csv
