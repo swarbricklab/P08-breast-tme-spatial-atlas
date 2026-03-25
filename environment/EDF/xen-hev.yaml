@@ -7,7 +7,7 @@ channels:
 
 dependencies:
   - python
-  - anndata
+  - anndata==0.10.5
   - arpack
   - conda
   - git
@@ -25,9 +25,9 @@ dependencies:
   - plotly
   - plotnine
   - mizani==0.9.2
+  - pyarrow
   - pip
   - pip:
     - mycolorpy
     - kaleido
     - pyalluvial
-    - pyarrow
