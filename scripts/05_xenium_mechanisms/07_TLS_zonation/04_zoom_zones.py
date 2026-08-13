@@ -438,7 +438,7 @@ fig.text((trans_x_start + trans_x_end) / 2, bracket_y + 0.005, 'Transcripts',
 
 title_y = top_y1 + 0.30
 title_x = (new_ax.get_position().x0 + axs[0, -1].get_position().x1) / 2
-fig.suptitle(f'{sample_id} ({subtype}) — B cell zone vs T cell zone '
+fig.suptitle(f'S9F–G — {sample_id} ({subtype}): B cell zone vs T cell zone '
              f'(scalebar: {scalebar_val_overview:g} {scalebar_units} overview, '
              f'{scalebar_val_zoom:g} {scalebar_units} insets)',
              x=title_x, y=title_y, ha='center', fontweight='bold', fontsize=30)
