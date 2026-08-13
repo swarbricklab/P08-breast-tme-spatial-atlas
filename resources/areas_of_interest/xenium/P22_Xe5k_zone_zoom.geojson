@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "coordinate_space": "xenium_microns",
+  "note": "Adjacent B/T cell zone fields for the S9F-G zone-zoom figure (sample P22_Xe5k). Polygon coordinates are Xenium native micron coordinates (x_centroid/y_centroid frame); the plotting script maps them to aligned-image pixels via the spatialdata image_space affine. Boxes were drawn on the H&E in QuPath and converted to microns.",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "classification": {
+          "name": "B cell zone",
+          "color": [100, 149, 237]
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [6155.296394904166, 4201.608697409135],
+            [6280.626576661253, 4201.608697409135],
+            [6280.626576661253, 4326.938879166223],
+            [6155.296394904166, 4326.938879166223],
+            [6155.296394904166, 4201.608697409135]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "classification": {
+          "name": "T cell zone",
+          "color": [220, 20, 60]
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [6318.455661854217, 4170.383767289432],
+            [6439.793023661523, 4170.383767289432],
+            [6439.793023661523, 4291.721129096736],
+            [6318.455661854217, 4291.721129096736],
+            [6318.455661854217, 4170.383767289432]
+          ]
+        ]
+      }
+    }
+  ]
+}
