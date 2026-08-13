@@ -70,7 +70,7 @@ parser.add_argument("--sample_sheet", default=None,
 parser.add_argument("--replot_only", action="store_true",
                     help="skip per-sample extraction when the per-sample CSVs already exist")
 
-# --- upstream input dirs (repointable; see FLAGs in the migration summary)
+# --- upstream input dirs
 parser.add_argument("--spatdata_dir", default=None,
                     help="defaults to <project_dir>/data/spatialdata_objects/xenium")
 parser.add_argument("--zone_dir", default=None,

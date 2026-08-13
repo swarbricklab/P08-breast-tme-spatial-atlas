@@ -206,10 +206,10 @@ print(f'{len(gc_bins)} GC bins for {sample_id} at threshold {gc_threshold}')
 #     centroid-to-centroid Euclidean: min over GC bins of the straight-line
 #     distance between the niche centroid and the GC bin centre (bin_x, bin_y).
 #
-# FLAG: the source script measured centroid-to-square-edge distance
-# (max(0, |d|-grid/2)); per the migration spec (S10I/J Methods) this uses
-# centroid-to-centroid Euclidean instead. Differences are <= half a bin diagonal
-# (~35 um at grid=50 um), so the 500 um close/far call is essentially unchanged.
+# Note: this measures centroid-to-centroid Euclidean distance rather than
+# centroid-to-square-edge (max(0, |d|-grid/2)). The two differ by <= half a bin
+# diagonal (~35 um at grid=50 um), so the 500 um close/far call is essentially
+# unchanged.
 
 n_niches = len(centroid_df)
 if n_niches == 0:

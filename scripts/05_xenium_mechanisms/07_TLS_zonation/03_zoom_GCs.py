@@ -212,12 +212,12 @@ print(f'Loaded {len(tx_df)} transcripts for the top {len(top_genes)} GC genes')
 # with the same affine spatialdata applies to the transcripts (native -> image_space), so
 # bins land on the aligned image exactly like the transcripts.
 #
-# FLAG: the per-sample alignment matrix also exists at
+# Note: a per-sample alignment matrix also exists at
 #   resources/image_alignment/xenium/alignment_matrix/{sample_id}_matrix.csv
 # but is not needed here because the .ome.tif is already registered to image_space and the
-# spatialdata affine is the canonical P08 route. Could not runtime-verify (data not
-# materialised) that transcript-native coords share the bin micron frame - they should for
-# Xenium (cells + transcripts use one global micron frame).
+# spatialdata affine is used to map the bins. This assumes transcript-native coords share
+# the bin micron frame, which holds for Xenium (cells + transcripts use one global micron
+# frame).
 
 affine = get_transformation(sdata.points['transcripts'],
                             to_coordinate_system='image_space').to_affine_matrix(

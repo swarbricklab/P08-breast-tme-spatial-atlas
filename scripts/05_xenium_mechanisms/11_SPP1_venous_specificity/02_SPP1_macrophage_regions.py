@@ -172,7 +172,7 @@ for feat in gj['features']:
     ring = feat['geometry']['coordinates'][0]
     px, py = micron_to_he_pixel([pt[0] for pt in ring], [pt[1] for pt in ring])
     region_px.append((int(px.min()), int(px.max()), int(py.min()), int(py.max())))
-region_px.sort(key=lambda c: c[2])   # by top (y_min), like the source script
+region_px.sort(key=lambda c: c[2])   # by top (y_min)
 area_coords = {f'region_{i + 1}': c for i, c in enumerate(region_px)}
 print(f'Regions (image px, top->bottom): {area_coords}')
 
