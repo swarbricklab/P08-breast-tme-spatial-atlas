@@ -10,6 +10,7 @@
 # --- Load packages
 import argparse
 import os
+import sys
 from datetime import datetime
 
 import anndata as ad
@@ -25,9 +26,6 @@ import pandas as pd
 import numpy as np
 
 import seaborn as sns
-
-# Import custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
 
 mpl.rcParams['pdf.fonttype'] = 42
 
@@ -53,6 +51,10 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
+
+# Import custom functions
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import save_multi_image
 
 
 # --- Extract some info from the sample sheet

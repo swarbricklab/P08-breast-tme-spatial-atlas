@@ -11,6 +11,7 @@
 
 import argparse
 import os
+import sys
 import json
 
 import anndata as ad
@@ -26,8 +27,6 @@ from scipy.spatial import cKDTree
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components
 from scipy.spatial import distance_matrix
-
-from sophiesfunctions.auto_crop import auto_crop_xenium
 
 sc.set_figure_params(figsize=(8, 8), fontsize=20)
 
@@ -60,6 +59,10 @@ sample_id=args["sample_id"]
 
 res_dir = args['res_dir']
 project_dir = args['project_dir']
+
+# Import custom functions
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_xenium
 
 
 # --- Extract some info from the sample sheet
