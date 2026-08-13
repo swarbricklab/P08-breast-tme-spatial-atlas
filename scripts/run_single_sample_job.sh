@@ -17,8 +17,8 @@ res_dir=$6
 visium_sample_sheet=$7
 
 # Initialize Conda environment
-if [ -f /g/data/a56/conda/miniconda3/etc/profile.d/conda.sh ]; then
-  source /g/data/a56/conda/miniconda3/etc/profile.d/conda.sh
+if [ -f /g/data/a56/conda/miniconda/etc/profile.d/conda.sh ]; then
+  source /g/data/a56/conda/miniconda/etc/profile.d/conda.sh
 fi
 
 # load environment

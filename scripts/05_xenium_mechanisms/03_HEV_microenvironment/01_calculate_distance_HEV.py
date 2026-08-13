@@ -11,6 +11,7 @@
 # --- Load packages
 import argparse
 import os
+import sys
 from datetime import datetime
 
 import anndata as ad
@@ -24,10 +25,6 @@ import scanpy as sc
 
 import seaborn as sns
 from scipy.spatial import cKDTree
-
-# Import custom functions
-from sophiesfunctions.auto_crop import auto_crop_xenium
-from sophiesfunctions.save_multi_image import save_multi_image
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -57,6 +54,10 @@ res_dir = args["res_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+
+# Import custom functions
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import auto_crop_xenium, save_multi_image
 
 
 # --- Get some info from the sample sheet
@@ -351,10 +352,10 @@ plt.suptitle(f'{sample_id} ({subtype}) - Distance to closest HEV niche (µm)', y
 df['HEV_in_TLS'] = df['HEV_group'].map(near_tls_dict)
 
 # Transfer the niche id if HEV is close to TLS
-df['HEV_group_TLS'] = df.apply(lambda row: row['HEV_group'] if row['HEV_in_TLS'] else np.NaN, axis=1)
+df['HEV_group_TLS'] = df.apply(lambda row: row['HEV_group'] if row['HEV_in_TLS'] else np.nan, axis=1)
 
 # Add column for HEVs not close to TLS
-df['HEV_group_not_TLS'] = df.apply(lambda row: row['HEV_group'] if not row['HEV_in_TLS'] else np.NaN, axis=1)
+df['HEV_group_not_TLS'] = df.apply(lambda row: row['HEV_group'] if not row['HEV_in_TLS'] else np.nan, axis=1)
 
 dist_close_df = calculate_distance(df[['x', 'y', 'HEV_group_TLS']].copy(), group_key='HEV_group_TLS', x_col='x', y_col='y')
 dist_far_df = calculate_distance(df[['x', 'y', 'HEV_group_not_TLS']].copy(), group_key='HEV_group_not_TLS', x_col='x', y_col='y')

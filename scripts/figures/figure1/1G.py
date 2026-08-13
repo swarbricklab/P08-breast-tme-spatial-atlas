@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 1G: B-cell to T-cell ratios per clinical subtype
-# Shows ratios across TLS/aggregate annotated spots
+# Plot Figure 1G: cell type composition within different pathology annotation categories
+# Shows deconvolution results stratified by tissue compartments (invasive, in situ, stroma, etc.)
 # This creates Figure 1G
-
 
 # --- Define environment
 # env: spatial-pilot
@@ -12,40 +11,52 @@
 # --- Load packages
 
 import argparse
+import json
 import os
-import pandas as pd
+import sys
+
 import numpy as np
-
+import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+from matplotlib.ticker import FuncFormatter
 
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+
+mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument("--data_dir", help="Path to raw data")
 parser.add_argument("-s", "--samples",
     nargs="*",  # 0 or more values expected => creates a list
     type=str,
     help="List of samples")
-parser.add_argument("-r", "--res_dir",
-                    help="Path to results directory (optional)")
-parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files") # Not necessary for this script
-parser.add_argument("--gene_file", help="Path to a csv file with genes, genes stored in first column") # Not necessary for this script
-parser.add_argument("--use_data", help="Which data to use (SCT or log_norm)") # Not necessary for this script
+parser.add_argument("-r", "--res_dir", help="Path to results directory")
+parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
+parser.add_argument("--N_cells_per_location", help="Value for N_cells_per_location parameter cell2location")
+parser.add_argument("--decon_level", help="Level of annotations used for decon")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
 args = vars(parser.parse_args())
 
-# Arguments
-data_dir = args["data_dir"]
+# --- Arguments
+project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
+res_dir = args["res_dir"]
 sample_list = args["samples"]
-project_dir = args['project_dir']
+N_cells_per_location = args["N_cells_per_location"]
+decon_level = args["decon_level"]
+
+print(f'Samples in python: {sample_list}')
+
+# Import function script as a module
+sys.path.append(os.path.join(project_dir, 'scripts', 'figures'))
+import dotplot_functions
 
 
 # --- Extract some info from the sample sheet
@@ -75,15 +86,33 @@ merged_df = pd.merge(sample_sheet, tissue_metadata, on='tissue_id')
 subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
 
 
-# --- Load the decon results
+# --- Some annotation parameters
 
-level = 'major'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
+# Use all available layers
+annotation_layers = ['epithelial', 'immune', 'stroma', 'additional_features']
+
+
+# --- Order the annotations
+
+# Get the desired order
+annotation_dir_base = os.path.join(project_dir, 'resources', 'pathology_annotations')
+# Load the desired categories per layer (to get the desired order)
+filename = 'pathology_categories_per_layer.json'
+path_to_file = os.path.join(annotation_dir_base, filename)
+
+with open(path_to_file, 'r') as json_file:
+                annotations_of_interest_dict = json.load(json_file)
+
+
+# --- Load the deconvolution results
+
+decon_level = 'major'
+decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{decon_level}_level')
 
 decon_dict = {}
 
 for sample in sample_list:
-    decon_filename = f'{sample}_{level}_q05_cell_abundance_w_sf.csv'
+    decon_filename = f'{sample}_{decon_level}_q05_cell_abundance_w_sf.csv'
     # Load decon results
     decon_results = pd.read_csv(os.path.join(decon_dir, decon_filename), index_col=0)
     decon_dict[sample] = decon_results
@@ -91,7 +120,7 @@ for sample in sample_list:
 all_cell_types = list(decon_dict[sample].columns)
 
 
-# --- Also load pathology annotations
+# --- Load the pathology annotations
 
 # Define annotation path
 reworked_anno_dir = os.path.join(project_dir, 'data', 'pathology_annotations', 'visium')
@@ -104,310 +133,515 @@ for sample in sample_list:
     if os.path.exists(annotation_path):
         path_anno = pd.read_csv(annotation_path, index_col=0)
         anno_df_dict[sample] = path_anno
-        decon_dict[sample][path_anno.columns] = path_anno
     else:
         print(f'No annotations found for {sample} - skipping')
 
 
-# --- Sort the samples per subtype
+# --- Load miniatlas qualifications
+# Load miniatlas classifications
 
-# Dictionary to store the lists of samples per type
-samples_by_subtype = {}
+classifications_dir = os.path.join(project_dir, 'resources', 'cell_types', 'miniatlas')
+classifications_file = 'miniatlas_subset_classifications.csv'
 
-# Group sample IDs by their type
+classifications = pd.read_csv(os.path.join(classifications_dir, classifications_file))
+
+# Load the colors from the miniatlas for visualization
+color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
+lineage_colors_file = 'miniatlas_lineage_colors.csv'
+miniatlas_major_colors_file = 'miniatlas_major_colors.csv'
+
+lineage_colors = pd.read_csv(os.path.join(color_dir, lineage_colors_file))
+miniatlas_major_colors = pd.read_csv(os.path.join(color_dir, miniatlas_major_colors_file))
+
+# Make some lookup tables
+lineage_lut = dict(zip(lineage_colors['lineage'], lineage_colors['color']))
+miniatlas_major_lut = dict(zip(miniatlas_major_colors['miniatlas_major'], miniatlas_major_colors['color']))
+
+# Add nan to lut
+lineage_lut[np.nan] = 'lightgray'
+miniatlas_major_lut[np.nan] = 'lightgray'
+
+# Make a dataframe containing the colors for the rows of the heatmap (lineage and miniatlas_major classifications)
+row_colors_df = pd.DataFrame(zip(classifications['lineage'].map(lineage_lut), classifications['miniatlas_major'].map(miniatlas_major_lut)), 
+                             index=classifications[f'miniatlas_{decon_level}'], columns=['lineage', 'miniatlas_major'])
+
+# Drop duplicates
+row_colors_df = row_colors_df[~row_colors_df.index.duplicated(keep='first')]
+
+# Sort the decon results on lineage and major
+group_columns = ['lineage', 'miniatlas_major']
+
+# Subset classifications to cell types present
+# Standardize the names in classifications
+classifications = classifications[classifications[f'miniatlas_{decon_level}'].isin(all_cell_types)]
+
+classifications_sorted = classifications.sort_values(by=group_columns)
+sorted_indices = list(classifications_sorted[f'miniatlas_{decon_level}'])
+
+# Drop duplicates
+# Build an index mapping from reference
+sorted_indices = list(dict.fromkeys(sorted_indices))
+order = {val: i for i, val in enumerate(sorted_indices)}
+
+# Sort all cell types according to the sorted_indices
+all_cell_types = sorted(all_cell_types, key=lambda x: order.get(x, float('inf')))
+
+
+# --- Merge into a single df with sample_id
+
+# First make single df that has annotations + decon results per sample
+anno_decon_dict = {}
+
 for sample in sample_list:
-    subtype = subtype_dict[sample]
-    if subtype not in samples_by_subtype:
-        samples_by_subtype[subtype] = []
-    samples_by_subtype[subtype].append(sample)
+    anno_decon_dict[sample] = anno_df_dict[sample]
+    anno_decon_dict[sample][all_cell_types] = decon_dict[sample][all_cell_types]
+    anno_decon_dict[sample]['barcode'] = anno_decon_dict[sample].index
 
-# Sort the lists of sample IDs per type
-for subtype in samples_by_subtype:
-    samples_by_subtype[subtype].sort()
-
-print(samples_by_subtype)
-
-# Define a plotting order for subtypes
-subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
-sorted_subtypes = sorted(samples_by_subtype.keys(), key=lambda x: subtype_order.index(x) if x in subtype_order else float('inf'))
+# Concatenate DataFrames and add 'sample_id' column
+anno_decon_df = pd.concat([df.assign(sample_id=key) for key, df in anno_decon_dict.items()], ignore_index=True)
 
 
-# --- Calculate B/T ratios in TLS and aggregate annotated spots
+# --- Order the categories
 
-annotations_of_interest = ['tls', 'aggregate']
-annotations_of_interest = ['tls', 'aggregate']
+ordered_major_cat_dict = {}
 
-b_t_ratio_annotated_dict = {}
-n_annotated_spots_dict = {}
+for layer in annotation_layers:
+    key = f'{layer}'
+    categories = list(anno_decon_df[key].dropna().unique())
+    # Sort according to predefined cateogires
+    sorted_categories = sorted(categories, key=lambda x: annotations_of_interest_dict[layer].index(x) if x in annotations_of_interest_dict[layer] else len(annotations_of_interest_dict[layer]))
+    ordered_major_cat_dict[layer] = sorted_categories
+    anno_decon_df[key] = pd.Categorical(anno_decon_df[key], categories=sorted_categories, ordered=True)
 
-for sample, df in decon_dict.items():
-    # Filter the DataFrame for specific annotations
-    annotated_df = df[df['immune'].isin(annotations_of_interest)]
-    n_annotated_spots = annotated_df.shape[0]
-    if not annotated_df.empty:
-        # Calculate the ratio of B cells to T cells
-        total_b = annotated_df[['B-cells']].sum(axis=0).values[0]
-        total_t = annotated_df[['T-cells']].sum(axis=0).values[0]
-        b_t_ratio = total_b / total_t
-        # Log2 transform the ratio
-        if total_b > 0:
-            b_t_ratio = np.log2(b_t_ratio)
-        else:
-            b_t_ratio = float('inf')
-    else:
-        b_t_ratio = float('nan')  # No annotated spots available
-    # Store the results in the dictionaries
-    b_t_ratio_annotated_dict[sample] = b_t_ratio
-    n_annotated_spots_dict[sample] = n_annotated_spots/df.shape[0]
 
-# Convert the dictionaries into DataFrames
-b_t_ratio_annotated_df = pd.DataFrame.from_dict(b_t_ratio_annotated_dict, orient='index', columns=['B_T_ratio_annotated'])
-n_annotated_spots_df = pd.DataFrame.from_dict(n_annotated_spots_dict, orient='index', columns=['n_annotated_spots'])
+# --- Get  colors per annotation
 
-# Add subtype info
-b_t_ratio_annotated_df['subtype'] = b_t_ratio_annotated_df.index.map(subtype_dict)
+ordered_columns_major = [item for sublist in ordered_major_cat_dict.values() for item in sublist]
 
-# Merge the two DataFrames
-b_t_ratio_annotated_df = b_t_ratio_annotated_df.merge(n_annotated_spots_df, left_index=True, right_index=True)
+color_dict, plotting_colors, top_cat_colors = dotplot_functions.create_plotting_colors(ordered_major_cat_dict, ordered_columns_major, 
+                                                                                       available_layers=annotation_layers, mixed=False, major_categories=True)
 
 
 # --- Prepare for plotting
 
-sns.set_style("ticks")
+# Disable the grid for all plots
+plt.rcParams['axes.grid'] = False
 
 
-# --- Get colors per subtype
+# --- Plot 1: Average number of cells per annotation (layers separate)
 
-color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
-color_file = 'SCSubtype_colors.csv'
+# -- Prepare for plotting
 
-color_lut = pd.read_csv(os.path.join(color_dir, color_file))
-color_lut = color_lut.set_index('subtype')
+# Reorder the cell types in the decon results according to the order in the classifications
+row_colors_df = row_colors_df[~row_colors_df.index.duplicated(keep='first')]
+lineage_palette = list(row_colors_df.reindex(all_cell_types)['lineage'])
 
-# Extract a color dict
-color_dict = color_lut['color'].to_dict()
+# Find missing cell types
+missing_cell_types = [ct for ct, color in zip(all_cell_types, lineage_palette) if pd.isna(color)]
+print("Cell types missing from lineage_palette:", missing_cell_types)
+
+# Make a plotting df per layer
+dot_plot_df_dict = {}
+count_df_x_dict = {}
+count_df_y_dict = {}
+
+for n, layer in enumerate(annotation_layers):
+    key = f'{layer}'
+    to_select = list(all_cell_types) + [key]
+    raw_df = anno_decon_df[to_select]
+    # Fill the NaNs
+    na_fill = f'non_{layer}'
+    raw_df[key] = raw_df[key].cat.add_categories(na_fill)
+    raw_df[key] = raw_df[key].fillna(f'non_{layer}')
+    # Make df for dotplot
+    dot_plot_df = pd.DataFrame()
+    for cell_type in all_cell_types:
+        df_tmp = dotplot_functions.calculate_stats(raw_df, key, cell_type)
+        dot_plot_df = pd.concat([dot_plot_df, df_tmp], axis=0)
+    # Make dfs for the counts plots
+    count_df_y = dot_plot_df.groupby('cell_type')['total_count'].sum().to_frame()
+    count_df_x = raw_df[key].value_counts().to_frame()
+    count_df_x = count_df_x.reset_index()
+    count_df_x.index = count_df_x[key]
+    # Save in dict
+    dot_plot_df_dict[key] = dot_plot_df
+    count_df_x_dict[key] = count_df_x
+    count_df_y_dict[key] = count_df_y
+
+# Plotting
+space_per_dot = 0.2
+vmax=3
+hue = 'average_count'
+size = 'average_proportion'
+
+# Prepare for calculating proportions per spot
+rowsums = raw_df[all_cell_types].sum(axis=1)
+proportion_per_spot = raw_df[all_cell_types].div(rowsums, axis=0)
+
+# Prepare the df
+for n, layer in enumerate(annotation_layers):
+    key = f'{layer}'
+    dot_plot_df = dot_plot_df_dict[key].copy()
+    count_df_x = count_df_x_dict[key].copy()
+    # Normalize the cell counts by number of spots per annotation
+    # Reset the index to the default integer index
+    count_df_x.reset_index(drop=True, inplace=True)
+    count_df_x.columns = ['category', 'number_of_spots']
+    dot_plot_df = pd.merge(dot_plot_df, count_df_x, on='category')
+    dot_plot_df[hue] = dot_plot_df['total_count'] / dot_plot_df['number_of_spots']
+    # Calculate total count per cell type
+    total_count_per_cell_type = dot_plot_df.groupby('cell_type')[hue].transform('sum')
+    # Also calculate the average proportion
+    prop_anno_df = proportion_per_spot.copy()
+    prop_anno_df[key] = anno_decon_df[key]
+    # Fill the NaNs
+    na_fill = f'non_{layer}'
+    prop_anno_df[key] = prop_anno_df[key].cat.add_categories(na_fill)
+    prop_anno_df[key] = prop_anno_df[key].fillna(na_fill)
+    # Make df for dotplot
+    prop_df = pd.DataFrame()
+    for cell_type in all_cell_types:
+        df_tmp = dotplot_functions.calculate_stats(prop_anno_df, key, cell_type)
+        prop_df = pd.concat([prop_df, df_tmp], axis=0)
+    # Add the number of spots
+    prop_df = pd.merge(prop_df, count_df_x, on='category')
+    prop_df[size] = prop_df['total_count'] / prop_df['number_of_spots']
+    # Merge the dfs
+    dot_plot_df = pd.merge(dot_plot_df, prop_df[['category', 'cell_type', size]], on = ['category', 'cell_type'])
+    # Sort in correct order
+    dot_plot_df['cell_type'] = pd.Categorical(dot_plot_df['cell_type'], categories=all_cell_types, ordered=True)
+    all_cats = ordered_major_cat_dict[layer] + [f'non_{layer}']
+    dot_plot_df['category'] = pd.Categorical(dot_plot_df['category'], categories=all_cats, ordered=True)
+    dot_plot_df = dot_plot_df.sort_values(by=['cell_type', 'category'])
+    dot_plot_df_dict[key] = dot_plot_df
+
+lineage_palette = [
+    color if pd.notna(color) else 'lightgray'
+    for color in row_colors_df.reindex(all_cell_types)['lineage']
+]
+
+if decon_level == 'major':
+    dot_size_max = 200
+else:
+    dot_size_max = 400
+
+# Function to format counts
+def format_count(value, tick_number):
+    if value >= 1000000:
+        return f'{value/1000000:.1f}M'
+    if value >= 1000:
+        return f'{value/1000:.0f}k'
+    return f'{value:.0f}'
+
+# Calculate max count across all layers for consistent y-axis in bar plots (excluding 'non_' categories)
+all_counts_spots_plot1 = []
+for layer in annotation_layers:
+    key = f'{layer}'
+    categories_in_layer = list(dot_plot_df_dict[key]['category'].unique())
+    # Exclude categories that start with 'non_'
+    categories_in_layer = [cat for cat in categories_in_layer if not str(cat).startswith('non_')]
+    counts = [count_df_x_dict[key].loc[cat, 'count'] if cat in count_df_x_dict[key].index else 0 for cat in categories_in_layer]
+    all_counts_spots_plot1.extend(counts)
+
+max_count_spots_plot1 = max(all_counts_spots_plot1) if all_counts_spots_plot1 else 0
+
+# Calculate max cell count for consistent x-axis in cell count bars
+max_cell_count_plot1 = max([count_df_y_dict[layer]['total_count'].max() for layer in annotation_layers])
+
+# --- Create multi-panel plot with proportion_per_layer as size
+space_per_dot_cell = 0.03
+space_per_dot_cat = 0.03
+
+# Filter out 'non_' categories for Plot 1b
+dot_plot_df_dict_filtered = {}
+for layer in annotation_layers:
+    df_layer = dot_plot_df_dict[layer].copy()
+    # Exclude categories that start with 'non_'
+    df_layer = df_layer[~df_layer['category'].astype(str).str.startswith('non_')]
+    dot_plot_df_dict_filtered[layer] = df_layer
+
+# Calculate global size range for consistent sizing across all plots
+all_size_values_plot1 = []
+for layer in annotation_layers:
+    all_size_values_plot1.extend(dot_plot_df_dict_filtered[layer][size].values)
+
+size_min_plot1 = min(all_size_values_plot1)
+size_max_plot1 = max(all_size_values_plot1)
 
 
-# --- Prepare for making some boxplots
+# --- Plot 1: Dotplot of z-scores of average counts per category, with size based on proportion_per_layer
 
-# Properties for boxplot
-whisker_props = {'color': 'black'}
-median_props = {'color': 'black'}
+# Calculate z-scores for each cell type across all categories (all layers combined)
+# First, create a combined dataframe with all layers, excluding 'non_' categories
+combined_df = pd.DataFrame()
+for layer in annotation_layers:
+    df_layer = dot_plot_df_dict[layer].copy()
+    # Exclude categories that start with 'non_'
+    df_layer = df_layer[~df_layer['category'].astype(str).str.startswith('non_')]
+    combined_df = pd.concat([combined_df, df_layer], axis=0)
 
-alpha = 0.7
-
-# Enable gridlines behind the plot for all plots
-sns.set_style("ticks",{'axes.grid' : True})
-plt.rcParams['axes.axisbelow'] = True
-
-# Function to avoid repetition
-def plot_seaborn_boxplot(df, ax, x, y, hue, plot_order, stripplot=True, title=None, gap=0, legend=False,
-                                annotation_size=10, spot_size=1, box_width=0.2, palette=None, width=0.8,
-                                ylabel=None, height=0.4):
-    if stripplot:
-        showfliers = False
+# Calculate z-score for each cell type
+combined_df_zscore = combined_df.copy()
+for cell_type in all_cell_types:
+    mask = combined_df_zscore['cell_type'] == cell_type
+    values = combined_df_zscore.loc[mask, 'average_count']
+    mean_val = values.mean()
+    std_val = values.std()
+    if std_val > 0:
+        combined_df_zscore.loc[mask, 'zscore'] = (values - mean_val) / std_val
     else:
-        showfliers = True
-    sns.boxplot(df, x=x, y=y, showfliers=showfliers, linewidth=1, whiskerprops=whisker_props, 
-                medianprops=median_props, width=width, ax=ax, palette=palette,
-                saturation=1, legend=legend, hue=hue, fliersize=1, order=plot_order, gap=gap)
-    # Plot the individual dots on the boxplot
-        # Plot dots if you want
-    if stripplot:
-        sns.stripplot(data=df, x=x, y=y, color="black", order=plot_order, jitter=True, size=spot_size, ax=ax)
-    for i, bar in enumerate(ax.patches):  # Adjust the colors of the bar
-        # Get the RGBA values of the fill color
-        fill_color = bar.get_facecolor()
-        fill_color = list(fill_color)
-        darkened_color = fill_color.copy()
-        for j in range(len(darkened_color)-1):
-            darkened_color[j] *= 0.8
-        fill_color[-1] = alpha # make the fill color a bit transparent
-        bar.set_color(tuple(fill_color))
-        bar.set_edgecolor(tuple(darkened_color))
-    # Add title
-    ax.set_title(title, fontweight='bold')
-    # move x-axis tick labels to the left
-    xlabels = ax.get_xticklabels()
-    ax.set_xticklabels(xlabels, rotation=45, ha='right')
-    # remove the x-axis label
+        combined_df_zscore.loc[mask, 'zscore'] = 0
+
+# Split back into layers
+dot_plot_df_dict_zscore = {}
+for layer in annotation_layers:
+    df_layer_zscore = combined_df_zscore[combined_df_zscore['category'].isin(dot_plot_df_dict[layer]['category'].unique())].copy()
+    df_layer_zscore['category'] = pd.Categorical(df_layer_zscore['category'], 
+                                                   categories=dot_plot_df_dict[layer]['category'].cat.categories, 
+                                                   ordered=True)
+    df_layer_zscore['cell_type'] = pd.Categorical(df_layer_zscore['cell_type'], 
+                                                    categories=all_cell_types, 
+                                                    ordered=True)
+    df_layer_zscore = df_layer_zscore.sort_values(['cell_type', 'category'])
+    dot_plot_df_dict_zscore[layer] = df_layer_zscore
+
+# Calculate global z-score range for color normalization
+all_zscore_values_plot1 = []
+for layer in annotation_layers:
+    all_zscore_values_plot1.extend(dot_plot_df_dict_zscore[layer]['zscore'].values)
+
+zscore_min_plot1 = min(all_zscore_values_plot1)
+zscore_max_plot1 = max(all_zscore_values_plot1)
+zscore_abs_max_plot1 = max(abs(zscore_min_plot1), abs(zscore_max_plot1))
+
+# Create figure
+fig = plt.figure(figsize=(8, 8))
+axs = []
+bar_axs = []
+
+# Calculate positions for arranging horizontally
+start_x = 0.08
+base_y = 0.15
+
+for n, layer in enumerate(annotation_layers):
+    df_layer = dot_plot_df_dict_zscore[layer]
+    # Calculate dimensions
+    num_cell_types = len(all_cell_types)
+    num_categories = len(df_layer['category'].unique())
+    plot_width = space_per_dot_cat * num_categories
+    plot_height = space_per_dot_cell * num_cell_types
+    # Position for this layer's dotplot (horizontal arrangement)
+    if n == 0:
+        ax_x = start_x
+        prev_x = ax_x + plot_width
+    else:
+        ax_x = prev_x + 0.007
+        prev_x = ax_x + plot_width
+    # Create main dotplot axis
+    ax = fig.add_axes([ax_x, base_y, plot_width, plot_height])
+    axs.append(ax)
+    # Create scatterplot with z-score as color
+    sns.scatterplot(
+        data=df_layer,
+        x='category',
+        y='cell_type',
+        hue='zscore',
+        size=size,
+        sizes=(0, dot_size_max),
+        size_norm=(size_min_plot1, size_max_plot1),
+        palette='RdBu_r',
+        edgecolor='black',
+        linewidth=0.5,
+        ax=ax,
+        hue_norm=(-zscore_abs_max_plot1, zscore_abs_max_plot1),
+        legend='brief' if n == len(annotation_layers) - 1 else False
+    )
+    # Format axes
     ax.set_xlabel('')
-    # set ylabel
-    if ylabel is None:
-        ax.set_xlabel(y)
+    ax.set_ylabel('')
+    ax.set_title('')
+    # Format x-axis
+    ax.set_xticks(range(num_categories))
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha='center')
+    # Format y-axis - only show labels on first plot
+    ax.set_yticks(range(len(all_cell_types)))
+    if n == 0:
+        ax.set_yticklabels(all_cell_types, rotation=0, ha='right')
     else:
-        ax.set_ylabel(ylabel)
-    # Adjust the positions of the subplots
-    ax_pos = ax.get_position()
-    # Set the width so it's equal for all plots
-    ax.set_position([ax_pos.x0, ax_pos.y0, box_width*len(plot_order), height])
-
-# Function to move axs if overlap
-def move_axs(axs, offset=0.01):
-    for n, ax in enumerate(axs):
-        ax_pos = ax.get_position()
-        # Shift the subplot to the desired location
-        if n == 0:
-            ax.set_position([ax_pos.x0, ax_pos.y0, ax_pos.width, ax_pos.height])
+        ax.set_yticklabels([])
+    # Set limits
+    ax.set_xlim(-0.75, num_categories - 0.25)
+    ax.set_ylim(len(all_cell_types) - 0.25, -0.75)
+    # Add grid
+    ax.grid(True, which='both', axis='both', linestyle='-', linewidth=0.5, alpha=1)
+    ax.set_axisbelow(True)
+    # Remove legend
+    if ax.get_legend():
+        ax.get_legend().remove()
+    # Create vertical barplot above
+    bar_height = 0.06
+    bar_ax = fig.add_axes([ax_x, base_y + plot_height + 0.007, plot_width, bar_height])
+    bar_ax.set_facecolor('none')
+    bar_axs.append(bar_ax)
+    # Get categories and counts
+    categories_in_layer = list(df_layer['category'].unique())
+    count_df_x = count_df_x_dict[layer]
+    counts = [count_df_x.loc[cat, 'count'] if cat in count_df_x.index else 0 for cat in categories_in_layer]
+    # Create vertical barplot
+    x_positions = range(len(categories_in_layer))
+    colors = [color_dict.get(cat, 'lightgray') for cat in categories_in_layer]
+    bar_ax.bar(x_positions, counts, color=colors, edgecolor='black', linewidth=0.8, alpha=0.9)
+    # Format barplot
+    bar_ax.set_xlim(-0.5, len(categories_in_layer) - 0.5)
+    bar_ax.set_ylim(0, max_count_spots_plot1 * 1.1)
+    bar_ax.set_xticks([])
+    bar_ax.spines['top'].set_visible(False)
+    bar_ax.spines['right'].set_visible(False)
+    # Add text annotations above each bar
+    for i, count in enumerate(counts):
+        buffer = max_count_spots_plot1 * 0.1
+        if count >= 1000:
+            label = f'{count/1000:.1f}k'
         else:
-            new_pos = ax_pos_prev.x0 + ax_pos_prev.width + offset
-            ax.set_position([new_pos, ax_pos.y0, ax_pos.width, ax_pos.height])
-        ax_pos_prev = ax.get_position()
+            label = str(count)
+        bar_ax.text(i, count + buffer, label, ha='center', va='bottom', fontsize=8, rotation=90)
+    # If not the first barplot, remove the ytick at 0
+    if n != 0:
+        bar_ax.set_yticks([bar_ax.get_yticks()[1]])
+    # Only show ylabel on first barplot
+    if n == 0:
+        bar_ax.set_ylabel('# spots', fontsize=9)
+        bar_ax.tick_params(axis='y', labelsize=9)
+        if max_count_spots_plot1 > 1000:
+            bar_ax.yaxis.set_major_formatter(FuncFormatter(format_count))
+    else:
+        bar_ax.set_yticklabels([])
+        bar_ax.tick_params(axis='y', labelsize=9)
+    # Add layer title
+    bar_ax.set_title(layer.capitalize().replace('_', ' '), fontweight='bold', pad=20)
 
-# Function to increase the distance between rows of subplots
-def increase_row_spacing(axs_by_row_dict, offset=0.05):
-    """
-    Adjust the vertical position of rows of subplots by adding an offset between rows.
-    
-    Parameters:
-    - axs_by_row_dict: A dictionary where each key is a row number and each value is a list of axes in that row.
-    - offset: The amount of vertical space to add between rows (default is 0.05).
-    """
-    for row_num, axs in axs_by_row_dict.items():
-        for ax in axs:
-            ax_pos = ax.get_position()
-            if row_num == 0:
-                # Keep the first row at the original position
-                ax.set_position([ax_pos.x0, ax_pos.y0, ax_pos.width, ax_pos.height])
+# Format x-axis labels
+caps = ['tls', 'lvi']
+for ax in axs:
+    xticks = ax.get_xticklabels()
+    new_labels = []
+    for label in xticks:
+        text = label.get_text()
+        if text == 'immune_other':
+            text = 'lymphocytes present'
+        if text in caps:
+            text = text.upper()
+        else:
+            text = text.capitalize()
+        text = text.replace('_', ' ')
+        new_labels.append(text)
+    ax.set_xticklabels(new_labels, rotation=90, ha='center')
+
+# Add cell count barplots on the right side
+cell_count_bar_axs = []
+for n, layer in enumerate(annotation_layers):
+    # Only add cell count barplot to the last plot
+    if n == len(annotation_layers) - 1:
+        ax = axs[n]
+        ax_pos = ax.get_position()
+        bar_width = 0.06
+        bar_ax = fig.add_axes([ax_pos.x1 + 0.007, ax_pos.y0, bar_width, ax_pos.height])
+        bar_ax.set_facecolor('none')
+        cell_count_bar_axs.append(bar_ax)
+        # Get cell counts
+        count_df_y = count_df_y_dict[layer]
+        cell_types_reversed = all_cell_types[::-1]
+        counts = [count_df_y.loc[ct, 'total_count'] if ct in count_df_y.index else 0 for ct in cell_types_reversed]
+        colors_reversed = lineage_palette[::-1]
+        # Create horizontal barplot
+        y_positions = range(len(cell_types_reversed))
+        bar_ax.barh(y_positions, counts, color=colors_reversed, edgecolor='black', linewidth=0.8, alpha=0.9)
+        # Add text annotations
+        for i, count in enumerate(counts):
+            if count >= 1000000:
+                label = f'{count/1000000:.1f}M'
+            elif count >= 1000:
+                label = f'{count/1000:.1f}k'
             else:
-                # Shift the row downward by the cumulative offset
-                new_y0 = ax_pos_prev.y0 - ax_pos.height - offset
-                ax.set_position([ax_pos.x0, new_y0, ax_pos.width, ax_pos.height])
-        ax_pos_prev = ax.get_position()
+                label = str(int(count))
+            offset = max_cell_count_plot1 * 0.1
+            bar_ax.text(count + offset, i, label, ha='left', va='center', fontsize=8)
+        # Format barplot
+        bar_ax.set_ylim(-0.5, len(cell_types_reversed) - 0.5)
+        bar_ax.set_xlim(0, max_cell_count_plot1 * 1.15)
+        bar_ax.set_yticks([])
+        bar_ax.xaxis.set_major_formatter(FuncFormatter(format_count))
+        bar_ax.spines['top'].set_visible(False)
+        bar_ax.spines['right'].set_visible(False)
+        bar_ax.set_xlabel('# cells', fontsize=9)
+        bar_ax.tick_params(axis='x', labelsize=8)
 
-# Function to add count bars at top of plot
-def add_count_bars(df, x, y, target_ax, alpha=0.7):
-    fig = plt.gcf()
-    # Position to target_ax
-    target_ax_pos = target_ax.get_position()
-    # Create a new axis above the target axis
-    count_ax_height = target_ax_pos.height * 0.2
-    count_ax = fig.add_axes([target_ax_pos.x0, target_ax_pos.y1 + 0.01, target_ax_pos.width, count_ax_height])
-    # Plot the count bars
-    sns.barplot(x=df[x], y=df[y], hue=df[x], ax=count_ax, color='lightgray', alpha=0.7, width=0.8,
-                edgecolor='black', linewidth=1, order=sorted_subtypes, err_kws={'color': 'black', 'linewidth': 1}, capsize=0.3,
-                palette=color_dict, saturation=1)
-    for i, bar in enumerate(count_ax.patches):  # Adjust the colors of the bar
-        # Get the RGBA values of the fill color
-        fill_color = bar.get_facecolor()
-        fill_color = list(fill_color)
-        darkened_color = fill_color.copy()
-        for j in range(len(darkened_color)-1):
-            darkened_color[j] *= 0.8
-        fill_color[-1] = alpha # make the fill color a bit transparent
-        bar.set_color(tuple(fill_color))
-        bar.set_edgecolor(tuple(darkened_color))
-    # Get the title
-    title = target_ax.get_title()
-    count_ax.set_title(title, fontweight='bold')
-    target_ax.set_title('')  # Remove the title from the target axis
-    count_ax.set_ylabel('Prop.\nspots', fontsize=10)
-    # Remove the xticks
-    count_ax.set_xticks([])
-    count_ax.set_xlabel('')
-    # Increase the ylim a bit
-    ylim = count_ax.get_ylim()
-    count_ax.set_ylim(0, ylim[1] * 1.1)
+# Add colorbar for z-score
+if len(annotation_layers) > 0:
+    last_cell_bar_ax = cell_count_bar_axs[-1]
+    cbar_height = space_per_dot_cell * 4
+    cax = fig.add_axes([last_cell_bar_ax.get_position().x1 + 0.03, last_cell_bar_ax.get_position().y0, 
+                        0.02, cbar_height])
+    norm = plt.Normalize(-zscore_abs_max_plot1, zscore_abs_max_plot1)
+    sm = plt.cm.ScalarMappable(cmap='RdBu_r', norm=norm)
+    sm.set_array([])
+    cbar = fig.colorbar(sm, cax=cax, orientation='vertical')
+    cax.set_title('Z-score\n(avg # cells)', ha='left', x=0)
+    cax.set_ylim(zscore_min_plot1, zscore_max_plot1)
+    # Add size legend
+    temp_ax = fig.add_axes([0, 0, 0.1, 0.1])
+    temp_scatter = sns.scatterplot(
+        data=dot_plot_df_dict_zscore[annotation_layers[-1]],
+        x='category',
+        y='cell_type',
+        size=size,
+        sizes=(0, dot_size_max),
+        size_norm=(size_min_plot1, size_max_plot1),
+        ax=temp_ax,
+        legend='brief'
+    )
+    size_handles, size_labels = temp_ax.get_legend_handles_labels()
+    if len(size_handles) > 3:
+        size_indices = [0, len(size_handles) // 2, -1]
+        size_handles = [size_handles[i] for i in size_indices]
+        size_labels = [size_labels[i] for i in size_indices]
+    for handle in size_handles:
+        handle.set_markerfacecolor('lightgray')
+        handle.set_linewidth(1)
+        handle.set_markeredgecolor('black')
+    legend = cax.legend(
+        size_handles, size_labels,
+        loc='lower left',
+        bbox_to_anchor=(-0.5, 1.4),
+        ncol=1,
+        frameon=False,
+        title='Avg prop\n/ spot',
+        handletextpad=0.8,
+        labelspacing=0.5,
+        fontsize=10,
+        alignment='left'
+    )
+    legend.get_title().set_fontsize(10)
+    legend.get_title().set_fontweight('normal')
+    for txt in legend.get_texts():
+        txt.set_ha("left")
+    temp_ax.remove()
 
+# Add title
+title_y = bar_axs[0].get_position().y1 + 0.1
+plt.suptitle(f'All samples - Cell type distribution per annotation layer (z-score, horizontal layout)', 
+             x=0.5, y=title_y, fontweight='bold', fontsize=13)
 
-# --- Plot 1: Horizontal boxplot of B/T cell ratio in annotated spots
-
-# Columns to plot
-title_dict = {
-    'B_T_ratio_annotated': 'B/T cell ratio\n(TLS/aggregates)'
-}
-
-fig = plt.figure(figsize=(2, 2))
-
-# Create prevalence axis on the left
-prevalence_ax = fig.add_axes([0.08, 0.2, 0.6, 0.6])
-prevalence_ax.set_title(f'Prevalence', fontweight='bold', fontsize=10)
-
-# Plot the count bars horizontally
-sns.barplot(y=b_t_ratio_annotated_df['subtype'], x=b_t_ratio_annotated_df['n_annotated_spots'], hue=b_t_ratio_annotated_df['subtype'], 
-            ax=prevalence_ax, width=0.8, edgecolor='black', linewidth=1, order=sorted_subtypes, 
-            palette=color_dict, saturation=1, orient='h', err_kws={'color': 'black', 'linewidth': 1}, capsize=0.3)
-
-# Add stripplot to prevalence
-sns.stripplot(data=b_t_ratio_annotated_df, y='subtype', x='n_annotated_spots', color="black", 
-              order=sorted_subtypes, jitter=0.3, size=2, ax=prevalence_ax)
-
-# Adjust colors for prevalence bars
-for i, bar in enumerate(prevalence_ax.patches):
-    fill_color = bar.get_facecolor()
-    fill_color = list(fill_color)
-    darkened_color = fill_color.copy()
-    for j in range(len(darkened_color)-1):
-        darkened_color[j] *= 0.8
-    fill_color[-1] = alpha
-    bar.set_color(tuple(fill_color))
-    bar.set_edgecolor(tuple(darkened_color))
-
-prevalence_ax.set_xlabel('Prop. spots', fontsize=10)
-prevalence_ax.set_ylabel('')
-
-# Increase the xlim a bit
-xlim = prevalence_ax.get_xlim()
-prevalence_ax.set_xlim(0, xlim[1] * 1.1)
-
-# Create B/T ratio axis on the right (same width as prevalence)
-prevalence_pos = prevalence_ax.get_position()
-ratio_ax = fig.add_axes([prevalence_pos.x1 + 0.05, prevalence_pos.y0, prevalence_pos.width, prevalence_pos.height])
-
-# Create horizontal boxplot
-sns.boxplot(b_t_ratio_annotated_df, y='subtype', x='B_T_ratio_annotated', showfliers=False, linewidth=1, 
-            whiskerprops=whisker_props, medianprops=median_props, width=0.8, ax=ratio_ax, 
-            palette=color_dict, saturation=1, legend=False, hue='subtype', order=sorted_subtypes, 
-            orient='h', gap=0)
-
-# Add stripplot
-sns.stripplot(data=b_t_ratio_annotated_df, y='subtype', x='B_T_ratio_annotated', color="black", 
-              order=sorted_subtypes, jitter=0.3, size=2, ax=ratio_ax)
-
-# Adjust colors for B/T ratio boxes
-for i, bar in enumerate(ratio_ax.patches):
-    fill_color = bar.get_facecolor()
-    fill_color = list(fill_color)
-    darkened_color = fill_color.copy()
-    for j in range(len(darkened_color)-1):
-        darkened_color[j] *= 0.8
-    fill_color[-1] = alpha
-    bar.set_color(tuple(fill_color))
-    bar.set_edgecolor(tuple(darkened_color))
-
-# Set labels
-ratio_ax.set_ylabel('')
-ratio_ax.set_xlabel('log2(B/T cell ratio)', fontsize=10)
-ratio_ax.set_title(f'B/T cell ratio', fontweight='bold', fontsize=10)
-
-# Remove yticklabels from ratio axis
-ratio_ax.set_yticklabels([])
-
-# Draw vertical line at x=0
-ratio_ax.axvline(0, color='lightgray', linestyle='-', linewidth=4, zorder=0)
-
-# Set a shared title centered above the 2 axs
-title_x = (prevalence_pos.x0 + ratio_ax.get_position().x1) / 2
-title_y = prevalence_pos.y1 + 0.15
-fig.text(title_x, title_y, 'TLS/aggregates', 
-         ha='center', fontsize=12, fontweight='bold')
-
-# Add overall title
-title_x = (prevalence_pos.x0 + ratio_ax.get_position().x1) / 2
-title_y = prevalence_pos.y1 + 0.4
-plt.suptitle(f'All samples - B/T cell proportion in {annotations_of_interest}-annotated spots (annotation_level={level})', 
-            y=title_y, x=title_x, fontweight='bold', fontsize=12)
+# Add y-axis label
+axs[0].set_ylabel('Cell type', fontweight='bold', labelpad=10)
 
 
-# --- Save the output
+# --- Save the figure
 
-out_dir = os.path.join(project_dir, 'results', 'figures',)
+out_dir = os.path.join(res_dir, 'figures',)
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_1G.pdf'
 plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')
 
-
-# --- Finish
-
-print("Script successfully completed")
+print("Script succesfully completed")

@@ -24,9 +24,6 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 
-# Import custom functions
-from sophiesfunctions.save_multi_image import save_multi_image
-
 sc.set_figure_params(figsize=(8, 8), fontsize=20)
 mpl.rcParams['pdf.fonttype'] = 42
 
@@ -60,8 +57,10 @@ sample_id=args["sample_id"]
 res_dir = args['res_dir']
 project_dir = args['project_dir']
 
-# Import function script as a module
+# Import function scripts as modules
+sys.path.append(os.path.join(project_dir, 'scripts'))
 sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms'))
+from helper_functions import save_multi_image
 import plotting_functions
 
 
