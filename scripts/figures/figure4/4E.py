@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4E: cell type expression near HEVs for ligand-receptor interaction analysis
-# Shows expression of cell adhesion molecules in different cell types within perivascular regions
-# Identifies likely cellular interactions in HEV niches based on Visium LR pairs
+# Plot Figure 4E: adhesion-receptor expression across cell types near HEVs
+# Shows the scaled expression of the integrin / SPN / CD38 receptors that bind the
+# HEV-expressed adhesion ligands, across HEV-enriched cell types within <50um of HEVs
 
 # --- Define environment
 # env: xen-hev
@@ -19,6 +19,8 @@ import scanpy as sc
 
 import pandas as pd
 import numpy as np
+from scipy.spatial.distance import pdist
+from scipy.cluster.hierarchy import linkage, dendrogram, leaves_list
 
 import seaborn as sns
 
@@ -275,38 +277,6 @@ all_adata.obs_names_make_unique()
 
 # --- Some functions for plotting
 
-# Automatic resizing function
-def auto_resize_dotplot(ax, space_per_dot=0.1, width_ratio=1):
-    """
-    Automatically resize the dotplot axes based on the number of genes.
-    """
-    # Get the current position of the axes
-    pos = ax.get_position()
-    # Resize based on xticks & yticks
-    xticks = len(ax.get_xticks())
-    yticks = len(ax.get_yticks())
-    # Calculate new width based on number of genes
-    new_width = xticks * space_per_dot * width_ratio
-    new_height = yticks * space_per_dot
-    # Set the new position
-    ax.set_position([pos.x0, pos.y0, new_width, new_height])
-
-# Function for repositioning the dotplot axes
-def reposition_dotplot_axs(axs, y_offset=0.1):
-    for n, ax in enumerate(axs):
-        # Get the current position of the axes
-        pos = ax.get_position()
-        if n == 0:
-            ypos = pos.y0  # Keep the first plot at the original position
-        else:
-            ypos = ax_pos_prev.y0 - pos.height - y_offset  # Offset from the previous plot
-        # Set the new position with an offset
-        ax.set_position([pos.x0, ypos, pos.width, pos.height])
-        ax_pos_prev = ax.get_position()  # Store the position for the next iteration
-        # Remove the xticks for all but the last plot
-        if n < len(axs) - 1:
-            ax.set_xticks([])
-
 # Add legends
 def position_legend(ax):
     """
@@ -354,142 +324,6 @@ def add_color_legend(fig, labels, color_dict, title='', x=0, y=0, offset=0.01, s
     # Return updated vertical position for next stacked legend
     return legend
 
-def join_lr_multi(axs, lr_pairs, offset=0.3, offset_start=0.2):
-    """
-    Draws brackets connecting ligands and receptors, extending the bracket
-    further left if a ligand has multiple receptors or a receptor has
-    multiple ligands.
-
-    This version correctly handles labels that appear on multiple axes,
-    counting and offsetting them independently per axis.
-
-    Args:
-        axs (list | Axes): The matplotlib Axes object(s).
-        lr_pairs (list[tuple]): A list of (ligand, receptor) string pairs.
-        offset (float): Horizontal distance from the label's left edge to the end of the bracket.
-        offset_start (float): Horizontal distance from the longest label to the main vertical line.
-    """
-    if not isinstance(axs, (list, tuple, np.ndarray)):
-        axs = [axs]
-    # 1. Build a lookup that can handle labels on MULTIPLE axes.
-    # label_to_info['L1'] -> [{'ax': ax1, 'idx': 2, ...}, {'ax': ax2, 'idx': 4, ...}]
-    label_to_info = {}
-    all_labels = set(lr for pair in lr_pairs for lr in pair)
-    if not all_labels:
-        return 0
-    renderer = axs[0].get_figure().canvas.get_renderer()
-    for ax in axs:
-        inv = ax.transData.inverted()
-        for idx, label in enumerate(ax.get_yticklabels()):
-            text = label.get_text()
-            if text in all_labels:
-                if text not in label_to_info:
-                    label_to_info[text] = []
-                info = {
-                    'ax': ax,
-                    'idx': idx,
-                    'bbox': label.get_window_extent(renderer),
-                    'inv': inv
-                }
-                label_to_info[text].append(info)
-    # 2. Resolve pairs by finding common axes.
-    # A pair (L1, R1) is only valid if L1 and R1 are found on the same axis.
-    resolved_pairs = []
-    for lr1, lr2 in lr_pairs:
-        info_list1 = label_to_info.get(lr1, [])
-        info_list2 = label_to_info.get(lr2, [])
-        # Find all valid (L1, R1) instances on a common axis
-        for info1 in info_list1:
-            for info2 in info_list2:
-                if info1['ax'] == info2['ax']:
-                    resolved_pairs.append({
-                        'lr1': lr1,
-                        'lr2': lr2,
-                        'ax': info1['ax'],
-                        'info1': info1, # All info for lr1 (ax, idx, bbox, inv)
-                        'info2': info2  # All info for lr2 (ax, idx, bbox, inv)
-                    })
-    if not resolved_pairs:
-        return 0 # No valid pairs found
-    # 3. Count occurrences PER AXIS, using only resolved pairs.
-    ligand_counts_per_ax = {ax: {} for ax in axs}
-    receptor_counts_per_ax = {ax: {} for ax in axs}
-    for pair in resolved_pairs:
-        ax, lr1, lr2 = pair['ax'], pair['lr1'], pair['lr2']
-        ligand_counts_per_ax[ax].setdefault(lr1, 0)
-        receptor_counts_per_ax[ax].setdefault(lr2, 0)
-        ligand_counts_per_ax[ax][lr1] += 1
-        receptor_counts_per_ax[ax][lr2] += 1
-    # 4. Determine the main vertical alignment line (Global)
-    all_x0_coords = []
-    for pair in resolved_pairs:
-        all_x0_coords.append(pair['info1']['inv'].transform((pair['info1']['bbox'].x0, 0))[0])
-        all_x0_coords.append(pair['info2']['inv'].transform((pair['info2']['bbox'].x0, 0))[0])
-    if not all_x0_coords:
-        return 0
-    min_x0 = min(all_x0_coords)
-    x_left_align = min_x0 - offset_start - offset
-    # 5. Prepare for drawing with PER-AXIS seen counters.
-    ligand_seen_per_ax = {ax: {lig: 0 for lig in ax_counts} for ax, ax_counts in ligand_counts_per_ax.items()}
-    receptor_seen_per_ax = {ax: {rec: 0 for rec in ax_counts} for ax, ax_counts in receptor_counts_per_ax.items()}
-    drawn_verticals_per_ax = {ax: [] for ax in axs}
-    indent_step = offset * 2
-    # 6. Main drawing loop (using resolved pairs).
-    for pair in resolved_pairs:
-        # Get all resolved data for this specific pair instance
-        ax = pair['ax']
-        lr1, lr2 = pair['lr1'], pair['lr2']
-        info1, info2 = pair['info1'], pair['info2']
-        idx_lig, idx_rec = info1['idx'], info2['idx']
-        bbox_lig, bbox_rec = info1['bbox'], info2['bbox']
-        inv_lig, inv_rec = info1['inv'], info2['inv'] # inv_lig will equal inv_rec
-        # Calculate horizontal end-points
-        x_lig_end = inv_lig.transform((bbox_lig.x0, 0))[0] - offset
-        x_rec_end = inv_rec.transform((bbox_rec.x0, 0))[0] - offset
-        # Get PER-AXIS counts for vertical spread
-        n_total_lig = ligand_counts_per_ax[ax].get(lr1, 0)
-        n_total_rec = receptor_counts_per_ax[ax].get(lr2, 0)
-        n_seen_lig = ligand_seen_per_ax[ax].get(lr1, 0)
-        n_seen_rec = receptor_seen_per_ax[ax].get(lr2, 0)
-        # Calculate vertical positions (using per-axis counts)
-        y_spread_lig, y_spread_rec = 0.3, 0.3
-        y_lig_data = idx_lig + 0.5 + ((n_seen_lig - (n_total_lig - 1) / 2) * y_spread_lig if n_total_lig > 1 else 0)
-        y_rec_data = idx_rec + 0.5
-        if n_total_rec > 1:
-            order = (n_total_rec - 1) - n_seen_rec
-            y_rec_data += (order - (n_total_rec - 1) / 2) * y_spread_rec
-        # Iteratively find a non-overlapping x-position (per-axis check)
-        y_span = tuple(sorted((y_lig_data, y_rec_data)))
-        current_x = x_left_align
-        if n_total_lig > 1 or n_total_rec > 1:
-            current_x -= indent_step
-        drawn_verticals = drawn_verticals_per_ax[ax] # Check on common axis
-        while True:
-            has_overlap = any(
-                max(y_span[0], s['span'][0]) < min(y_span[1], s['span'][1])
-                for s in drawn_verticals if s['x'] == current_x
-            )
-            if not has_overlap:
-                x_left_draw = current_x
-                break
-            else:
-                current_x -= indent_step
-        # Draw the bracket on the common axis
-        x_points = [x_lig_end, x_left_draw, x_left_draw, x_rec_end]
-        y_points = [y_lig_data, y_lig_data, y_rec_data, y_rec_data]
-        ax.plot(x_points, y_points, color='black', linewidth=2, zorder=10, clip_on=False, solid_joinstyle='miter')
-        # Record the segment that was just drawn for this axis
-        drawn_verticals.append({'x': x_left_draw, 'span': y_span})
-        # Update seen counters PER AXIS
-        ligand_seen_per_ax[ax][lr1] += 1
-        receptor_seen_per_ax[ax][lr2] += 1
-    # 7. Collapse all drawn verticals to find the furthest point
-    all_drawn_verticals = [d for verticals in drawn_verticals_per_ax.values() for d in verticals]
-    if all_drawn_verticals:
-        furthest_x = min(d['x'] for d in all_drawn_verticals)
-    else:
-        furthest_x = x_left_align 
-    return furthest_x
 
 
 # --- Calculate slope based on mean proportions
@@ -544,137 +378,24 @@ plt.rcParams['axes.grid'] = False
 vmin = 0
 vmax = 1
 
-adhesion_genes = ['ICAM1', 'ICAM2', 'VCAM1', 'PECAM1', 'MCAM']
+# Adhesion receptors expressed by immune cells that bind the HEV-expressed adhesion
+# ligands, grouped by integrin family. Genes absent from the Xenium panel are dropped.
+receptor_families_dict = {
+    'β2-integrin\nfamily': ['ITGAL', 'ITGAX', 'ITGB2'],
+    'α4-integrin': ['ITGA4', 'ITGA9', 'ITGB1'],
+    'Non-integrin': ['SPN', 'CD38'],
+}
 
-lr_pairs = [('ICAM1', 'ITGAL'), ('ICAM1', 'ITGAX'), ('ICAM1', 'ITGB2'), ('ICAM1', 'SPN'), ('ICAM2', 'ITGAL'), ('ICAM2', 'ITGB2'), 
-            ('VCAM1', 'ITGA4'), ('VCAM1', 'ITGA9'), ('VCAM1', 'ITGB1'), ('VCAM1', 'ITGB2'), ('PECAM1', 'CD38'), ('MCAM', 'MCAM')]
-
-# Create a dict with all receptors per adhesion gene
-top_genes_dict = {}
-
-for gene in adhesion_genes:
-    receptors = [rec for lig, rec in lr_pairs if lig == gene]
-    # Sort receptors alphabetically
-    receptors = sorted(receptors)
-    # If gene is also in receptors, filter
-    if gene in receptors:
-        receptors = [rec for rec in receptors if rec != gene]
-    top_genes_dict[gene] = [gene] + receptors
-
-# Now also sort the lr_pairs based on the order in top_genes_dict
-sorted_lr_pairs = []
-for gene in adhesion_genes:
-    receptors = [rec for lig, rec in lr_pairs if lig == gene]
-    # Sort receptors alphabetically
-    receptors = sorted(receptors)
-    for rec in receptors:
-        sorted_lr_pairs.append((gene, rec))
-
-lr_pairs = sorted_lr_pairs
-
-if len(lr_pairs) == 0:
-    top_genes_dict = {'Adhesion genes': adhesion_genes}
-
-# Check if genes are in the object
-for zone, genes in top_genes_dict.items():
-    genes_present = [gene for gene in genes if gene in all_adata_filtered.var_names]
+for family, genes in receptor_families_dict.items():
+    genes_present = [g for g in genes if g in all_adata_filtered.var_names]
     if len(genes_present) < len(genes):
-        missing_genes = set(genes) - set(genes_present)
-        print(f'Warning: The following genes are missing from the data and will be skipped in the {zone} plot: {missing_genes}')
-    top_genes_dict[zone] = genes_present
+        print(f'Warning: Missing receptor genes in {family}: {set(genes) - set(genes_present)}')
+    receptor_families_dict[family] = genes_present
 
-# Also identify missing genes in lr_pairs
-for lig, rec in lr_pairs:
-    if lig not in all_adata_filtered.var_names:
-        print(f'Warning: Ligand {lig} is missing from the data and will be skipped in the ligand-receptor brackets.')
-        lr_pairs.remove((lig, rec))
-    if rec not in all_adata_filtered.var_names:
-        print(f'Warning: Receptor {rec} is missing from the data and will be skipped in the ligand-receptor brackets.')
-        lr_pairs.remove((lig, rec))
+receptor_genes = [g for genes in receptor_families_dict.values() for g in genes]
 
-lr_present = []
-# Filter LR pairs to only include those present in any list in top_genes_dict
-for zone, genes in top_genes_dict.items():
-    for lig, rec in lr_pairs:
-        if lig in genes and rec in genes:
-            lr_present.append((lig, rec))
-
-lr_pairs = lr_present
-
-n_keys = len(top_genes_dict)
-total_genes = sum([len(genes) for genes in top_genes_dict.values()])
-
-
-# --- Function to get heatmap values as a df
-
-def plot_heatmap(adata, ax, gene, annotation_key, vmin=0, vmax=1, last_ax=False, scale='var'):
-    dp = sc.pl.matrixplot(
-        adata,
-        var_names=gene,
-        groupby=annotation_key,
-        ax=ax,
-        cmap='viridis',
-        vmin=vmin,
-        vmax=vmax,
-        show=False,
-        swap_axes=True,
-        standard_scale=scale,
-    )
-    # Adjust the size of the axes
-    auto_resize_dotplot(dp['mainplot_ax'], space_per_dot=0.04, width_ratio=0.7)
-    heatmap_ax = dp['mainplot_ax']
-    # Adjust the ylims
-    buffer = 0
-    dp['mainplot_ax'].set_ylim(len(dp['mainplot_ax'].get_yticks()) + buffer, -buffer)
-    # If not the last plot, make all other axes invisible
-    if not last_ax:
-        for name, dp_ax in dp.items():
-            if not name == 'mainplot_ax':
-                dp_ax.set_visible(False)
-    cbar_ax = dp['color_legend_ax']
-    return heatmap_ax, cbar_ax
-
-def get_heatmap_values(all_adata, gene, level, all_bins, sorted_cell_types, mean_prop, nrows, vmin=0, vmax=None, scale='var'):
-    heatmap_values = pd.DataFrame(index=sorted_cell_types, columns=all_bins)
-    fig, axs = plt.subplots(ncols=1, nrows=nrows, figsize=(5, 5))
-    heatmap_axs = []
-    for i, n_bin in enumerate(all_bins):
-        ax = axs[i]
-        # Subset adata to bin 
-        adata_sub = all_adata[all_adata.obs['distance_bin'] == n_bin].copy()
-        heatmap_ax, cbar_ax = plot_heatmap(adata_sub, ax, gene, annotation_key=level, vmin=vmin, vmax=vmax, 
-                                            scale=scale, last_ax=False)
-        # Set bin as yticklabel
-        heatmap_ax.set_yticklabels([n_bin])
-        # Extract zscore df from plot
-        zscore_df = heatmap_ax.collections[0].get_array().reshape(-1, 1)
-        # Add to heatmap_values df
-        heatmap_values[n_bin] = zscore_df.flatten()
-        heatmap_ax.set_visible(False)
-    # Make long format
-    heatmap_values = heatmap_values.reset_index().melt(id_vars='index', var_name='distance_bin', value_name='z_score')
-    # Rename the first column
-    heatmap_values = heatmap_values.rename(columns={'index': 'cell_type'})
-    # Add the proportions to the zscore df
-    heatmap_values = heatmap_values.merge(mean_prop.melt(id_vars='distance_bin', var_name='cell_type', value_name='proportion'), on=['distance_bin', 'cell_type'])
-    # Close this figure
-    plt.close(fig)
-    return heatmap_values
-
-# Get the non adhesion molecule genes in top_genes_dict
-non_adhesion_genes = []
-for genes in top_genes_dict.values():
-    for gene in genes:
-        if gene not in adhesion_genes:
-            non_adhesion_genes.append(gene)
-
-# Get all unique genes in top_genes_dict
-unique_genes = set()
-for genes in top_genes_dict.values():
-    for gene in genes:
-        unique_genes.add(gene)
-
-unique_genes = sorted(list(unique_genes))
+# Genes scored in the pseudobulk matrixplot below
+unique_genes = receptor_genes
 
 
 # --- Define HEV cell types per annotation level
@@ -733,363 +454,212 @@ df = pd.DataFrame(
     columns=cell_types
 )
 
-# Calculate sum per cell type
-sum_df = df.loc[non_adhesion_genes,:].sum(axis=0).sort_values(ascending=False)
-
-# Sort cell types by sum
-sorted_cell_types_by_sum = sum_df.index.tolist()
-
-# Reorder the cell types in adata
-all_adata_sub.obs[level] = pd.Categorical(all_adata_sub.obs[level], categories=sorted_cell_types_by_sum, ordered=True)
+# Order cell types by cumulative scaled receptor expression
+sum_df_rec = df.loc[receptor_genes, :].sum(axis=0).sort_values(ascending=False)
+sorted_cell_types_by_sum_rec = sum_df_rec.index.tolist()
+sum_df_rec = pd.DataFrame(sum_df_rec, columns=['sum'])
 
 # Close the plot
 plt.close()
 
-# -- Make the actual plot
 
-ncols = 2
+# --- Receptors-only heatmap (Figure 4E)
+# The published panel shows only the receptors (integrins / SPN / CD38) that bind the
+# HEV-expressed adhesion ligands, not the ligands themselves. Receptor rows are
+# hierarchically clustered; cell-type columns are kept in cumulative-receptor-expression
+# order, with the HEV cell types fixed on the left.
+
 sum_cmap = 'Purples'
+slope_cmap = 'bwr'
 
-fig, axs = plt.subplots(ncols=ncols, nrows=len(top_genes_dict), figsize=(5, 5))
+# Cluster the receptor rows across all HEV-enriched (negative-slope) cell types
+other_cell_types = [ct for ct in sorted_cell_types_by_sum_rec if ct not in HEV_cell_types]
+all_neg_slope = HEV_cell_types + other_cell_types
 
-if n_keys == 1:
-    axs = [axs]
+if len(receptor_genes) >= 3 and len(all_neg_slope) >= 2:
+    row_matrix = df.loc[receptor_genes, all_neg_slope].values
+    row_linkage = linkage(pdist(row_matrix), method='average')
+    clustered_genes = [receptor_genes[i] for i in leaves_list(row_linkage)]
+else:
+    row_linkage = None
+    clustered_genes = receptor_genes
 
-heatmap_axs_HEV = []
-heatmap_axs = []
+# Layout parameters
+space_per_dot = 0.04
+row_dendro_size = space_per_dot          # row dendrogram width
+n_hev = len(HEV_cell_types)
+n_genes = len(clustered_genes)
+hev_width = n_hev * space_per_dot * 0.7
+heatmap_height = n_genes * space_per_dot
+hev_x = 0.32
+hev_y = 0.15
 
-# First plot just the HEVs
-for i, (zone, genes) in enumerate(top_genes_dict.items()):
-    # Use the first column for HEV cell types only
-    plot_df = df.loc[genes, HEV_cell_types]
-    ax = axs[i][0]
-    g = sns.heatmap(
-        plot_df,
-        ax=ax,
-        cmap='viridis',
-        vmin=vmin,
-        vmax=vmax,
-        cbar=False,
-        yticklabels=True,
-        xticklabels=True,
-        linewidths=1,
-        linecolor='gray',
-    )
-    # Adjust the size of the axes
-    auto_resize_dotplot(ax, space_per_dot=0.04, width_ratio=0.7)
-    # Adjust the ylims
-    buffer = 0
-    ax.set_ylim(len(ax.get_yticks()) + buffer, -buffer)
-    # Set spines visible
-    for spine in ax.spines.values():
-        spine.set_linewidth(1)  # Change to your preferred thickness
-        spine.set_visible(True)  # Change to your preferred thickness
-    # Make sure the yticklabels are not rotated
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
-    # Also make sure the xticklabels are rotated
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-    heatmap_axs_HEV.append(ax)
+# Major-lineage colours restricted to the lineages present among the plotted cell types
+major_cell_types_sorted_neg = [ct for ct in major_cell_types_sorted
+                               if ct in [get_major(cell, level=level) for cell in negative_slope_cell_types]]
 
-# Then plot the remaining cell types
-for i, (zone, genes) in enumerate(top_genes_dict.items()):
-    other_cell_types = [ct for ct in sorted_cell_types_by_sum if ct not in HEV_cell_types]
-    plot_df = df.loc[genes, other_cell_types]
-    ax = axs[i][1]
-    g = sns.heatmap(
-        plot_df,
-        ax=ax,
-        cmap='viridis',
-        vmin=vmin,
-        vmax=vmax,
-        cbar=False,
-        yticklabels=True,
-        xticklabels=True,
-        linewidths=1,
-        linecolor='gray',
-    )
-    # Adjust the size of the axes
-    auto_resize_dotplot(ax, space_per_dot=0.04, width_ratio=0.7)
-    # Adjust the ylims
-    buffer = 0
-    ax.set_ylim(len(ax.get_yticks()) + buffer, -buffer)
-    # Set spines visible
-    for spine in ax.spines.values():
-        spine.set_linewidth(1)  # Change to your preferred thickness
-        spine.set_visible(True)  # Change to your preferred thickness
-    # Remove yticks
-    ax.set_yticks([])
-    # Also make sure the xticklabels are rotated
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-    heatmap_axs.append(ax)
+fig = plt.figure(figsize=(6, 5))
 
-# Reposition the dotplot axes
-reposition_dotplot_axs(heatmap_axs, y_offset=0.01)
-reposition_dotplot_axs(heatmap_axs_HEV, y_offset=0.01)
+n_other = len(other_cell_types)
+other_width = n_other * space_per_dot * 0.7
 
-# Move the heatmap_axs right next to the HEV heatmaps
-for n, ax in enumerate(heatmap_axs):
-    pos_hev = heatmap_axs_HEV[n].get_position()
-    pos = ax.get_position()
-    ax.set_position([pos_hev.x1 + 0.01, pos.y0, pos.width, pos.height])
+# HEV heatmap (fixed on the left)
+hev_ax = fig.add_axes([hev_x, hev_y, hev_width, heatmap_height])
+sns.heatmap(
+    df.loc[clustered_genes, HEV_cell_types],
+    ax=hev_ax, cmap='viridis', vmin=vmin, vmax=vmax, cbar=False,
+    yticklabels=True, xticklabels=True, linewidths=1, linecolor='gray',
+)
+hev_ax.set_yticklabels(hev_ax.get_yticklabels(), rotation=0)
+hev_ax.set_xticklabels(hev_ax.get_xticklabels(), rotation=90)
+for spine in hev_ax.spines.values():
+    spine.set_linewidth(1); spine.set_visible(True)
 
-# Add a colorbar ax next to the last heatmap_ax
-cbar_ax = fig.add_axes([heatmap_axs[-1].get_position().x1 + 0.03, heatmap_axs[-1].get_position().y0, 0.04*4, 0.03])
+# Row dendrogram — placed to the left of the widest yticklabel of the HEV heatmap
+hev_left_edge = position_legend(hev_ax)[2]
+row_dendro_ax = fig.add_axes([hev_left_edge - row_dendro_size - 0.005, hev_y, row_dendro_size, heatmap_height])
+if row_linkage is not None:
+    dendrogram(row_linkage, ax=row_dendro_ax, orientation='left', no_labels=True,
+               color_threshold=-1, link_color_func=lambda k: 'black')
+    for coll in row_dendro_ax.collections:
+        coll.set_linewidth(0.6)
+row_dendro_ax.set_xticks([]); row_dendro_ax.set_yticks([])
+row_dendro_ax.invert_yaxis()
+for spine in row_dendro_ax.spines.values():
+    spine.set_visible(False)
 
-# Add colorbar to the new ax
-cbar = mpl.colorbar.ColorbarBase(cbar_ax, cmap='viridis', norm=mpl.colors.Normalize(vmin=vmin, vmax=vmax), orientation='horizontal')
+# Non-HEV heatmap (columns in gene-sum order, no clustering)
+other_x = hev_x + hev_width + 0.01
+other_ax = fig.add_axes([other_x, hev_y, other_width, heatmap_height])
+sns.heatmap(
+    df.loc[clustered_genes, other_cell_types],
+    ax=other_ax, cmap='viridis', vmin=vmin, vmax=vmax, cbar=False,
+    yticklabels=False, xticklabels=True, linewidths=1, linecolor='gray',
+)
+other_ax.set_yticks([])
+other_ax.set_xticklabels(other_ax.get_xticklabels(), rotation=90)
+for spine in other_ax.spines.values():
+    spine.set_linewidth(1); spine.set_visible(True)
 
-# Set xlim to vmin and vmax
+# Scaled expression colorbar
+cbar_ax = fig.add_axes([other_x + other_width + 0.03, hev_y,
+                        space_per_dot * 5 * 0.75, space_per_dot * 0.8 * 0.9])
+mpl.colorbar.ColorbarBase(cbar_ax, cmap='viridis',
+                          norm=mpl.colors.Normalize(vmin=vmin, vmax=vmax), orientation='horizontal')
 cbar_ax.set_xlim(vmin, vmax)
 cbar_ax.set_xticks([vmin, vmax])
 cbar_ax.set_xticklabels([f'{vmin:.1f}', f'{vmax:.1f}'])
 cbar_ax.set_title('Scaled expr.\nin group')
 
-# Position the cbar
-ax_pos = heatmap_axs[-1].get_position()
-space_per_dot = 0.04
-cbar_height = space_per_dot * 0.8
-cbar_width = space_per_dot * 5
-cbar_ax.set_position([ax_pos.x1 + 0.03, ax_pos.y0, cbar_width*0.75, cbar_height*0.9])
+# Slope / gene-sum / cell-count annotation rows above the heatmaps
+metadata_y0 = hev_y + heatmap_height + 0.01
+heatmap_positions = [(hev_x, hev_width, HEV_cell_types, True),
+                     (other_x, other_width, other_cell_types, False)]
 
-if len(lr_pairs) > 0:
-    # Join the ligand-receptor pairs
-    x_left_global = join_lr_multi(heatmap_axs_HEV, lr_pairs, offset=0.25)
-    # Draw rectangles from top to bottom of each ax
-    for n, ax in enumerate(heatmap_axs_HEV):
-        # Add vertical text
-        label = list(top_genes_dict.keys())[n]
-        face_color = 'lightskyblue'
-        # Convert x_left_global from data to figure coordinates
-        x_fig, _ = fig.transFigure.inverted().transform(ax.transData.transform((x_left_global, 0)))
-        pos = ax.get_position()
-        y0 = pos.y0
-        y1 = pos.y1
-        height = abs(y1 - y0)
-        width = 0.02  # Width in figure coordinates
-        x1 = x_fig - 0.02  # Center the rectangle on x_left_global
-        highlight_rect = mpl.patches.Rectangle(
-            (x1-width, y0), width, height,
-            transform=fig.transFigure,
-            facecolor=face_color,
-            edgecolor='black',
-            linewidth=0,
-            alpha=1
-        )
-        fig.patches.append(highlight_rect)
-        # Calculate midpoint y
-        y_text = (y0 + y1) / 2
-        x_text = x1-width - 0.01
-        if 'zone' in label:
-            label = label.replace(' zone', '\nzone')
-        fig.text(
-            x_text, y_text,
-            label,
-            ha='right', va='center',
-            color='black',
-        )
+all_slope_values = list(slope_dict[level].values())
+slope_vmax = max(abs(min(all_slope_values)), abs(max(all_slope_values)))
 
-# Add axs for slope for each column
-slope_cmap = 'bwr'
 slope_axs = []
-
-for i in range(ncols):
-    ref_ax = heatmap_axs_HEV[0] if i == 0 else heatmap_axs[0]
-    # Add an ax for slope
-    slope_ax = fig.add_axes([ref_ax.get_position().x0, ref_ax.get_position().y1 + 0.01, ref_ax.get_position().width, 0.04])
-    # Get the xticklabels from the last ax to ensure same order
-    last_ax = heatmap_axs_HEV[-1] if i == 0 else heatmap_axs[-1]
-    cell_type_order = [tick.get_text() for tick in last_ax.get_xticklabels()]
-    # Extract all values
-    all_values = [v for v in slope_dict[level].values()]
-    # Plot slopes as a heatmap
-    slope_values = [slope_dict[level][cell_type] for cell_type in cell_type_order]
-    slope_plot_df = pd.DataFrame(slope_values, index=cell_type_order, columns=['slope'])
-    vmax_cbar = max(abs(min(all_values)), abs(max(all_values)))
-    vmin_cbar = -vmax_cbar
-    sns.heatmap(slope_plot_df.T, ax=slope_ax, cmap=slope_cmap, cbar=False, annot=False, linewidths=1, linecolor='gray', yticklabels=False,
-                vmin=vmin_cbar, vmax=vmax_cbar)
-    # Remove xticks
+for x, width, cts, is_hev in heatmap_positions:
+    slope_ax = fig.add_axes([x, metadata_y0, width, 0.04])
+    slope_values = [slope_dict[level][ct] for ct in cts]
+    slope_plot_df = pd.DataFrame(slope_values, index=cts, columns=['slope'])
+    sns.heatmap(slope_plot_df.T, ax=slope_ax, cmap=slope_cmap, cbar=False, annot=False,
+                linewidths=1, linecolor='gray', yticklabels=False,
+                vmin=-slope_vmax, vmax=slope_vmax)
     slope_ax.set_xticks([])
-    # Add ytick with slope
-    if i == 0:
+    if is_hev:
         slope_ax.set_yticks([0.5])
         slope_ax.set_yticklabels(['Slope'], rotation=0, va='center')
-    # Set spines visible
     for spine in slope_ax.spines.values():
-        spine.set_linewidth(1)  # Change to your preferred thickness
-        spine.set_visible(True)  # Change to your preferred thickness
-    if i == ncols - 1:
-        # Add a cbar ax next to the slope_ax
-        cbar_ax_slope = fig.add_axes([slope_ax.get_position().x1 + 0.05, slope_ax.get_position().y0, cbar_ax.get_position().width, cbar_ax.get_position().height])
-        # Add colorbar to the new ax
-        cbar_slope = mpl.colorbar.ColorbarBase(cbar_ax_slope, cmap='bwr', norm=mpl.colors.Normalize(vmin=vmin_cbar, vmax=vmax_cbar), orientation='horizontal')
-        # Set xlim to actual min and ma
-        vmin_cbar = min(all_values)
-        vmax_cbar = 0
-        cbar_ax_slope.set_xlim(vmin_cbar, vmax_cbar)
-        cbar_ax_slope.set_xticks([vmin_cbar, vmax_cbar])
-        # Use scientific not
-        cbar_ax_slope.set_xticklabels([f'{vmin_cbar:.1e}', f'{vmax_cbar:.1e}'], fontsize=8)
+        spine.set_linewidth(1); spine.set_visible(True)
     slope_axs.append(slope_ax)
 
-# Then add an ax showing summed gene values
-sum_axs = []
+cbar_ax_slope = fig.add_axes([slope_axs[-1].get_position().x1 + 0.05, slope_axs[-1].get_position().y0,
+                              cbar_ax.get_position().width, cbar_ax.get_position().height])
+mpl.colorbar.ColorbarBase(cbar_ax_slope, cmap='bwr',
+                          norm=mpl.colors.Normalize(vmin=-slope_vmax, vmax=slope_vmax), orientation='horizontal')
+cbar_ax_slope.set_xlim(min(all_slope_values), 0)
+cbar_ax_slope.set_xticks([min(all_slope_values), 0])
+cbar_ax_slope.set_xticklabels([f'{min(all_slope_values):.1e}', '0'], fontsize=8)
 
-for i in range(ncols):
+sum_axs = []
+for i, (x, width, cts, is_hev) in enumerate(heatmap_positions):
     slope_ax = slope_axs[i]
-    # Add an ax for sum
-    sum_ax = fig.add_axes([slope_ax.get_position().x0, slope_ax.get_position().y1 + 0.01, slope_ax.get_position().width, 0.04])
+    sum_ax = fig.add_axes([x, slope_ax.get_position().y1 + 0.01, width, 0.04])
     sum_axs.append(sum_ax)
-    sum_df = pd.DataFrame(sum_df, index=sorted_cell_types_by_sum, columns=['sum'])
-    # Get the xticklabels from the last ax to ensure same order
-    last_ax = heatmap_axs_HEV[-1] if i == 0 else heatmap_axs[-1]
-    cell_type_order = [tick.get_text() for tick in last_ax.get_xticklabels()]
-    plot_sum_df = sum_df.reindex(cell_type_order)
-    max_sum = sum_df['sum'].max()
-    # Add heatmap for summed gene values
-    sns.heatmap(plot_sum_df.T, ax=sum_ax, cmap=sum_cmap, vmin=0, vmax=max_sum, cbar=False, annot=False, linewidths=1.3, linecolor='gray', yticklabels=False)
-    # Remove xticks
+    plot_sum_df = sum_df_rec.reindex(cts)
+    max_sum = sum_df_rec['sum'].max()
+    sns.heatmap(plot_sum_df.T, ax=sum_ax, cmap=sum_cmap, vmin=0, vmax=max_sum, cbar=False,
+                annot=False, linewidths=1.3, linecolor='gray', yticklabels=False)
     sum_ax.set_xticks([])
-    # Add ytick with 'Sum'
-    if i == 0:
+    if is_hev:
         sum_ax.set_yticks([0.5])
         sum_ax.set_yticklabels(['Gene sum'], rotation=0, va='center')
-    # Set spines visible
     for spine in sum_ax.spines.values():
-        spine.set_linewidth(1)  # Change to your preferred thickness
-        spine.set_visible(True)  # Change to your preferred thickness
-    if i == ncols - 1:
-        # Add cbar ax next to the sum_ax
-        cbar_ax_sum = fig.add_axes([sum_ax.get_position().x1 + 0.05, sum_ax.get_position().y0, cbar_ax.get_position().width, cbar_ax.get_position().height])
-        # Add colorbar to the new ax
-        vmax_cbar = sum_df['sum'].max()
-        cbar_sum = mpl.colorbar.ColorbarBase(cbar_ax_sum, cmap=sum_cmap, norm=mpl.colors.Normalize(vmin=0, vmax=vmax_cbar), orientation='horizontal')
-        # Set xlim to actual min and ma
-        vmin_cbar = 0
-        cbar_ax_sum.set_xlim(vmin_cbar, vmax_cbar)
-        cbar_ax_sum.set_xticks([vmin_cbar, vmax_cbar])
-        # Round to first decimal
-        cbar_ax_sum.set_xticklabels([f'{vmin_cbar:.1f}', f'{vmax_cbar:.1f}'], fontsize=8)
-        # Set the x axis at the top
-        cbar_ax_sum.xaxis.set_ticks_position('top')
+        spine.set_linewidth(1); spine.set_visible(True)
 
-# Add barplot showing total cell numbers on top of top heatmap ax
+max_sum_val = sum_df_rec['sum'].max()
+cbar_ax_sum = fig.add_axes([sum_axs[-1].get_position().x1 + 0.05, sum_axs[-1].get_position().y0,
+                            cbar_ax.get_position().width, cbar_ax.get_position().height])
+mpl.colorbar.ColorbarBase(cbar_ax_sum, cmap=sum_cmap,
+                          norm=mpl.colors.Normalize(vmin=0, vmax=max_sum_val), orientation='horizontal')
+cbar_ax_sum.set_xlim(0, max_sum_val)
+cbar_ax_sum.set_xticks([0, max_sum_val])
+cbar_ax_sum.set_xticklabels(['0.0', f'{max_sum_val:.1f}'], fontsize=8)
+cbar_ax_sum.xaxis.set_ticks_position('top')
+
 bar_axs = []
-
-for i in range(ncols):
-    top_ax = sum_axs[i]
-    bar_ax = plt.axes([0.1, 0.1, 0.2, 0.2])
+for i, (x, width, cts, is_hev) in enumerate(heatmap_positions):
+    sum_ax = sum_axs[i]
+    sum_ax_pos = sum_ax.get_position()
+    bar_ax = fig.add_axes([sum_ax_pos.x0, sum_ax_pos.y1 + 0.01, sum_ax_pos.width, sum_ax_pos.height * 3])
     bar_axs.append(bar_ax)
-    top_ax_pos = top_ax.get_position()
-    bar_ax.set_position([top_ax_pos.x0, top_ax_pos.y1 + 0.01, top_ax_pos.width, top_ax_pos.height*3])
-    # Get the xticklabels from the last ax to ensure same order
-    last_ax = heatmap_axs_HEV[-1] if i == 0 else heatmap_axs[-1]
-    cell_type_order = [tick.get_text() for tick in last_ax.get_xticklabels()]    # Get cell counts
-    cell_counts = all_adata_filtered.obs[level].value_counts().reindex(cell_type_order).fillna(0).astype(int)
-    # Plot bars
-    x = np.arange(len(cell_type_order))
-    # Extract colors for the sorted cells
-    color_list = [color_dict[cell] if cell in color_dict else 'lightgrey' for cell in cell_type_order]
-    bar_ax.bar(x, cell_counts[cell_type_order], color=color_list, linewidth=0.5, edgecolor='black')
-    # Set xlim same as heatmap
-    bar_ax.set_xlim(top_ax.get_xlim()[0] - 0.5, top_ax.get_xlim()[1] - 0.5)
-    # Set spines inivisible
+    cell_counts = all_adata_filtered.obs[level].value_counts().reindex(cts).fillna(0).astype(int)
+    x_pos = np.arange(len(cts))
+    color_list = [color_dict[c] if c in color_dict else 'lightgrey' for c in cts]
+    bar_ax.bar(x_pos, cell_counts[cts], color=color_list, linewidth=0.5, edgecolor='black')
+    bar_ax.set_xlim(sum_ax.get_xlim()[0] - 0.5, sum_ax.get_xlim()[1] - 0.5)
     bar_ax.spines['top'].set_visible(False)
     bar_ax.spines['right'].set_visible(False)
     bar_ax.spines['left'].set_visible(False)
-    # Remove xticks & yticks
-    bar_ax.set_xticks([])
-    bar_ax.set_yticks([])
-    # Annotate the bars with cell counts
-    for rect, count in zip(bar_ax.patches, cell_counts[cell_type_order]):
-        height = rect.get_height()
-        if height > 0:
-            # Divide by 1000 
-            # Round to 1 decimal
-            count = f'{count/1000:.1f}'
-            bar_ax.text(
-                rect.get_x() + rect.get_width() / 2, height + bar_ax.get_ylim()[1]*0.02,
-                f'{count}',
-                ha='center', va='bottom',
-                fontsize=7, rotation=90
-            )
+    bar_ax.set_xticks([]); bar_ax.set_yticks([])
+    for rect, count in zip(bar_ax.patches, cell_counts[cts]):
+        h = rect.get_height()
+        if h > 0:
+            bar_ax.text(rect.get_x() + rect.get_width() / 2,
+                        h + bar_ax.get_ylim()[1] * 0.02,
+                        f'{count/1000:.1f}',
+                        ha='center', va='bottom', fontsize=7, rotation=90)
 
-# Set equal ylim for both bar_axs
-max_ylim = max([bar_ax.get_ylim()[1] for bar_ax in bar_axs])
-for bar_ax in bar_axs:
-    bar_ax.set_ylim(0, max_ylim)
+max_ylim = max([b.get_ylim()[1] for b in bar_axs])
+for b in bar_axs:
+    b.set_ylim(0, max_ylim * 1.3)
 
-# Add a title
-bar_ax.set_title(f'Gene expression <{max_hev_dist}µm from HEVs', fontweight='bold', fontsize=10)
-if level_clean == 'subset':
-    bar_axs[0].set_title(f'HEV',)
-# Set top ax spien visible
+bar_axs[-1].set_title(f'Receptor expression <{max_hev_dist}µm from HEVs', fontweight='bold', fontsize=10)
+if level_clean in ['subset', 'minor']:
+    bar_axs[0].set_title('HEV')
 bar_axs[0].spines['top'].set_visible(True)
-
-# Add a color legend
-bottom_edge, top_edge, left_edge, right_edge = position_legend(cbar_ax)
-x_legend = left_edge
-
-bottom_edge, top_edge, left_edge, right_edge = position_legend(heatmap_axs[0])
-y_legend = top_edge - 0.03
-
-# Add legend only if minimum number of genes 
-# Filter major_cell_types_sorted to only those present in negative_slope_cell_types
-major_cell_types_sorted_neg = [ct for ct in major_cell_types_sorted if ct in [get_major(cell, level=level) for cell in negative_slope_cell_types]]
-
-if total_genes >= 7:
-    add_color_legend(
-        fig,
-        labels=major_cell_types_sorted_neg,
-        color_dict=color_dict,
-        title='',
-        x=x_legend,
-        y=y_legend,
-        offset=0.01,
-        spacing_per_label=0.025,
-        loc='upper left',
-        fontsize=8
-    )
-
-# Add ylabel
 bar_axs[0].set_ylabel('# cells\n(x10³)', fontsize=8)
 
-# Adjust the ylim to make space for the annotations
-for bar_ax in bar_axs:
-    bar_ax.set_ylim(0, bar_ax.get_ylim()[1]*1.3)
+# Major-type colour legend
+fig.canvas.draw()
+right_edges = [position_legend(cb_ax)[3] for cb_ax in [cbar_ax, cbar_ax_slope, cbar_ax_sum]]
+x_legend = max(right_edges)
+y_legend = sum_axs[-1].get_position().y1
 
-# If subset level, replace xticklabels of the last heatmap ax by the short names
+add_color_legend(
+    fig, labels=major_cell_types_sorted_neg, color_dict=color_dict, title='',
+    x=x_legend, y=y_legend, offset=0.01, spacing_per_label=0.025,
+    loc='upper left', fontsize=8,
+)
+
+# Replace subset-level cell-type labels with their short names
 if 'subset' in level:
-    last_heatmap_ax = heatmap_axs[-1]
-    xticklabels = last_heatmap_ax.get_xticklabels()
-    new_labels = []
-    for label in xticklabels:
-        cell_type = label.get_text()
-        if cell_type in miniatlas_sub_dict['miniatlas_subset_short']:
-            new_label = miniatlas_sub_dict['miniatlas_subset_short'][cell_type]
-        else:
-            new_label = cell_type
-        new_labels.append(new_label)
-    last_heatmap_ax.set_xticklabels(new_labels)
-    # Also for HEV heatmap
-    last_heatmap_ax_hev = heatmap_axs_HEV[-1]
-    xticklabels_hev = last_heatmap_ax_hev.get_xticklabels()
-    new_labels_hev = []
-    for label in xticklabels_hev:
-        cell_type = label.get_text()
-        if cell_type in miniatlas_sub_dict['miniatlas_subset_short']:
-            new_label = miniatlas_sub_dict['miniatlas_subset_short'][cell_type]
-        else:
-            new_label = cell_type
-        new_labels_hev.append(new_label)
-    last_heatmap_ax_hev.set_xticklabels(new_labels_hev)
-
-# Position the title
-bar_ax_pos = bar_axs[-1].get_position()
-title_x = (bar_ax_pos.x0 + bar_ax_pos.x1) / 2
-title_y = bar_ax_pos.y1 + 0.1
-
-plt.suptitle(f'All samples - Gene expression near (<{max_hev_dist}µm) HEVs', x=title_x, y=title_y, fontweight='bold')
+    for xtick_ax in [hev_ax, other_ax]:
+        new_labels = [miniatlas_sub_dict['miniatlas_subset_short'].get(label.get_text(), label.get_text())
+                      for label in xtick_ax.get_xticklabels()]
+        xtick_ax.set_xticklabels(new_labels)
 
 
 # --- Save the output

@@ -352,10 +352,10 @@ plt.suptitle(f'{sample_id} ({subtype}) - Distance to closest HEV niche (µm)', y
 df['HEV_in_TLS'] = df['HEV_group'].map(near_tls_dict)
 
 # Transfer the niche id if HEV is close to TLS
-df['HEV_group_TLS'] = df.apply(lambda row: row['HEV_group'] if row['HEV_in_TLS'] else np.NaN, axis=1)
+df['HEV_group_TLS'] = df.apply(lambda row: row['HEV_group'] if row['HEV_in_TLS'] else np.nan, axis=1)
 
 # Add column for HEVs not close to TLS
-df['HEV_group_not_TLS'] = df.apply(lambda row: row['HEV_group'] if not row['HEV_in_TLS'] else np.NaN, axis=1)
+df['HEV_group_not_TLS'] = df.apply(lambda row: row['HEV_group'] if not row['HEV_in_TLS'] else np.nan, axis=1)
 
 dist_close_df = calculate_distance(df[['x', 'y', 'HEV_group_TLS']].copy(), group_key='HEV_group_TLS', x_col='x', y_col='y')
 dist_far_df = calculate_distance(df[['x', 'y', 'HEV_group_not_TLS']].copy(), group_key='HEV_group_not_TLS', x_col='x', y_col='y')
