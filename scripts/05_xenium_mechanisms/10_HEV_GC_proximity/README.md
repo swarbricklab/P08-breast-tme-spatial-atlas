@@ -10,7 +10,7 @@ Stratify HEV endothelial cells by **proximity to a germinal centre (GC)** and te
 
 **`01_classify_HEV_by_GC_dist.py`** — for each intra-TLS HEV niche (`close_to_TLS`, ≤100 µm from a TLS), computes the centroid-to-centroid distance to the nearest GC bin and labels it close (≤500 µm) / far. Writes `{s}_intra_TLS_HEV_GC_dist.csv`. GC-negative samples yield an empty / all-far table.
 
-**`02_DEG_close_vs_far.py`** — pools ACKR1+ HEV endothelial cells across the GC-positive samples and, for each gene detected in ≥10 % of the pooled cells, tests close (≤500 µm) vs far log-norm expression by two-sided Mann-Whitney U + BH. The unit is the cell (≈795 close / 4021 far). Writes the per-gene table `DEG_close_vs_far.csv`.
+**`02_DEG_close_vs_far.py`** — pools ACKR1+ HEV endothelial cells across the GC-positive samples and, for each gene detected in ≥10 % of the pooled cells, tests close (≤500 µm) vs far log-norm expression by two-sided Mann-Whitney U + BH. The unit is the cell (the manuscript reports 795 close vs 4021 far). Writes the per-gene table `DEG_close_vs_far.csv`.
 
 **`03_volcano_dotplot.py`** — renders `DEG_close_vs_far.csv` as the **S10I** volcano (mean log-norm difference close − far vs −log10 BH-P; purple = higher close to GC, brown = lower, grey = ns; canonical HEV markers outlined + bold-labelled, all significant genes labelled via adjustText) and the **S10J** transposed dot plot of the significant genes (up-/down-close blocks, close vs far rows, dot size = % expressing, colour = per-gene-max mean expression). Runs on the `shapely` env because it needs `adjustText`.
 
