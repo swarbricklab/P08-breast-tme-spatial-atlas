@@ -18,8 +18,8 @@ shift 6 # need to shift so that the first 6 arguments are gone and I get only th
 samples=$@
 
 # Initialize Conda environment
-if [ -f /g/data/a56/conda/miniconda3/etc/profile.d/conda.sh ]; then
-  source /g/data/a56/conda/miniconda3/etc/profile.d/conda.sh
+if [ -f /g/data/a56/conda/miniconda/etc/profile.d/conda.sh ]; then
+  source /g/data/a56/conda/miniconda/etc/profile.d/conda.sh
 fi
 
 # load environment
