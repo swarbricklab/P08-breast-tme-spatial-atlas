@@ -1,0 +1,167 @@
+{
+  "type": "FeatureCollection",
+  "coordinate_space": "xenium_microns",
+  "note": "Macrophage-SPP1-outside-TLS zoom regions for S10E (sample P29_Xe5k). Polygon coordinates are Xenium native micron coordinates; the plotting script maps them to aligned-image pixels via the spatialdata image_space affine. These are the 4 regions kept in the manuscript (original regions 1,2,5,6 of 6).",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "classification": {
+          "name": "SPP1_macrophage_region",
+          "color": [
+            75,
+            0,
+            130
+          ]
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              5764.78755564068,
+              5655.699465397623
+            ],
+            [
+              5997.1947943617,
+              5655.699465397623
+            ],
+            [
+              5997.1947943617,
+              5888.1067041186425
+            ],
+            [
+              5764.78755564068,
+              5888.1067041186425
+            ],
+            [
+              5764.78755564068,
+              5655.699465397623
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "classification": {
+          "name": "SPP1_macrophage_region",
+          "color": [
+            75,
+            0,
+            130
+          ]
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              775.2646316516588,
+              6026.727059120026
+            ],
+            [
+              997.6639031550278,
+              6026.727059120026
+            ],
+            [
+              997.6639031550278,
+              6249.126330623394
+            ],
+            [
+              775.2646316516588,
+              6249.126330623394
+            ],
+            [
+              775.2646316516588,
+              6026.727059120026
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "classification": {
+          "name": "SPP1_macrophage_region",
+          "color": [
+            75,
+            0,
+            130
+          ]
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              542.0046194800402,
+              3081.2599975254793
+            ],
+            [
+              764.4038909834093,
+              3081.2599975254793
+            ],
+            [
+              764.4038909834093,
+              3303.6592690288503
+            ],
+            [
+              542.0046194800402,
+              3303.6592690288503
+            ],
+            [
+              542.0046194800402,
+              3081.2599975254793
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "classification": {
+          "name": "SPP1_macrophage_region",
+          "color": [
+            75,
+            0,
+            130
+          ]
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              4484.683658185641,
+              5299.178891756016
+            ],
+            [
+              4707.082929689011,
+              5299.178891756016
+            ],
+            [
+              4707.082929689011,
+              5521.578163259384
+            ],
+            [
+              4484.683658185641,
+              5521.578163259384
+            ],
+            [
+              4484.683658185641,
+              5299.178891756016
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}
