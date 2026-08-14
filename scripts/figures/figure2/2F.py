@@ -74,7 +74,7 @@ print(f'Number of samples: {len(sample_sheet)}')
 
 # --- Define TLS coordinates
 # Each TLS has: sample_id (new_sample_id from sample sheet), top_left coordinates, and width
-# Coordinates from original script subselection ['1', '4', '5', '6']
+# Coordinates for the TLS subselection ['1', '4', '5', '6']
 
 TLS_coords = {
     "1": {

@@ -58,7 +58,7 @@ sdata = xenium(path=raw_data_dir_sample, n_jobs=8, cells_as_circles=False, morph
 
 
 # --- Update the ids of the anndata object to match the cell_id
-# For some reason anndata.obs.index is a sequence of numbers rather than the cell_ids
+# anndata.obs.index comes through as a sequence of numbers rather than the cell_ids
 # Copy them over from the segmentation mask
 # If you don't do this you won't be able to plot anything on the segmentation mask because it won't know how to match
 # data from the anndata object to the segmentation mask

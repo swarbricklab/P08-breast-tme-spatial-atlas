@@ -315,8 +315,8 @@ radius_max = c*2
 # Round up to whole pixel
 radius_max = math.ceil(radius_max)
 
-# In theory this should work, but for some reason it doesn't in some areas??
-# Make it a bit larger and then it works on all spots
+# Enlarge the neighbour radius slightly so all spots are captured; the exact
+# radius occasionally misses spots near region boundaries.
 radius_max = radius_max * 1.1
 
 # Use squidpy to define which TLS-high spots are neighbors
@@ -413,7 +413,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - neighborhood graph of spots with {score
 
 sc.set_figure_params(fontsize=12, figsize=(6,6))
 
-# Need to convert to categorical otherwise it runs into an error for some reason
+# Convert to categorical to avoid a downstream plotting error
 adata_sub.obs[group_key] = adata_sub.obs[group_key].astype('category')
 
 sq.pl.spatial_scatter(adata_sub, color=group_key, img_alpha=1, crop_coord=coord_squidpy, title=f'{sample_id} - groups of spots >{threshold}', 
@@ -439,7 +439,7 @@ temp_df[group_key] = np.where(temp_df[group_key].isin(too_small), too_small_valu
 # Save singletons as separat df
 too_small = temp_df[temp_df[group_key] == too_small_value]
 
-# Remove the singletons for now
+# Remove the singletons
 temp_df = temp_df[temp_df[group_key] != too_small_value]
 
 # Update group names based on size
@@ -462,7 +462,7 @@ adata_sub.obs['group_too_small'] = group_too_small
 
 sc.set_figure_params(fontsize=12)
 
-# Need to convert to categorical otherwise it runs into an error for some reason
+# Convert to categorical to avoid a downstream plotting error
 adata_sub.obs['group_too_small'] = adata_sub.obs['group_too_small'].astype('category')
 
 sq.pl.spatial_scatter(adata_sub, color='group_too_small', img_alpha=0.5, crop_coord=coord_squidpy, title=f'{sample_id} - groups > {threshold}', shape='square',

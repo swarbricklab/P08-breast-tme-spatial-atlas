@@ -276,7 +276,7 @@ ax.legend(handles[::-1], labels[::-1], loc='best', handlelength=0.8,
 plt.suptitle(f'All samples - stlearn significant LR interactions top {top} by number of spots', y=1.2, x=0.5, fontweight='bold')
 
 
-# --- Plot 2b: Same as above but filtering collagens for now
+# --- Plot 2b: Same as above but filtering collagens
 
 # Filter out collagens bc they tend to be very high in number of spots
 collagen_pattern = r'COLLAG|COL1A|COL2A|COL'
@@ -408,8 +408,8 @@ for sample in sample_list:
     radius_max = c*2
     # Round up to whole pixel
     radius_max = math.ceil(radius_max)
-    # In theory this should work, but for some reason it doesn't in some areas??
-    # Make it a bit larger and then it works on all spots
+    # Enlarge the neighbour radius slightly so all spots are captured; the exact
+    # radius occasionally misses spots near region boundaries.
     radius_max = radius_max * 1.1
     # Use squidpy to define which TLS-high spots are neighbors
     sq.gr.spatial_neighbors(adata_sub, coord_type='generic', radius=(0, radius_max))
@@ -433,7 +433,7 @@ for sample in sample_list:
 
 
 # --- Plot 4: Spatial plot showing the new groupings
-# Check that nothing weird happened
+# Sanity-check the result
 
 plt.figure(figsize=(8*ncols, 7*nrows))
 

@@ -66,7 +66,7 @@ adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 
 # --- Load the coefficient file from andersson 2021
-# Note: ran the original file through find_synonyms_single.py to adapt the gene names to the Visium probe set names
+# Note: gene names in this coefficient file have been mapped to the Visium probe set names
 
 gene_list_dir = os.path.join(project_dir, 'resources/gene_lists', 'andersson_2021')
 

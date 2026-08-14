@@ -419,12 +419,12 @@ sorted_cell_types = slope_sorted_cell_types[level]
 all_adata_filtered.obs[level] = pd.Categorical(all_adata_filtered.obs[level], categories=sorted_cell_types, ordered=True)
 
 
-# --- Plot 2: Same as above but only cell types with negative slope
+# --- Restrict to the HEV-enriched (negative-slope) cell types
 
 negative_slope_cell_types = [cell for cell in sorted_cell_types if slope_dict[level][cell] < 0]
 all_adata_sub = all_adata_filtered[all_adata_filtered.obs[level].isin(negative_slope_cell_types)].copy()
 
-#  Plot 0: Make a heatmap to calculate total scores per cell type
+# Pseudobulk scaled-expression matrix (receptors x cell types) via matrixplot
 dp = sc.pl.matrixplot(
     all_adata_sub,
     var_names=unique_genes,

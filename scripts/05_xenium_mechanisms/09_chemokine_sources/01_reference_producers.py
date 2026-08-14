@@ -171,7 +171,7 @@ def expression_table(genes):
 
 def emit_producers(genes, name, expr_csv, prod_csv, pdf_name, legend_anchor):
     """For each threshold in MIN_PCT_EXPRS, write producer lists (over_<pct>/) + a dot plot.
-    `name` -> subdir under csv_files/ & plots/; file names preserved from the source so the
+    `name` -> subdir under csv_files/ & plots/; file names are kept stable so the
     downstream attribution / correlation scripts can read them unchanged."""
     res  = expression_table(genes)
     n    = len(subset_order)

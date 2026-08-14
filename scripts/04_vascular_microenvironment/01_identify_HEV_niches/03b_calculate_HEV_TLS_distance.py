@@ -147,7 +147,7 @@ temp_df[group_key] = np.where(temp_df[group_key].isin(too_small), too_small_valu
 # Save singletons as separat df
 too_small = temp_df[temp_df[group_key] == too_small_value]
 
-# Remove the singletons for now
+# Remove the singletons
 temp_df = temp_df[temp_df[group_key] != too_small_value]
 
 # Update group names based on size
