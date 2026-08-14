@@ -409,10 +409,10 @@ for score_name, filename in clusters_of_i.items():
 
     group_key = 'group'
 
-    # Need to convert to categorical otherwise it runs into an error for some reason
+    # Convert to categorical to avoid a downstream plotting error
     adata_sub.obs[group_key] = adata_sub.obs[group_key].astype('category')
 
-    # For some reason this doesn't work if just one spot
+    # This does not work when there is just one spot
     if len(adata_sub) > 1:
 
         sq.pl.spatial_scatter(adata_sub, color=group_key, connectivity_key="spatial_connectivities", edges_color="black", crop_coord=coord_squidpy,
@@ -487,7 +487,7 @@ for score_name, filename in clusters_of_i.items():
     # Save singletons as separat df
     too_small = temp_df[temp_df[group_key] == too_small_value]
 
-    # Remove the singletons for now
+    # Remove the singletons
     temp_df = temp_df[temp_df[group_key] != too_small_value]
 
     # Update group names based on size
@@ -561,7 +561,7 @@ for score_name, filename in clusters_of_i.items():
 
     # --- Plot 5: Groups after removing small groups
 
-    # Need to convert to categorical otherwise it runs into an error for some reason
+    # Convert to categorical to avoid a downstream plotting error
     adata_sub.obs['group_too_small'] = adata_sub.obs['group_too_small'].astype('category')
 
     sc.pl.spatial(adata_sub, color='group_too_small', size=spot_size, bw=False, alpha_img=1, crop_coord=coords, title=f'{sample_id} - GC-high spots', )

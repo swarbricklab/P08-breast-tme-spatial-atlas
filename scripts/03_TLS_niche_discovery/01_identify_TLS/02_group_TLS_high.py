@@ -326,7 +326,7 @@ temp_df['group'] = np.where(temp_df['group'].isin(singleton_groups), 'singleton'
 # Save singletons as separat df
 singletons = temp_df[temp_df['group'] == 'singleton']
 
-# Remove the singletons for now
+# Remove the singletons
 temp_df = temp_df[temp_df['group'] != 'singleton']
 
 # Update group names based on size

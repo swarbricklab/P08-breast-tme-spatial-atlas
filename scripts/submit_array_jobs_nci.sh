@@ -27,6 +27,7 @@ function_script_file="$cwd/$file_name" # actual python script to be run
 # Identify all from the sample sheet
 # Extract the section_id column
 samples=$(awk -F',' 'NR > 1 {print $3}' $visium_sample_sheet) 
+# samples="P29_HD"
 
 echo "Identified samples: $samples"
 
@@ -51,8 +52,8 @@ do
         -S /bin/bash \
         -P a56 \
         -q normal \
-        -o $log_dir/$s.out \
-        -e $log_dir/$s.err \
+        -o $log_dir/${name}_$s.out \
+        -e $log_dir/${name}_$s.err \
         -m a \
         -l walltime=01:00:00 \
         -l ncpus=$n_cores \

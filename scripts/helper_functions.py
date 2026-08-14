@@ -82,7 +82,7 @@ def auto_crop(adata, border_size=0.2):
 
     return coord_square
 
-# The function above doesn't work so well when the hires image is smaller than the area where spots were captured
+# The function above is less reliable when the hires image is smaller than the area where spots were captured
 # Squidpy doesn't support cropping outside of the hires image area so that way you miss a lot of spots
 # Therefore create an identical function that will work with scanpy, which does support cropping outside the image area
 

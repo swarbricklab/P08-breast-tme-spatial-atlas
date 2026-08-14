@@ -163,14 +163,8 @@ adata_ref.write(os.path.join(out_dir, adata_file))
 
 # --- Examine QC plots
 
-# Note: this plot doesn't seem to be plotted correctly, but not sure if I can do anything about it
-# Should be two separate plots but they're plotted on top of each other
-
-# mod.plot_QC()
-# plt.savefig(os.path.join(out_dir_plots, 'model_qc.pdf'))
-# plt.close()
-
-# Actually, take the source code to stop them being plotted on top of each other
+# cell2location's built-in mod.plot_QC() overlays its two QC panels on a single
+# axis; the panels are re-plotted separately below so each is legible.
 
 # Some default params
 summary_name = 'means'

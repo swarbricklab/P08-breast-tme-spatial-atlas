@@ -283,7 +283,7 @@ hires_factor = adata.uns['spatial'][sample_id]['scalefactors']['tissue_hires_sca
 
 # --- Define crop areas for zoomed views
 
-# Coordinates from original script (in full resolution pixels)
+# Coordinates in full-resolution pixels
 crop_coords = {
     'Primary follicle': [30862, 30900],
     'Secondary follicle': [35077, 18986],

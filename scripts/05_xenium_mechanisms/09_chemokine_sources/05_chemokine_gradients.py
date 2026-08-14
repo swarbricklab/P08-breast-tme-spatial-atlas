@@ -2,8 +2,8 @@
 
 # --- Aim
 # Figure S9H: spatial chemokine gradients moving out from the HEVs. For every
-# sample we extract density-vs-distance profiles (this is a merge of the source
-# extract + plot pair) and then aggregate them into the cohort figure.
+# sample we extract density-vs-distance profiles and aggregate them into the
+# cohort figure.
 #
 # The headline S9H figure shows, as a broken-axis profile (mean +/- s.e.m., n=6):
 #   LEFT  = distance from the HEV centre within the T cell zone

@@ -346,11 +346,11 @@ radius_max = c*2
 # Round up to whole pixel
 radius_max = math.ceil(radius_max)
 
-# In theory this should work, but for some reason it doesn't in some areas??
-# Make it a bit larger and then it works on all spots
+# Enlarge the neighbour radius slightly so all spots are captured; the exact
+# radius occasionally misses spots near region boundaries.
 radius_max = radius_max * 1.1
 
-# And stlearn doesn't want it in pixel coords for some reason
+# stlearn expects the radius in hires-image coordinates, so rescale it
 scalef = adata.uns['spatial'][sample_id]['scalefactors']['tissue_hires_scalef']
 radius_max = radius_max*scalef
 

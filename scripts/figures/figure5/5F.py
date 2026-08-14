@@ -532,7 +532,7 @@ genes = [gene for sublist in gene_dict.values() for gene in sublist]
 if gene_of_interest not in genes:
     genes.append(gene_of_interest)
     gene_dict['Other'] = [gene_of_interest]
-    LRI_genes.append(gene_of_interest) # Add it here for now too
+    LRI_genes.append(gene_of_interest) # Add it here too
 
 # Also add SPP1 to other if not already there
 if 'SPP1' not in genes:

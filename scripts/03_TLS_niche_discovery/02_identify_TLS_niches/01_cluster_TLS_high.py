@@ -305,7 +305,7 @@ plt.suptitle(f'All samples - PCA variance (n_comps={n_comps}, n_pcs={n_pcs}) - T
 
 sc.set_figure_params(scanpy=True, fontsize=10)
 
-# Note: this doesn't work with the SCT data because you can't save the PCs
+# Note: this is incompatible with the SCT data because the PCs cannot be saved
 if use_data == 'log_norm':
     dimensions_to_check=10
     plt.rcParams['figure.figsize']=(5, 5)
