@@ -8,6 +8,7 @@ This directory contains scripts and workflows for identifying, scoring, and char
   Initial TLS scoring and spatial grouping.
   - `01_run_TLS_model.py`: Apply the published TLS predictive model (Andersson et al., 2021) to Visium spots.
   - `02_group_TLS_high.py`: Visualize and group spatially contiguous regions with high TLS scores.
+  - `03_TLS_spatial_organization/`: Characterise discrete TLS across the cohort — number, size, spatial clustering (DBSCAN) and tumour topology (intratumoral / peritumoral / stromal-distant). Reproduces **Figure S3B**. See its [README](01_identify_TLS/03_TLS_spatial_organization/README.md).
 
 - **02_identify_TLS_niches/**  
   Refined clustering and identification of internal TLS architectures.
