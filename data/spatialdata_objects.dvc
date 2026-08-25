@@ -1,6 +1,39 @@
+md5: 2d16e5b6c7443c93fd04f735d765e286
+frozen: true
+deps:
+- hash: md5
+  path: zenodo://10.5281/zenodo.18917100/spatialdata_objects.zip
+  fs_config:
+    extract_zips: 'true'
+  files:
+  - relpath: xenium/P17_Xe5k.zip
+    md5: 6b9780b03b7ccfba15d77ff27195a4a3
+    size: 4065046386
+    version_id: 4108cdaca4b0dda64cddc5aa9025ef51:85df0b3e
+  - relpath: xenium/P22_Xe5k.zip
+    md5: 16fe723f89ea8a8c212c46830e1c88ce
+    size: 3644477611
+    version_id: 4108cdaca4b0dda64cddc5aa9025ef51:f7d0d6d2
+  - relpath: xenium/P24_Xe5k.zip
+    md5: c1ce42aa8c623ca6bc71ca23479ae193
+    size: 2220678190
+    version_id: 4108cdaca4b0dda64cddc5aa9025ef51:a7235407
+  - relpath: xenium/P26_Xe5k.zip
+    md5: d01db64be0ebba73d7a7a00398bb8055
+    size: 4821696420
+    version_id: 4108cdaca4b0dda64cddc5aa9025ef51:b935d2ef
+  - relpath: xenium/P29_Xe5k.zip
+    md5: 1c12077c49e15e82e292b71e7344b6a6
+    size: 5636409105
+    version_id: 4108cdaca4b0dda64cddc5aa9025ef51:a46e6549
+  - relpath: xenium/P32_Xe5k.zip
+    md5: d729f8c45bcce41899760238f5fea9d5
+    size: 7777978538
+    version_id: 4108cdaca4b0dda64cddc5aa9025ef51:53075d37
 outs:
-- md5: eed6cadd2d89fdfe2167ab252a1ca3f5.dir
-  size: 28166484532
+- md5: 9619368410ff0ef31c543abba0848e81.dir
+  size: 28166286250
   nfiles: 6
   hash: md5
   path: spatialdata_objects
+  push: false
