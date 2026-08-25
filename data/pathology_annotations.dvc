@@ -243,5 +243,5 @@ outs:
   size: 106357723
   nfiles: 58
   hash: md5
-  path: pathology_annotatios
+  path: pathology_annotations
   push: false
