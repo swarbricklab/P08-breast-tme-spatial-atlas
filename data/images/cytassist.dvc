@@ -1,0 +1,14 @@
+md5: d7021b242585d93be2202aa2a9a536cd
+frozen: true
+deps:
+- md5: 5856d41ebe7ed4e9570fe404672c0cbe.dir
+  size: 1133421835
+  nfiles: 44
+  hash: md5
+  path: bia://S-BIAD3080/images/cytassist
+outs:
+- hash: md5
+  path: cytassist
+  md5: 5856d41ebe7ed4e9570fe404672c0cbe.dir
+  size: 1133421835
+  nfiles: 44
