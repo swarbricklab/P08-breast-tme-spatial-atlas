@@ -1,11 +1,11 @@
-md5: 7441fe761733d0659e35da987a28410f
+md5: f6cb613687d6829947ecc64177247a85
 frozen: true
 deps:
 - md5: c93c065668831c7ce6d355747abfa4e6.dir
   size: 426401647068
   nfiles: 18
   hash: md5
-  path: bia://S-BIAD3080/images/ihc
+  path: chiro://data/images/manifests/ihc.chiro.json
 outs:
 - hash: md5
   path: ihc

@@ -1,0 +1,235 @@
+{
+  "schema": "chirograph",
+  "schema_version": "1.1",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "S-BIAD3080/images/cytassist",
+  "concept": "biostudies:S-BIAD3080/images/cytassist",
+  "created": "2026-09-06T21:50:04Z",
+  "generator": "chirograph 0.1.0",
+  "size": 1133421835,
+  "nfiles": 44,
+  "body_hash": "297bf449b9b927be7b28ba1063578c7e",
+  "files": [
+    {
+      "relpath": "visium/P01_Vis_cytassist.tif",
+      "md5": "5b0035641de10131bc72d39aa69fd848",
+      "size": 25684803
+    },
+    {
+      "relpath": "visium/P02_Vis_cytassist.tif",
+      "md5": "567a26bc8598cd2605e5d9b66a2f07cd",
+      "size": 28918433
+    },
+    {
+      "relpath": "visium/P03_Vis_cytassist.tif",
+      "md5": "e7b3df5249e9c433e6c3c60dc62d0200",
+      "size": 22429428
+    },
+    {
+      "relpath": "visium/P04_Vis_cytassist.tif",
+      "md5": "4c94dc5e653c52c16c0d2aaaf86c0275",
+      "size": 29302171
+    },
+    {
+      "relpath": "visium/P05_Vis_cytassist.tif",
+      "md5": "16819bd707357dccdd3092229264328e",
+      "size": 27818951
+    },
+    {
+      "relpath": "visium/P06_Vis_cytassist.tif",
+      "md5": "236ed7d28b20a142c57b115414cd3e85",
+      "size": 24236267
+    },
+    {
+      "relpath": "visium/P07_Vis_cytassist.tif",
+      "md5": "bd4f808e8d5407338f1c43304ef63b66",
+      "size": 27126553
+    },
+    {
+      "relpath": "visium/P08_Vis_cytassist.tif",
+      "md5": "e85327294975f8e1050ba363cf4538f7",
+      "size": 26487569
+    },
+    {
+      "relpath": "visium/P09_Vis_cytassist.tif",
+      "md5": "27d9e6b8187b8ed9895350ad8e819899",
+      "size": 25274499
+    },
+    {
+      "relpath": "visium/P10_Vis_cytassist.tif",
+      "md5": "08047964ca3e43a3e04339143cce4d0e",
+      "size": 25180541
+    },
+    {
+      "relpath": "visium/P11_Vis_cytassist.tif",
+      "md5": "9721829232ca9e6ccbecafef255f27c4",
+      "size": 26324123
+    },
+    {
+      "relpath": "visium/P12_LN_Vis_cytassist.tif",
+      "md5": "38aab6f74c2579b81e7ba5294d5abb9d",
+      "size": 20948856
+    },
+    {
+      "relpath": "visium/P12_Vis_cytassist.tif",
+      "md5": "3c10624819834eaf17e63e2a6322d80b",
+      "size": 21627603
+    },
+    {
+      "relpath": "visium/P13_Vis_cytassist.tif",
+      "md5": "d69a37e6bbc9884e2ec00de55a693e57",
+      "size": 27372707
+    },
+    {
+      "relpath": "visium/P14_Vis_cytassist.tif",
+      "md5": "a11dd03586be469241d127793f11ee9e",
+      "size": 23996460
+    },
+    {
+      "relpath": "visium/P15_Vis_cytassist.tif",
+      "md5": "59b630abfb0d33c6d0f49f340939fa6d",
+      "size": 27233409
+    },
+    {
+      "relpath": "visium/P16_Vis_cytassist.tif",
+      "md5": "1cc6b220073840e613e71a60d4ac7698",
+      "size": 25696511
+    },
+    {
+      "relpath": "visium/P17_Vis_cytassist.tif",
+      "md5": "84df0b7d75f394d4f84765cf2d9bdd24",
+      "size": 27256939
+    },
+    {
+      "relpath": "visium/P18_Vis_cytassist.tif",
+      "md5": "05bb9374d662bfa79f6c4a39f90cff01",
+      "size": 28964743
+    },
+    {
+      "relpath": "visium/P19_Vis_cytassist.tif",
+      "md5": "b114b510c9b5a539410922b8ac06539a",
+      "size": 26059897
+    },
+    {
+      "relpath": "visium/P20_Vis_cytassist.tif",
+      "md5": "34adffedacabbb49683b7df3f8af0e2e",
+      "size": 25250013
+    },
+    {
+      "relpath": "visium/P21_Vis_cytassist.tif",
+      "md5": "2ef2c6682e9c188636f99ecb0ebd0877",
+      "size": 27287913
+    },
+    {
+      "relpath": "visium/P22_Vis_cytassist.tif",
+      "md5": "6d21dd1f89327a4ccec4ee5eece723c9",
+      "size": 28354903
+    },
+    {
+      "relpath": "visium/P23_Vis_cytassist.tif",
+      "md5": "f1e70fa5a358b1708416a8b6cb656240",
+      "size": 23039533
+    },
+    {
+      "relpath": "visium/P24_Vis_cytassist.tif",
+      "md5": "2c36481d72eaee6a320c70cb41112f21",
+      "size": 25885409
+    },
+    {
+      "relpath": "visium/P25_LN_Vis_cytassist.tif",
+      "md5": "ba4358ebde9532f7d496bedc74028a74",
+      "size": 19803554
+    },
+    {
+      "relpath": "visium/P25_Vis_cytassist.tif",
+      "md5": "be7fe903c4f5ccb93b77750e9f67fc49",
+      "size": 25182143
+    },
+    {
+      "relpath": "visium/P26_LN_Vis_cytassist.tif",
+      "md5": "93632c1bbf128653b490463f017c31cc",
+      "size": 23676100
+    },
+    {
+      "relpath": "visium/P26_Vis_cytassist.tif",
+      "md5": "b92cbea89552681d8ea5db058002bbc3",
+      "size": 23521463
+    },
+    {
+      "relpath": "visium/P27_LN_Vis_cytassist.tif",
+      "md5": "59f6954eb20e3599e29776fd0f6e2df4",
+      "size": 21046124
+    },
+    {
+      "relpath": "visium/P27_Vis_cytassist.tif",
+      "md5": "678ab55c301a63104e0ce3ef15cc6078",
+      "size": 27618409
+    },
+    {
+      "relpath": "visium/P28_LN_Vis_cytassist.tif",
+      "md5": "0708efbcd2209801498391277aef34e8",
+      "size": 22271232
+    },
+    {
+      "relpath": "visium/P28_Vis_cytassist.tif",
+      "md5": "336951bda819ae074a10b074e2263af7",
+      "size": 25625281
+    },
+    {
+      "relpath": "visium/P29_LN_Vis_cytassist.tif",
+      "md5": "7d0370d1b894961cbde9859b8bc5dd49",
+      "size": 21543638
+    },
+    {
+      "relpath": "visium/P29_Vis_Rep1_cytassist.tif",
+      "md5": "8151f9c0b06aa9558739150339b0a0eb",
+      "size": 27945419
+    },
+    {
+      "relpath": "visium/P29_Vis_Rep2_cytassist.tif",
+      "md5": "9ddf1431b0d200352e61ff0c4508dd97",
+      "size": 27683291
+    },
+    {
+      "relpath": "visium/P30_Vis_cytassist.tif",
+      "md5": "6eb930a193667f1badb3d7c8a886ec15",
+      "size": 23015051
+    },
+    {
+      "relpath": "visium/P31_Vis_cytassist.tif",
+      "md5": "0a45a6f18575e82de23f9f36b205c0c7",
+      "size": 28022877
+    },
+    {
+      "relpath": "visium/P32_LN_Vis_cytassist.tif",
+      "md5": "a7a4cd77ce4333574583d2e67326834d",
+      "size": 22448010
+    },
+    {
+      "relpath": "visium/P32_Vis_cytassist.tif",
+      "md5": "5b3c77d0a11022cc824355567d467420",
+      "size": 24758339
+    },
+    {
+      "relpath": "visium_hd/P26_HD_cytassist.tif",
+      "md5": "f2c5f42b96ce6e67001436fb8421806b",
+      "size": 28501011
+    },
+    {
+      "relpath": "visium_hd/P27_HD_cytassist.tif",
+      "md5": "72097df3d409d61d5bdb2a714799869d",
+      "size": 31165189
+    },
+    {
+      "relpath": "visium_hd/P29_HD_cytassist.tif",
+      "md5": "72bf058deb37b9786a20b9c14b5e6919",
+      "size": 31016973
+    },
+    {
+      "relpath": "visium_hd/P32_HD_cytassist.tif",
+      "md5": "48ad36184ee010318d669a4b28573e4d",
+      "size": 30819497
+    }
+  ]
+}

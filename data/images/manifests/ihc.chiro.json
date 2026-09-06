@@ -1,0 +1,105 @@
+{
+  "schema": "chirograph",
+  "schema_version": "1.1",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "S-BIAD3080/images/ihc",
+  "concept": "biostudies:S-BIAD3080/images/ihc",
+  "created": "2026-09-06T21:50:11Z",
+  "generator": "chirograph 0.1.0",
+  "size": 426401647068,
+  "nfiles": 18,
+  "body_hash": "bd24d37e43ac14e4c8c3cf7293c3d17d",
+  "files": [
+    {
+      "relpath": "P17_STING.ome.tif",
+      "md5": "5b1b83ec6bb8558f75e6874a24644d97",
+      "size": 27446017940
+    },
+    {
+      "relpath": "P17_cGAS.ome.tif",
+      "md5": "0931dc586fd029b2c7d917e7a8721574",
+      "size": 28329505641
+    },
+    {
+      "relpath": "P17_pTBK1.ome.tif",
+      "md5": "a76e53805f9aa8a1e1ae2e26de16d03d",
+      "size": 26664577315
+    },
+    {
+      "relpath": "P22_STING.ome.tif",
+      "md5": "b52012636d2bb63967d8d19ac7294798",
+      "size": 20459244891
+    },
+    {
+      "relpath": "P22_cGAS.ome.tif",
+      "md5": "2a211049fb29ad33712f4ca6ea86b557",
+      "size": 20119387102
+    },
+    {
+      "relpath": "P22_pTBK1.ome.tif",
+      "md5": "bf96731486d0b29bce01d5d1229a3276",
+      "size": 20522640066
+    },
+    {
+      "relpath": "P24_STING.ome.tif",
+      "md5": "5b2aac6da0616fd48914262a73d752ef",
+      "size": 20884987963
+    },
+    {
+      "relpath": "P24_cGAS.ome.tif",
+      "md5": "02eaca9ccc1e5f1bb8b5347a207bd35e",
+      "size": 18841530612
+    },
+    {
+      "relpath": "P24_pTBK1.ome.tif",
+      "md5": "b1080cda03840e51f9752b754cd116a7",
+      "size": 20903421782
+    },
+    {
+      "relpath": "P26_STING.ome.tif",
+      "md5": "1ce6e4d7ab448ed9c843d9757a97429c",
+      "size": 18360990617
+    },
+    {
+      "relpath": "P26_cGAS.ome.tif",
+      "md5": "15e214a0d7a5196a24091244a130cc77",
+      "size": 18273038885
+    },
+    {
+      "relpath": "P26_pTBK1.ome.tif",
+      "md5": "04f71d491f47928198925fa263208c87",
+      "size": 17974205248
+    },
+    {
+      "relpath": "P29_STING.ome.tif",
+      "md5": "9a88c572ead268f897c029cd75ca8a42",
+      "size": 25649355752
+    },
+    {
+      "relpath": "P29_cGAS.ome.tif",
+      "md5": "c0abe4df1786e131c44641cb6d2fccea",
+      "size": 26117240866
+    },
+    {
+      "relpath": "P29_pTBK1.ome.tif",
+      "md5": "e76c8dff05841d75cccb85e5c406ae77",
+      "size": 25919181941
+    },
+    {
+      "relpath": "P32_STING.ome.tif",
+      "md5": "f0fd759017e3d9056c3feb5b946adbc2",
+      "size": 30219768684
+    },
+    {
+      "relpath": "P32_cGAS.ome.tif",
+      "md5": "b5cce852c93b2b4a0560b1fa27298b13",
+      "size": 29747182499
+    },
+    {
+      "relpath": "P32_pTBK1.ome.tif",
+      "md5": "b2329cfd4ef02fb6482cb3a15fda6958",
+      "size": 29969369264
+    }
+  ]
+}
