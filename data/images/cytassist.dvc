@@ -1,11 +1,11 @@
-md5: 31528938089d56f4a4b41337c172eae8
+md5: b66f77d041c0b845573605f9fb65e6cd
 frozen: true
 deps:
 - md5: 5856d41ebe7ed4e9570fe404672c0cbe.dir
   size: 1133421835
   nfiles: 44
   hash: md5
-  path: chiro://data/images/manifests/cytassist.chiro.json
+  path: chiro://md5:f1afc1927bd0d5e960c830b7552e8673
 outs:
 - hash: md5
   path: cytassist

@@ -1,11 +1,11 @@
-md5: e0be05108c9dd72c65842d6135b7435d
+md5: a649793e4088b0284be0a80b1f3baf8d
 frozen: true
 deps:
 - md5: 065742665d1e6ce8316329ed2e075262.dir
   size: 431298554487
   nfiles: 91
   hash: md5
-  path: chiro://data/images/manifests/he.chiro.json
+  path: chiro://md5:8180bc4ad081899d5eab47e7981bf349
 outs:
 - hash: md5
   path: he
