@@ -1,0 +1,429 @@
+{
+  "schema": "chirograph",
+  "schema_version": "2.0",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "18917100",
+  "concept": "doi:10.5281/zenodo.18917099",
+  "source_url": "zenodo://10.5281/zenodo.18917100/pathology_annotations.zip",
+  "created": "2026-09-08T01:54:27Z",
+  "generator": "chirograph 0.1.0",
+  "size": 106357723,
+  "nfiles": 58,
+  "body_hash": "12caf8b000108d2b3af4911ff8ed162c",
+  "containers": [
+    {
+      "source_root": "pathology_annotations.zip",
+      "format": "zip",
+      "md5": "8aad4ad7fac5f18749e9000111bb3fc8"
+    }
+  ],
+  "files": [
+    {
+      "relpath": "visium/P01_Vis_pathology_annotations.csv",
+      "md5": "5aba8e8eb76d0f784623e8aca811a4d4",
+      "size": 265392,
+      "source_path": "pathology_annotations.zip/visium/P01_Vis_pathology_annotations.csv",
+      "crc32": "df2441b0"
+    },
+    {
+      "relpath": "visium/P02_Vis_pathology_annotations.csv",
+      "md5": "c165c0ca252a01ea1ffef284204cc911",
+      "size": 233501,
+      "source_path": "pathology_annotations.zip/visium/P02_Vis_pathology_annotations.csv",
+      "crc32": "b088aa3e"
+    },
+    {
+      "relpath": "visium/P03_Vis_pathology_annotations.csv",
+      "md5": "c0a6366d089b546556f0fff53bcb5985",
+      "size": 201198,
+      "source_path": "pathology_annotations.zip/visium/P03_Vis_pathology_annotations.csv",
+      "crc32": "635ab237"
+    },
+    {
+      "relpath": "visium/P04_Vis_pathology_annotations.csv",
+      "md5": "482f948f2084c6c76bcfffd6672d70c2",
+      "size": 242375,
+      "source_path": "pathology_annotations.zip/visium/P04_Vis_pathology_annotations.csv",
+      "crc32": "e104997e"
+    },
+    {
+      "relpath": "visium/P05_Vis_pathology_annotations.csv",
+      "md5": "82b68582813277533b0b8c77de5f9ec7",
+      "size": 232630,
+      "source_path": "pathology_annotations.zip/visium/P05_Vis_pathology_annotations.csv",
+      "crc32": "697cbdbd"
+    },
+    {
+      "relpath": "visium/P06_Vis_pathology_annotations.csv",
+      "md5": "428547cfde5311c3786ab29e41934c57",
+      "size": 200309,
+      "source_path": "pathology_annotations.zip/visium/P06_Vis_pathology_annotations.csv",
+      "crc32": "b42854eb"
+    },
+    {
+      "relpath": "visium/P07_Vis_pathology_annotations.csv",
+      "md5": "669037db025d957cb7ad685bd09558c7",
+      "size": 233453,
+      "source_path": "pathology_annotations.zip/visium/P07_Vis_pathology_annotations.csv",
+      "crc32": "282cf7f0"
+    },
+    {
+      "relpath": "visium/P08_Vis_pathology_annotations.csv",
+      "md5": "fc94cbd1f6a16454285eab908a45337c",
+      "size": 237314,
+      "source_path": "pathology_annotations.zip/visium/P08_Vis_pathology_annotations.csv",
+      "crc32": "bcf5e67c"
+    },
+    {
+      "relpath": "visium/P09_Vis_pathology_annotations.csv",
+      "md5": "e912d059f13b94fa32f09b092dd8c895",
+      "size": 227728,
+      "source_path": "pathology_annotations.zip/visium/P09_Vis_pathology_annotations.csv",
+      "crc32": "4153397d"
+    },
+    {
+      "relpath": "visium/P10_Vis_pathology_annotations.csv",
+      "md5": "ac2c5c1cb18771c20a27c4b9841828a3",
+      "size": 587398,
+      "source_path": "pathology_annotations.zip/visium/P10_Vis_pathology_annotations.csv",
+      "crc32": "801e377d"
+    },
+    {
+      "relpath": "visium/P11_Vis_pathology_annotations.csv",
+      "md5": "5adc13892a921302e26683319d2dcc20",
+      "size": 711278,
+      "source_path": "pathology_annotations.zip/visium/P11_Vis_pathology_annotations.csv",
+      "crc32": "fcfe1aca"
+    },
+    {
+      "relpath": "visium/P12_Vis_pathology_annotations.csv",
+      "md5": "a33a327c0601812d4186a44981b0e6f8",
+      "size": 413348,
+      "source_path": "pathology_annotations.zip/visium/P12_Vis_pathology_annotations.csv",
+      "crc32": "57135199"
+    },
+    {
+      "relpath": "visium/P13_Vis_pathology_annotations.csv",
+      "md5": "3541a804d70322a92d9bcd523cc38e16",
+      "size": 203703,
+      "source_path": "pathology_annotations.zip/visium/P13_Vis_pathology_annotations.csv",
+      "crc32": "7970138f"
+    },
+    {
+      "relpath": "visium/P14_Vis_pathology_annotations.csv",
+      "md5": "9ca71a200ff3a8d8638a525f9e6b5e62",
+      "size": 235567,
+      "source_path": "pathology_annotations.zip/visium/P14_Vis_pathology_annotations.csv",
+      "crc32": "b0e1c752"
+    },
+    {
+      "relpath": "visium/P15_Vis_pathology_annotations.csv",
+      "md5": "d6e7eed410274d04c8f79698a0e4c3f1",
+      "size": 227196,
+      "source_path": "pathology_annotations.zip/visium/P15_Vis_pathology_annotations.csv",
+      "crc32": "bd5b8a35"
+    },
+    {
+      "relpath": "visium/P16_Vis_pathology_annotations.csv",
+      "md5": "49b97850aa4b237bf3e6eccea5a3b8fa",
+      "size": 597206,
+      "source_path": "pathology_annotations.zip/visium/P16_Vis_pathology_annotations.csv",
+      "crc32": "a0210545"
+    },
+    {
+      "relpath": "visium/P17_Vis_pathology_annotations.csv",
+      "md5": "5e6f23f19414ac8c721eeae7b9d38b18",
+      "size": 219519,
+      "source_path": "pathology_annotations.zip/visium/P17_Vis_pathology_annotations.csv",
+      "crc32": "fd7c31ca"
+    },
+    {
+      "relpath": "visium/P18_Vis_pathology_annotations.csv",
+      "md5": "fe877d057e82143bf8626c50a0455c5a",
+      "size": 250025,
+      "source_path": "pathology_annotations.zip/visium/P18_Vis_pathology_annotations.csv",
+      "crc32": "f1c7ed20"
+    },
+    {
+      "relpath": "visium/P19_Vis_pathology_annotations.csv",
+      "md5": "739ae135c971d84b617f74f492cd1c6a",
+      "size": 517115,
+      "source_path": "pathology_annotations.zip/visium/P19_Vis_pathology_annotations.csv",
+      "crc32": "490eaedf"
+    },
+    {
+      "relpath": "visium/P20_Vis_pathology_annotations.csv",
+      "md5": "fab322cdb02dc4a927fc48f6bbe7853e",
+      "size": 202199,
+      "source_path": "pathology_annotations.zip/visium/P20_Vis_pathology_annotations.csv",
+      "crc32": "9d1a0308"
+    },
+    {
+      "relpath": "visium/P21_Vis_pathology_annotations.csv",
+      "md5": "e2037a4ce6648ece4ba14d651d5a5fef",
+      "size": 209998,
+      "source_path": "pathology_annotations.zip/visium/P21_Vis_pathology_annotations.csv",
+      "crc32": "622bd3a0"
+    },
+    {
+      "relpath": "visium/P22_Vis_pathology_annotations.csv",
+      "md5": "814b9b00dabc56e8b66ddc680a15eacd",
+      "size": 263146,
+      "source_path": "pathology_annotations.zip/visium/P22_Vis_pathology_annotations.csv",
+      "crc32": "ee489013"
+    },
+    {
+      "relpath": "visium/P23_Vis_pathology_annotations.csv",
+      "md5": "3ecf7883fdac0d837e9d58c43fdf3af1",
+      "size": 205300,
+      "source_path": "pathology_annotations.zip/visium/P23_Vis_pathology_annotations.csv",
+      "crc32": "1ce70dbe"
+    },
+    {
+      "relpath": "visium/P24_Vis_pathology_annotations.csv",
+      "md5": "ab81eccdbe8485eb26c41850125f9f5b",
+      "size": 243489,
+      "source_path": "pathology_annotations.zip/visium/P24_Vis_pathology_annotations.csv",
+      "crc32": "305bd2e7"
+    },
+    {
+      "relpath": "visium/P25_Vis_pathology_annotations.csv",
+      "md5": "02d1170e8261c8a5565e66268e21f746",
+      "size": 514928,
+      "source_path": "pathology_annotations.zip/visium/P25_Vis_pathology_annotations.csv",
+      "crc32": "19a0994b"
+    },
+    {
+      "relpath": "visium/P26_Vis_pathology_annotations.csv",
+      "md5": "e00c6f000dd26d783ab8b287b69f29c1",
+      "size": 396660,
+      "source_path": "pathology_annotations.zip/visium/P26_Vis_pathology_annotations.csv",
+      "crc32": "016f7bfe"
+    },
+    {
+      "relpath": "visium/P27_Vis_pathology_annotations.csv",
+      "md5": "c602941597617321ee23e85d700176fc",
+      "size": 602083,
+      "source_path": "pathology_annotations.zip/visium/P27_Vis_pathology_annotations.csv",
+      "crc32": "ad791c79"
+    },
+    {
+      "relpath": "visium/P28_Vis_pathology_annotations.csv",
+      "md5": "91b1e619ad125134248bc14dc3584b15",
+      "size": 706627,
+      "source_path": "pathology_annotations.zip/visium/P28_Vis_pathology_annotations.csv",
+      "crc32": "794cbd43"
+    },
+    {
+      "relpath": "visium/P29_Vis_Rep1_pathology_annotations.csv",
+      "md5": "d75556ab6638f23d0c990105cac33ecb",
+      "size": 628306,
+      "source_path": "pathology_annotations.zip/visium/P29_Vis_Rep1_pathology_annotations.csv",
+      "crc32": "a34c6d5e"
+    },
+    {
+      "relpath": "visium/P29_Vis_Rep2_pathology_annotations.csv",
+      "md5": "d1dcafd3669b0ba133cf76d909fe18d7",
+      "size": 576149,
+      "source_path": "pathology_annotations.zip/visium/P29_Vis_Rep2_pathology_annotations.csv",
+      "crc32": "13a68746"
+    },
+    {
+      "relpath": "visium/P30_Vis_pathology_annotations.csv",
+      "md5": "ab21cd2c0ca9788d60299ee9f4ac1a39",
+      "size": 514720,
+      "source_path": "pathology_annotations.zip/visium/P30_Vis_pathology_annotations.csv",
+      "crc32": "b6b1aaf7"
+    },
+    {
+      "relpath": "visium/P31_Vis_pathology_annotations.csv",
+      "md5": "40675ae4ab9503e18e3a0fcd471fde7b",
+      "size": 230691,
+      "source_path": "pathology_annotations.zip/visium/P31_Vis_pathology_annotations.csv",
+      "crc32": "1b3eba98"
+    },
+    {
+      "relpath": "visium/P32_Vis_pathology_annotations.csv",
+      "md5": "ebfc517d3e1a74a5e5189d0618221d82",
+      "size": 592466,
+      "source_path": "pathology_annotations.zip/visium/P32_Vis_pathology_annotations.csv",
+      "crc32": "4cf2cf31"
+    },
+    {
+      "relpath": "visium_hd/P26_HD_pathology_annotations.csv",
+      "md5": "8b445db685d63d1c79a8c575babfb741",
+      "size": 22709639,
+      "source_path": "pathology_annotations.zip/visium_hd/P26_HD_pathology_annotations.csv",
+      "crc32": "0ef9ef10"
+    },
+    {
+      "relpath": "visium_hd/P27_HD_pathology_annotations.csv",
+      "md5": "ce8b15bebb9155d5a7b4d99ae66163e4",
+      "size": 24700488,
+      "source_path": "pathology_annotations.zip/visium_hd/P27_HD_pathology_annotations.csv",
+      "crc32": "de6a5d66"
+    },
+    {
+      "relpath": "visium_hd/P29_HD_pathology_annotations.csv",
+      "md5": "e29f8bb3733608ce5cd44a5353684d11",
+      "size": 23231344,
+      "source_path": "pathology_annotations.zip/visium_hd/P29_HD_pathology_annotations.csv",
+      "crc32": "81b74368"
+    },
+    {
+      "relpath": "visium_hd/P32_HD_pathology_annotations.csv",
+      "md5": "f7f40ddf80f2e4cea90961a76efa8203",
+      "size": 23123069,
+      "source_path": "pathology_annotations.zip/visium_hd/P32_HD_pathology_annotations.csv",
+      "crc32": "666c14af"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P12_LN_Vis_GC_annotations.csv",
+      "md5": "f8d8294e3ef0807e69e11a74e142ed0b",
+      "size": 8804,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P12_LN_Vis_GC_annotations.csv",
+      "crc32": "7c909c2b"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P12_LN_Vis_GC_annotations.geojson",
+      "md5": "97d8d2c0e6ec69002128b5cfccf01ce3",
+      "size": 29381,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P12_LN_Vis_GC_annotations.geojson",
+      "crc32": "431359cb"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P12_LN_Vis_tissue_annotations.csv",
+      "md5": "ca366fb6d4f2336ec725ee87961af048",
+      "size": 32701,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P12_LN_Vis_tissue_annotations.csv",
+      "crc32": "81cf2a4f"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P25_LN_Vis_GC_annotations.csv",
+      "md5": "4dbd0e8fdde6eb6574c378c179302572",
+      "size": 5502,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P25_LN_Vis_GC_annotations.csv",
+      "crc32": "ea865cfd"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P25_LN_Vis_GC_annotations.geojson",
+      "md5": "eec883be3a4244a49a725739dce9be73",
+      "size": 64726,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P25_LN_Vis_GC_annotations.geojson",
+      "crc32": "66a3f97c"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P25_LN_Vis_tissue_annotations.csv",
+      "md5": "88e5034d6f3e8c18774fb42497af1609",
+      "size": 99625,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P25_LN_Vis_tissue_annotations.csv",
+      "crc32": "5290c04f"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P26_LN_Vis_GC_annotations.csv",
+      "md5": "3943458f1b840a41d377d4c15b32bab3",
+      "size": 1944,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P26_LN_Vis_GC_annotations.csv",
+      "crc32": "43a0cc61"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P26_LN_Vis_GC_annotations.geojson",
+      "md5": "f154bceb0fcb10feb9ccf0cfbc90ff58",
+      "size": 18509,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P26_LN_Vis_GC_annotations.geojson",
+      "crc32": "1dc75535"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P26_LN_Vis_tissue_annotations.csv",
+      "md5": "293626c454667ddab7d277cdca528af0",
+      "size": 104331,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P26_LN_Vis_tissue_annotations.csv",
+      "crc32": "047618a4"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P27_LN_Vis_GC_annotations.csv",
+      "md5": "82748c476b1d2fd0eff2af8cfbd6efee",
+      "size": 8889,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P27_LN_Vis_GC_annotations.csv",
+      "crc32": "f7aff906"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P27_LN_Vis_GC_annotations.geojson",
+      "md5": "3842effdaa819e8958cc63b68048e9d9",
+      "size": 69830,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P27_LN_Vis_GC_annotations.geojson",
+      "crc32": "3d86476f"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P27_LN_Vis_tissue_annotations.csv",
+      "md5": "209bb7f7f1b653d31e1815f79593d939",
+      "size": 71415,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P27_LN_Vis_tissue_annotations.csv",
+      "crc32": "2c384c92"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P28_LN_Vis_GC_annotations.csv",
+      "md5": "37ccacbf205989e7699e562052ba9a2b",
+      "size": 19,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P28_LN_Vis_GC_annotations.csv",
+      "crc32": "ea4555db"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P28_LN_Vis_GC_annotations.geojson",
+      "md5": "f2894be507ae425adacd67ac485594fc",
+      "size": 2165,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P28_LN_Vis_GC_annotations.geojson",
+      "crc32": "1f5336aa"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P28_LN_Vis_tissue_annotations.csv",
+      "md5": "5f1818c38cc82c1d24c3b81a15c704ea",
+      "size": 50667,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P28_LN_Vis_tissue_annotations.csv",
+      "crc32": "e5aafcb2"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P29_LN_Vis_GC_annotations.csv",
+      "md5": "37ccacbf205989e7699e562052ba9a2b",
+      "size": 19,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P29_LN_Vis_GC_annotations.csv",
+      "crc32": "ea4555db"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P29_LN_Vis_GC_annotations.geojson",
+      "md5": "ae422f55ad1925838c23cbabdb4c8cfa",
+      "size": 2365,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P29_LN_Vis_GC_annotations.geojson",
+      "crc32": "75642e14"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P29_LN_Vis_tissue_annotations.csv",
+      "md5": "3c2d089771dc3bf025562b30600d319c",
+      "size": 35639,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P29_LN_Vis_tissue_annotations.csv",
+      "crc32": "018202b6"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P32_LN_Vis_GC_annotations.csv",
+      "md5": "b72bd34dc3ce2ae03161387f70f0e6d0",
+      "size": 159,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P32_LN_Vis_GC_annotations.csv",
+      "crc32": "742ed3a9"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P32_LN_Vis_GC_annotations.geojson",
+      "md5": "c3fea2bb5ab1b10493a0c3868f87c0bf",
+      "size": 2435,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P32_LN_Vis_GC_annotations.geojson",
+      "crc32": "a1a4436b"
+    },
+    {
+      "relpath": "visium_lymph_nodes/P32_LN_Vis_tissue_annotations.csv",
+      "md5": "129f046a931914ec0391f2b6117d35b8",
+      "size": 61041,
+      "source_path": "pathology_annotations.zip/visium_lymph_nodes/P32_LN_Vis_tissue_annotations.csv",
+      "crc32": "39891e94"
+    }
+  ]
+}

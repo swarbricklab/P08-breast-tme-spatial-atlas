@@ -1,0 +1,429 @@
+{
+  "schema": "chirograph",
+  "schema_version": "2.0",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "18917100",
+  "concept": "doi:10.5281/zenodo.18917099",
+  "source_url": "zenodo://10.5281/zenodo.18917100/anndata_objects.zip",
+  "created": "2026-09-08T01:54:28Z",
+  "generator": "chirograph 0.1.0",
+  "size": 20783654648,
+  "nfiles": 58,
+  "body_hash": "edec734edfeef8d4d83d28e8df91a0f7",
+  "containers": [
+    {
+      "source_root": "anndata_objects.zip",
+      "format": "zip",
+      "md5": "a37b8ebcf9361fd1d094531fbab39078"
+    }
+  ],
+  "files": [
+    {
+      "relpath": "visium/P01_Vis.h5ad",
+      "md5": "a18a6d784a2ea709ecbf8e40b532848f",
+      "size": 245907145,
+      "source_path": "anndata_objects.zip/visium/P01_Vis.h5ad",
+      "crc32": "0be89e6a"
+    },
+    {
+      "relpath": "visium/P02_Vis.h5ad",
+      "md5": "4f9f33cb15374407e3cea6ec309f3c48",
+      "size": 177871837,
+      "source_path": "anndata_objects.zip/visium/P02_Vis.h5ad",
+      "crc32": "8a979769"
+    },
+    {
+      "relpath": "visium/P03_Vis.h5ad",
+      "md5": "348060e93eab7553241fb439df438481",
+      "size": 222440346,
+      "source_path": "anndata_objects.zip/visium/P03_Vis.h5ad",
+      "crc32": "712020f1"
+    },
+    {
+      "relpath": "visium/P04_Vis.h5ad",
+      "md5": "ef56f9d5faab70431a7f2482079d47bc",
+      "size": 204422156,
+      "source_path": "anndata_objects.zip/visium/P04_Vis.h5ad",
+      "crc32": "99930217"
+    },
+    {
+      "relpath": "visium/P05_Vis.h5ad",
+      "md5": "8b249434f015d59d71a1549cb9ab8955",
+      "size": 254225898,
+      "source_path": "anndata_objects.zip/visium/P05_Vis.h5ad",
+      "crc32": "c76965ab"
+    },
+    {
+      "relpath": "visium/P06_Vis.h5ad",
+      "md5": "4321cabfc9cc3451dfd07907a624644e",
+      "size": 161428087,
+      "source_path": "anndata_objects.zip/visium/P06_Vis.h5ad",
+      "crc32": "68df96f5"
+    },
+    {
+      "relpath": "visium/P07_Vis.h5ad",
+      "md5": "c85656309cb3ed34ca8d0f817eb11a9c",
+      "size": 266236505,
+      "source_path": "anndata_objects.zip/visium/P07_Vis.h5ad",
+      "crc32": "b48fafcf"
+    },
+    {
+      "relpath": "visium/P08_Vis.h5ad",
+      "md5": "4720120d8b986d44a0268bb851fb5b31",
+      "size": 238200988,
+      "source_path": "anndata_objects.zip/visium/P08_Vis.h5ad",
+      "crc32": "3873de21"
+    },
+    {
+      "relpath": "visium/P09_Vis.h5ad",
+      "md5": "137e053bff73d1ef654b6fbc7f35c7e6",
+      "size": 309882875,
+      "source_path": "anndata_objects.zip/visium/P09_Vis.h5ad",
+      "crc32": "698ba349"
+    },
+    {
+      "relpath": "visium/P10_Vis.h5ad",
+      "md5": "fd14b3db7cabaa4f6ca88161e2b9fc7b",
+      "size": 561017793,
+      "source_path": "anndata_objects.zip/visium/P10_Vis.h5ad",
+      "crc32": "febfff24"
+    },
+    {
+      "relpath": "visium/P11_Vis.h5ad",
+      "md5": "51c651cd18c794f541cb83c1db5ae41f",
+      "size": 519479776,
+      "source_path": "anndata_objects.zip/visium/P11_Vis.h5ad",
+      "crc32": "0d174ca7"
+    },
+    {
+      "relpath": "visium/P12_LN_Vis.h5ad",
+      "md5": "81d8fe9a6157d4eb019bafefbb668008",
+      "size": 77338544,
+      "source_path": "anndata_objects.zip/visium/P12_LN_Vis.h5ad",
+      "crc32": "4f791e1b"
+    },
+    {
+      "relpath": "visium/P12_Vis.h5ad",
+      "md5": "881daca3d7048bb68ffb04ae0b9d6d95",
+      "size": 355691496,
+      "source_path": "anndata_objects.zip/visium/P12_Vis.h5ad",
+      "crc32": "b4ac12ce"
+    },
+    {
+      "relpath": "visium/P13_Vis.h5ad",
+      "md5": "dc0dc2297eb66d6d3ba38a5067f599a9",
+      "size": 221946571,
+      "source_path": "anndata_objects.zip/visium/P13_Vis.h5ad",
+      "crc32": "15be996f"
+    },
+    {
+      "relpath": "visium/P14_Vis.h5ad",
+      "md5": "1a9dd88a3ee7b9d6ba1a637147923270",
+      "size": 216377230,
+      "source_path": "anndata_objects.zip/visium/P14_Vis.h5ad",
+      "crc32": "ecce23c2"
+    },
+    {
+      "relpath": "visium/P15_Vis.h5ad",
+      "md5": "f5036b524f25fd1f9ef8ec2d94df2880",
+      "size": 299276633,
+      "source_path": "anndata_objects.zip/visium/P15_Vis.h5ad",
+      "crc32": "87d19a73"
+    },
+    {
+      "relpath": "visium/P16_Vis.h5ad",
+      "md5": "a598325f60c68bf7337ca52be15fa32f",
+      "size": 345321463,
+      "source_path": "anndata_objects.zip/visium/P16_Vis.h5ad",
+      "crc32": "0e1715a2"
+    },
+    {
+      "relpath": "visium/P17_Vis.h5ad",
+      "md5": "989190109b3c7c732400c86ed1a8b097",
+      "size": 219842319,
+      "source_path": "anndata_objects.zip/visium/P17_Vis.h5ad",
+      "crc32": "d845c955"
+    },
+    {
+      "relpath": "visium/P18_Vis.h5ad",
+      "md5": "dd82b96660125bec7d0d90308b9566ff",
+      "size": 257718266,
+      "source_path": "anndata_objects.zip/visium/P18_Vis.h5ad",
+      "crc32": "781d2a84"
+    },
+    {
+      "relpath": "visium/P19_Vis.h5ad",
+      "md5": "82570d681934a06f07f5e00f402ae72b",
+      "size": 457916973,
+      "source_path": "anndata_objects.zip/visium/P19_Vis.h5ad",
+      "crc32": "ad984a59"
+    },
+    {
+      "relpath": "visium/P20_Vis.h5ad",
+      "md5": "f861d4cd0f6fba27163e9b259eed6c32",
+      "size": 189810866,
+      "source_path": "anndata_objects.zip/visium/P20_Vis.h5ad",
+      "crc32": "e54e88f6"
+    },
+    {
+      "relpath": "visium/P21_Vis.h5ad",
+      "md5": "ea59c28a767317a5ea8fa1af14c24479",
+      "size": 241362015,
+      "source_path": "anndata_objects.zip/visium/P21_Vis.h5ad",
+      "crc32": "90059712"
+    },
+    {
+      "relpath": "visium/P22_Vis.h5ad",
+      "md5": "848fa1ebb61bfcb81ed0d5e20d636b8d",
+      "size": 281775651,
+      "source_path": "anndata_objects.zip/visium/P22_Vis.h5ad",
+      "crc32": "29c2a01c"
+    },
+    {
+      "relpath": "visium/P23_Vis.h5ad",
+      "md5": "6f9e316aec00051afbf3b1328526a6c2",
+      "size": 150611694,
+      "source_path": "anndata_objects.zip/visium/P23_Vis.h5ad",
+      "crc32": "725cda25"
+    },
+    {
+      "relpath": "visium/P24_Vis.h5ad",
+      "md5": "d7a422f85a00c2af32fb065363e9c01d",
+      "size": 217493630,
+      "source_path": "anndata_objects.zip/visium/P24_Vis.h5ad",
+      "crc32": "aee957c7"
+    },
+    {
+      "relpath": "visium/P25_LN_Vis.h5ad",
+      "md5": "800390b525c8e940ee128dffb002c921",
+      "size": 131896573,
+      "source_path": "anndata_objects.zip/visium/P25_LN_Vis.h5ad",
+      "crc32": "e1ada9eb"
+    },
+    {
+      "relpath": "visium/P25_Vis.h5ad",
+      "md5": "31b39f8e8ad764bde181cfbfe2b84f81",
+      "size": 436118218,
+      "source_path": "anndata_objects.zip/visium/P25_Vis.h5ad",
+      "crc32": "3ef23374"
+    },
+    {
+      "relpath": "visium/P26_LN_Vis.h5ad",
+      "md5": "f68ce9903d746e97125803cc7eb1a090",
+      "size": 242775091,
+      "source_path": "anndata_objects.zip/visium/P26_LN_Vis.h5ad",
+      "crc32": "9121d0f1"
+    },
+    {
+      "relpath": "visium/P26_Vis.h5ad",
+      "md5": "3c391d48941bff2d397cb955a6619b24",
+      "size": 434282981,
+      "source_path": "anndata_objects.zip/visium/P26_Vis.h5ad",
+      "crc32": "beac237c"
+    },
+    {
+      "relpath": "visium/P27_LN_Vis.h5ad",
+      "md5": "977bd628ac062178b0543972a854c422",
+      "size": 65195540,
+      "source_path": "anndata_objects.zip/visium/P27_LN_Vis.h5ad",
+      "crc32": "fe017f87"
+    },
+    {
+      "relpath": "visium/P27_Vis.h5ad",
+      "md5": "6e7f8fc971acf989a32d3b2b7766beca",
+      "size": 252668645,
+      "source_path": "anndata_objects.zip/visium/P27_Vis.h5ad",
+      "crc32": "b27e26d6"
+    },
+    {
+      "relpath": "visium/P28_LN_Vis.h5ad",
+      "md5": "d0cb6d477187c9a4027f6d04d35cbf2d",
+      "size": 69094588,
+      "source_path": "anndata_objects.zip/visium/P28_LN_Vis.h5ad",
+      "crc32": "f4263cb3"
+    },
+    {
+      "relpath": "visium/P28_Vis.h5ad",
+      "md5": "610bee30dc58ceb71245b054e22e3509",
+      "size": 402108102,
+      "source_path": "anndata_objects.zip/visium/P28_Vis.h5ad",
+      "crc32": "3e72cafe"
+    },
+    {
+      "relpath": "visium/P29_LN_Vis.h5ad",
+      "md5": "3c1f0257e42e9c281c36b5de958c8145",
+      "size": 67198765,
+      "source_path": "anndata_objects.zip/visium/P29_LN_Vis.h5ad",
+      "crc32": "c5ece112"
+    },
+    {
+      "relpath": "visium/P29_Vis_Rep1.h5ad",
+      "md5": "6f3d13e61f4c6ba5333e76c223868370",
+      "size": 658687907,
+      "source_path": "anndata_objects.zip/visium/P29_Vis_Rep1.h5ad",
+      "crc32": "3defdded"
+    },
+    {
+      "relpath": "visium/P29_Vis_Rep2.h5ad",
+      "md5": "43dc1a18febabc80f84854d453ac11e5",
+      "size": 720580380,
+      "source_path": "anndata_objects.zip/visium/P29_Vis_Rep2.h5ad",
+      "crc32": "ec0ca6f2"
+    },
+    {
+      "relpath": "visium/P30_Vis.h5ad",
+      "md5": "38361a4b87f3bd8b0e57f3903c8a17d3",
+      "size": 359170506,
+      "source_path": "anndata_objects.zip/visium/P30_Vis.h5ad",
+      "crc32": "1bfa5379"
+    },
+    {
+      "relpath": "visium/P31_Vis.h5ad",
+      "md5": "6a7b148e7ddc487eb561c6da21fcae76",
+      "size": 242196377,
+      "source_path": "anndata_objects.zip/visium/P31_Vis.h5ad",
+      "crc32": "f56bff66"
+    },
+    {
+      "relpath": "visium/P32_LN_Vis.h5ad",
+      "md5": "a5fe26e5ec44ceb9246e1948e720b64c",
+      "size": 117384631,
+      "source_path": "anndata_objects.zip/visium/P32_LN_Vis.h5ad",
+      "crc32": "3e524e95"
+    },
+    {
+      "relpath": "visium/P32_Vis.h5ad",
+      "md5": "d2288d91c1cca29062ac70863d046960",
+      "size": 690510667,
+      "source_path": "anndata_objects.zip/visium/P32_Vis.h5ad",
+      "crc32": "302ef9f7"
+    },
+    {
+      "relpath": "visium_hd/square_008um/P26_HD.h5ad",
+      "md5": "18d45cfc8c35ce6f0440497d4545373e",
+      "size": 601958671,
+      "source_path": "anndata_objects.zip/visium_hd/square_008um/P26_HD.h5ad",
+      "crc32": "cb45234f"
+    },
+    {
+      "relpath": "visium_hd/square_008um/P27_HD.h5ad",
+      "md5": "4b42d74d98b2a8556175e84bac1bbe3b",
+      "size": 148088325,
+      "source_path": "anndata_objects.zip/visium_hd/square_008um/P27_HD.h5ad",
+      "crc32": "27aed0a2"
+    },
+    {
+      "relpath": "visium_hd/square_008um/P29_HD.h5ad",
+      "md5": "657e95d00b40713db4eb8df4b213cfff",
+      "size": 586775089,
+      "source_path": "anndata_objects.zip/visium_hd/square_008um/P29_HD.h5ad",
+      "crc32": "0df36f82"
+    },
+    {
+      "relpath": "visium_hd/square_008um/P32_HD.h5ad",
+      "md5": "aa018c0bd8bfa45e31307ca63a7bf6e2",
+      "size": 627091241,
+      "source_path": "anndata_objects.zip/visium_hd/square_008um/P32_HD.h5ad",
+      "crc32": "9a2ef372"
+    },
+    {
+      "relpath": "visium_hd/square_016um/P26_HD.h5ad",
+      "md5": "3d63739256a6b473f975074ff883b653",
+      "size": 492061040,
+      "source_path": "anndata_objects.zip/visium_hd/square_016um/P26_HD.h5ad",
+      "crc32": "f9342300"
+    },
+    {
+      "relpath": "visium_hd/square_016um/P27_HD.h5ad",
+      "md5": "c1af255419607d7c628923ef3b703a2e",
+      "size": 106278658,
+      "source_path": "anndata_objects.zip/visium_hd/square_016um/P27_HD.h5ad",
+      "crc32": "04da725c"
+    },
+    {
+      "relpath": "visium_hd/square_016um/P29_HD.h5ad",
+      "md5": "ae77008b7b5974ded68307d5c6614749",
+      "size": 482129584,
+      "source_path": "anndata_objects.zip/visium_hd/square_016um/P29_HD.h5ad",
+      "crc32": "50120f3d"
+    },
+    {
+      "relpath": "visium_hd/square_016um/P32_HD.h5ad",
+      "md5": "3dce068da8c9a078cf69d10a3f29a333",
+      "size": 510817794,
+      "source_path": "anndata_objects.zip/visium_hd/square_016um/P32_HD.h5ad",
+      "crc32": "6a467e68"
+    },
+    {
+      "relpath": "visium_hd/square_048um/P26_HD.h5ad",
+      "md5": "f03e1e0e649fdda24ae4d90fd0cbffcf",
+      "size": 666891900,
+      "source_path": "anndata_objects.zip/visium_hd/square_048um/P26_HD.h5ad",
+      "crc32": "40e0a094"
+    },
+    {
+      "relpath": "visium_hd/square_048um/P27_HD.h5ad",
+      "md5": "c3744b653d2303b1bdc5a9df102ffc9a",
+      "size": 182284964,
+      "source_path": "anndata_objects.zip/visium_hd/square_048um/P27_HD.h5ad",
+      "crc32": "4b67573f"
+    },
+    {
+      "relpath": "visium_hd/square_048um/P29_HD.h5ad",
+      "md5": "88fe3a46a1c53ec54f5ec35383d42aa6",
+      "size": 679238399,
+      "source_path": "anndata_objects.zip/visium_hd/square_048um/P29_HD.h5ad",
+      "crc32": "61f3f089"
+    },
+    {
+      "relpath": "visium_hd/square_048um/P32_HD.h5ad",
+      "md5": "a66d191aa6967755d8e04e4273df583c",
+      "size": 701641515,
+      "source_path": "anndata_objects.zip/visium_hd/square_048um/P32_HD.h5ad",
+      "crc32": "e5a91e86"
+    },
+    {
+      "relpath": "xenium/P17_Xe5k.h5ad",
+      "md5": "384765c0bd5e7274a6f8f3bf3794d041",
+      "size": 442743536,
+      "source_path": "anndata_objects.zip/xenium/P17_Xe5k.h5ad",
+      "crc32": "8e7b5e2c"
+    },
+    {
+      "relpath": "xenium/P22_Xe5k.h5ad",
+      "md5": "12e586104814eaf5b4c0f9edc5359c5d",
+      "size": 464802569,
+      "source_path": "anndata_objects.zip/xenium/P22_Xe5k.h5ad",
+      "crc32": "6d4f9b81"
+    },
+    {
+      "relpath": "xenium/P24_Xe5k.h5ad",
+      "md5": "c2989512d3fe641715dbca979f353ca4",
+      "size": 269798435,
+      "source_path": "anndata_objects.zip/xenium/P24_Xe5k.h5ad",
+      "crc32": "a27f84e8"
+    },
+    {
+      "relpath": "xenium/P26_Xe5k.h5ad",
+      "md5": "b0207fce32b338388b0fe465cc17d4cf",
+      "size": 616802629,
+      "source_path": "anndata_objects.zip/xenium/P26_Xe5k.h5ad",
+      "crc32": "52a73402"
+    },
+    {
+      "relpath": "xenium/P29_Xe5k.h5ad",
+      "md5": "7af1566b58d3464511cf27c1109ffa04",
+      "size": 724099884,
+      "source_path": "anndata_objects.zip/xenium/P29_Xe5k.h5ad",
+      "crc32": "25d315e9"
+    },
+    {
+      "relpath": "xenium/P32_Xe5k.h5ad",
+      "md5": "ea4d13cdbbcb1b930c192f651e3bb0a1",
+      "size": 896684687,
+      "source_path": "anndata_objects.zip/xenium/P32_Xe5k.h5ad",
+      "crc32": "a83c1a2e"
+    }
+  ]
+}
