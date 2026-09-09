@@ -1,4 +1,4 @@
-md5: 5b62774ecc92e7aaa2dfe6372eeaf29f
+md5: c68bdd46c1b8ce5f2383ec82ee07f659
 frozen: true
 deps:
 - md5: cec361d5b6dbede3197771b027b05448.dir
@@ -7,9 +7,5 @@ deps:
   hash: md5
   path: chiro://md5:1766bd92c7a0f8b2b37009c9a8a42bee
 outs:
-- md5: cec361d5b6dbede3197771b027b05448.dir
-  size: 106357723
-  nfiles: 58
-  hash: md5
+- hash: md5
   path: pathology_annotations
-  push: false

@@ -1,4 +1,4 @@
-md5: f44279b7ba372560d15d39bae5fccd74
+md5: c4a6ba072f4d0ab288417452243c20f2
 frozen: true
 deps:
 - md5: b31a60ea2a0ba0b06e0afad28a4626f0.dir
@@ -7,9 +7,5 @@ deps:
   hash: md5
   path: chiro://md5:1c5041b2702dc5ba606c3741a7f4c053
 outs:
-- md5: b31a60ea2a0ba0b06e0afad28a4626f0.dir
-  size: 20783654648
-  nfiles: 58
-  hash: md5
+- hash: md5
   path: anndata_objects
-  push: false

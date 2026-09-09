@@ -1,4 +1,4 @@
-md5: db7ea747f0e226ede43d300ff807366f
+md5: 0cca7d6c637133d7e457ea3aad5d18ce
 frozen: true
 deps:
 - md5: 9619368410ff0ef31c543abba0848e81.dir
@@ -7,9 +7,5 @@ deps:
   hash: md5
   path: chiro://md5:81aa36a43b3135747d5bd891b7b2a72e
 outs:
-- md5: 9619368410ff0ef31c543abba0848e81.dir
-  size: 28166286250
-  nfiles: 6
-  hash: md5
+- hash: md5
   path: spatialdata_objects
-  push: false
