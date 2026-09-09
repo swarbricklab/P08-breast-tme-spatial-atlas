@@ -1,5 +1,14 @@
-md5: b66f77d041c0b845573605f9fb65e6cd
+md5: 953ecaa328db6420c693658a7fd34ad1
 frozen: true
+meta:
+  archivefs:
+    archive: bia
+    study: S-BIAD3080
+    subtree: images/cytassist
+    url: https://www.ebi.ac.uk/biostudies/studies/S-BIAD3080
+    source: bia://S-BIAD3080/images/cytassist
+    nfiles: 44
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
 deps:
 - md5: 5856d41ebe7ed4e9570fe404672c0cbe.dir
   size: 1133421835
@@ -9,6 +18,3 @@ deps:
 outs:
 - hash: md5
   path: cytassist
-  md5: 5856d41ebe7ed4e9570fe404672c0cbe.dir
-  size: 1133421835
-  nfiles: 44

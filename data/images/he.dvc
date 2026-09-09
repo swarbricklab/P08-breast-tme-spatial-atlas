@@ -1,5 +1,14 @@
-md5: a649793e4088b0284be0a80b1f3baf8d
+md5: 87cef5f844998a27aebc95af2a5e6105
 frozen: true
+meta:
+  archivefs:
+    archive: bia
+    study: S-BIAD3080
+    subtree: images/he
+    url: https://www.ebi.ac.uk/biostudies/studies/S-BIAD3080
+    source: bia://S-BIAD3080/images/he
+    nfiles: 91
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
 deps:
 - md5: 065742665d1e6ce8316329ed2e075262.dir
   size: 431298554487
@@ -9,6 +18,3 @@ deps:
 outs:
 - hash: md5
   path: he
-  md5: 065742665d1e6ce8316329ed2e075262.dir
-  size: 431298554487
-  nfiles: 91

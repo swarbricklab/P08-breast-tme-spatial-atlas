@@ -1,5 +1,15 @@
 md5: 282eb5c949c72b64c90145ebeeec60ee
 frozen: true
+meta:
+  archivefs:
+    archive: zenodo
+    record: 10.5281/zenodo.18917100
+    concept_doi: 10.5281/zenodo.18917099
+    container: cell_type_mapping.zip
+    url: https://doi.org/10.5281/zenodo.18917100
+    source: zenodo://10.5281/zenodo.18917100/cell_type_mapping.zip
+    nfiles: 141
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
 deps:
 - md5: a2649f24208f8ecca9044ba916f11bbc.dir
   size: 2318773581

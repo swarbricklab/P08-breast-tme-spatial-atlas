@@ -1,5 +1,15 @@
 md5: c68bdd46c1b8ce5f2383ec82ee07f659
 frozen: true
+meta:
+  archivefs:
+    archive: zenodo
+    record: 10.5281/zenodo.18917100
+    concept_doi: 10.5281/zenodo.18917099
+    container: pathology_annotations.zip
+    url: https://doi.org/10.5281/zenodo.18917100
+    source: zenodo://10.5281/zenodo.18917100/pathology_annotations.zip
+    nfiles: 58
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
 deps:
 - md5: cec361d5b6dbede3197771b027b05448.dir
   size: 106357723

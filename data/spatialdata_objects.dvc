@@ -1,5 +1,15 @@
 md5: 0cca7d6c637133d7e457ea3aad5d18ce
 frozen: true
+meta:
+  archivefs:
+    archive: zenodo
+    record: 10.5281/zenodo.18917100
+    concept_doi: 10.5281/zenodo.18917099
+    container: spatialdata_objects.zip
+    url: https://doi.org/10.5281/zenodo.18917100
+    source: zenodo://10.5281/zenodo.18917100/spatialdata_objects.zip
+    nfiles: 6
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
 deps:
 - md5: 9619368410ff0ef31c543abba0848e81.dir
   size: 28166286250
