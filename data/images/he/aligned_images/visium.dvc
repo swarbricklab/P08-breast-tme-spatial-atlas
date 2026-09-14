@@ -1,0 +1,20 @@
+md5: 8464515e2afa114fe575c1ef0dbb12ed
+frozen: true
+meta:
+  archivefs:
+    archive: bia
+    study: S-BIAD3080
+    subtree: images/he/aligned_images/visium
+    url: https://www.ebi.ac.uk/biostudies/studies/S-BIAD3080
+    source: bia://S-BIAD3080/images/he/aligned_images/visium
+    nfiles: 40
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
+deps:
+- md5: 56253bef472a7573bbbe8e97939252af.dir
+  size: 310864583552
+  nfiles: 40
+  hash: md5
+  path: chiro://md5:4b9805dae23831a685e09ba28753941f
+outs:
+- hash: md5
+  path: visium

@@ -1,0 +1,45 @@
+{
+  "schema": "chirograph",
+  "schema_version": "1.1",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "S-BIAD3080/images/he/aligned_images/xenium",
+  "concept": "biostudies:S-BIAD3080/images/he/aligned_images/xenium",
+  "created": "2026-09-06T23:30:40Z",
+  "generator": "chirograph 0.1.0",
+  "size": 63279602020,
+  "nfiles": 6,
+  "body_hash": "c43c6992521acddda2eb56ad9064a508",
+  "files": [
+    {
+      "relpath": "P17_Xe5k.ome.tif",
+      "md5": "cad3b7907a468306fb524aed72181ec0",
+      "size": 10387426069
+    },
+    {
+      "relpath": "P22_Xe5k.ome.tif",
+      "md5": "3613e4720c2343eabcc0eed836688a2f",
+      "size": 9778509764
+    },
+    {
+      "relpath": "P24_Xe5k.ome.tif",
+      "md5": "0067ab4699d5cb325ed76fef5db5d71a",
+      "size": 13341334119
+    },
+    {
+      "relpath": "P26_Xe5k.ome.tif",
+      "md5": "8b8dcf0e908db29b95aadf675fa8cfe9",
+      "size": 9405923848
+    },
+    {
+      "relpath": "P29_Xe5k.ome.tif",
+      "md5": "0ae98f3ea9cb90c87d426c7efe5de0c8",
+      "size": 9646784070
+    },
+    {
+      "relpath": "P32_Xe5k.ome.tif",
+      "md5": "2e462a9dd83f9c54270282f932199de3",
+      "size": 10719624150
+    }
+  ]
+}
