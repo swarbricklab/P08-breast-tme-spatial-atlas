@@ -89,6 +89,16 @@ These environments are based on official package documentation and should be kep
 - Used for scripts requiring spatial geometry operations, advanced annotation placement, and set visualization. This environment is mainly used for figure generation rather than analysis.
 - Key packages: `shapely`, `adjusttext`, `upsetplot`
 
+#### data-access
+- Used to fetch the input data from the public archives with `dvc pull` (see [Getting the data](../README.md#getting-the-data))
+- Key packages: `dvc`, `archivefs` (DVC access to Zenodo, BioImage Archive, and GEO), `chirograph` (reads the archive manifests in `.chirograph/`)
+- DVC does not discover `archivefs` automatically. After creating the environment, run once:
+  ```bash
+  conda activate data-access
+  archivefs dvc enable    # registers chiro://, zenodo://, bia:// and geo:// with DVC
+  ```
+  This has to be repeated if the environment is rebuilt from scratch.
+
 ---
 
 For each environment, refer to the corresponding YAML file in EDF for dependencies and to ESF for a snapshot of the installed packages.
