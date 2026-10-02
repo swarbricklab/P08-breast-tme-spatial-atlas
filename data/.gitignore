@@ -1,7 +1,6 @@
-/anndata_objects
-/pathology_annotations
-/spatialdata_objects
-/images
 /processed
 .dt/tmp/
 *.zip
+/pathology_annotations
+/anndata_objects
+/spatialdata_objects

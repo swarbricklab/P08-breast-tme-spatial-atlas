@@ -1,0 +1,215 @@
+{
+  "schema": "chirograph",
+  "schema_version": "1.1",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "S-BIAD3080/images/he/aligned_images/visium",
+  "concept": "biostudies:S-BIAD3080/images/he/aligned_images/visium",
+  "created": "2026-09-06T23:30:40Z",
+  "generator": "chirograph 0.1.0",
+  "size": 310864583552,
+  "nfiles": 40,
+  "body_hash": "865bac3809bfd95a78b8e23e4812284f",
+  "files": [
+    {
+      "relpath": "P01_Vis.ome.tif",
+      "md5": "8b9abf59fa1eac55fdd32172c83ec42c",
+      "size": 1424754327
+    },
+    {
+      "relpath": "P02_Vis.ome.tif",
+      "md5": "6b33c34bae381c2fa5dee6510398d992",
+      "size": 1750199163
+    },
+    {
+      "relpath": "P03_Vis.ome.tif",
+      "md5": "d24b9b91e23ef0789369ae34a7849d13",
+      "size": 1460882101
+    },
+    {
+      "relpath": "P04_Vis.ome.tif",
+      "md5": "3f19a9b8573133e7f7761ebd391dc2e2",
+      "size": 1681979870
+    },
+    {
+      "relpath": "P05_Vis.ome.tif",
+      "md5": "a817e306d00efdf161e2b9042622dfdc",
+      "size": 1699481661
+    },
+    {
+      "relpath": "P06_Vis.ome.tif",
+      "md5": "a445f2b079ed6c143ac11137cb251937",
+      "size": 1301734393
+    },
+    {
+      "relpath": "P07_Vis.ome.tif",
+      "md5": "d8ce1d3ef458c6ab25fb900bb68b5c8a",
+      "size": 1602333989
+    },
+    {
+      "relpath": "P08_Vis.ome.tif",
+      "md5": "1d5879684dfac9ce4ec30a3d697a7a7a",
+      "size": 1558267998
+    },
+    {
+      "relpath": "P09_Vis.ome.tif",
+      "md5": "9ed4cfec301586d0a83a6ca7b935991c",
+      "size": 1602719020
+    },
+    {
+      "relpath": "P10_Vis.ome.tif",
+      "md5": "20a893078fa87f127269c9779b511e40",
+      "size": 2369055789
+    },
+    {
+      "relpath": "P11_Vis.ome.tif",
+      "md5": "73950fb0f67f7241c1aab52efb465225",
+      "size": 2787982734
+    },
+    {
+      "relpath": "P12_LN_Vis.ome.tif",
+      "md5": "cd587226ac6a3ea32453be86f7e7fb55",
+      "size": 4112260419
+    },
+    {
+      "relpath": "P12_Vis.ome.tif",
+      "md5": "fe1bd99b6675021e4e7b86fcb325f0b9",
+      "size": 25353052777
+    },
+    {
+      "relpath": "P13_Vis.ome.tif",
+      "md5": "a3ef0e3d5d2bf658f323a977ad84d74d",
+      "size": 1647892369
+    },
+    {
+      "relpath": "P14_Vis.ome.tif",
+      "md5": "737df2a5edd8cc2dc5978c412c9fa27e",
+      "size": 1492512765
+    },
+    {
+      "relpath": "P15_Vis.ome.tif",
+      "md5": "af5cf9a3bdd814182c8d78d78944bc5c",
+      "size": 1665659625
+    },
+    {
+      "relpath": "P16_Vis.ome.tif",
+      "md5": "65a64c0d84f46497576b7fa6c9d47b55",
+      "size": 2531057857
+    },
+    {
+      "relpath": "P17_Vis.ome.tif",
+      "md5": "1150239de0487056d69562c5a34990d0",
+      "size": 1367647368
+    },
+    {
+      "relpath": "P18_Vis.ome.tif",
+      "md5": "9867cc96ea078498192097e4765b2acb",
+      "size": 1795646647
+    },
+    {
+      "relpath": "P19_Vis.ome.tif",
+      "md5": "0d9c87e39dd9c81bcc2068a998adc8fa",
+      "size": 2517722358
+    },
+    {
+      "relpath": "P20_Vis.ome.tif",
+      "md5": "809be99ee3e51bd73c998f13e7b370e6",
+      "size": 1533529431
+    },
+    {
+      "relpath": "P21_Vis.ome.tif",
+      "md5": "c5cacb07bb24722a76b709f5b6e6eedc",
+      "size": 1585856600
+    },
+    {
+      "relpath": "P22_Vis.ome.tif",
+      "md5": "8101c418474405539ddef7cbdfee2123",
+      "size": 1682039773
+    },
+    {
+      "relpath": "P23_Vis.ome.tif",
+      "md5": "8f910e401acd5d51f08fa6bdaf2fda1d",
+      "size": 1359965093
+    },
+    {
+      "relpath": "P24_Vis.ome.tif",
+      "md5": "7bed39369765bdb395eae1fb3af4664c",
+      "size": 1632165921
+    },
+    {
+      "relpath": "P25_LN_Vis.ome.tif",
+      "md5": "7ed546fb28f89a999c44cc6f6a9e26f9",
+      "size": 6750419337
+    },
+    {
+      "relpath": "P25_Vis.ome.tif",
+      "md5": "4b725679387245e3b6d57d4939b668df",
+      "size": 24762968612
+    },
+    {
+      "relpath": "P26_LN_Vis.ome.tif",
+      "md5": "6ee6290ca0a89639cd35f2e2f97df318",
+      "size": 11215782139
+    },
+    {
+      "relpath": "P26_Vis.ome.tif",
+      "md5": "b8d3920ef0f4f01b276e1d153f9a50d1",
+      "size": 13397589195
+    },
+    {
+      "relpath": "P27_LN_Vis.ome.tif",
+      "md5": "3cb1930b7c239dfb528421691569bf2a",
+      "size": 4350180198
+    },
+    {
+      "relpath": "P27_Vis.ome.tif",
+      "md5": "b297ea7f2f1390d2e5f0ac79b048a425",
+      "size": 31859549728
+    },
+    {
+      "relpath": "P28_LN_Vis.ome.tif",
+      "md5": "750eeed3124fb2cdd7cfedb2c5305912",
+      "size": 5815078265
+    },
+    {
+      "relpath": "P28_Vis.ome.tif",
+      "md5": "d1a4aaa4d046f19cee3610a567708a0c",
+      "size": 35183669244
+    },
+    {
+      "relpath": "P29_LN_Vis.ome.tif",
+      "md5": "f96d1a5890daa1ec23f307ea393fe5ff",
+      "size": 6493601107
+    },
+    {
+      "relpath": "P29_Vis_Rep1.ome.tif",
+      "md5": "aaebdf8e1cfc9a1debf2f124efe12b1b",
+      "size": 2895424612
+    },
+    {
+      "relpath": "P29_Vis_Rep2.ome.tif",
+      "md5": "cfda6b8fd18639a23abd9a0962ad4d8a",
+      "size": 31166865933
+    },
+    {
+      "relpath": "P30_Vis.ome.tif",
+      "md5": "3b306945d42ffb686d52b09c0a6850f4",
+      "size": 28487003723
+    },
+    {
+      "relpath": "P31_Vis.ome.tif",
+      "md5": "4d6af0a88479e7aabdb79c3f80489e4d",
+      "size": 1538981960
+    },
+    {
+      "relpath": "P32_LN_Vis.ome.tif",
+      "md5": "297bf4519e5071c8ac32a3ccee7358fa",
+      "size": 9654112888
+    },
+    {
+      "relpath": "P32_Vis.ome.tif",
+      "md5": "bc35dd763b923820477d98de974f52e1",
+      "size": 27776956563
+    }
+  ]
+}

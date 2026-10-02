@@ -1,0 +1,30 @@
+{
+  "schema": "chirograph",
+  "schema_version": "1.1",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "GSE176078",
+  "concept": "geo:GSE176078",
+  "created": "2026-10-01T01:38:24Z",
+  "generator": "chirograph 0.2.0",
+  "size": 1122625865,
+  "nfiles": 3,
+  "body_hash": "a9e2d7f076c0bc3c26ccad6115084bc9",
+  "files": [
+    {
+      "relpath": "GSE176078_RAW.tar",
+      "md5": "d9092f5c24d45815f4f21770e82a6d0c",
+      "size": 558264320
+    },
+    {
+      "relpath": "GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz",
+      "md5": "e6d9df4a627bdd60cb4898be2ede77cd",
+      "size": 558829202
+    },
+    {
+      "relpath": "GSE176078_Wu_etal_2021_bulkRNAseq_raw_counts.txt.gz",
+      "md5": "887d02e472b44eec76d42c5d7fcd9f7a",
+      "size": 5532343
+    }
+  ]
+}

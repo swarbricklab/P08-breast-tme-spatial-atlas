@@ -1,6 +1,21 @@
-outs:
-- md5: ec2f6b7d55f8e60926d2e063aecc93eb.dir
-  size: 25276757093
-  nfiles: 62
+md5: c4a6ba072f4d0ab288417452243c20f2
+frozen: true
+meta:
+  archivefs:
+    archive: zenodo
+    record: 10.5281/zenodo.18917100
+    concept_doi: 10.5281/zenodo.18917099
+    container: anndata_objects.zip
+    url: https://doi.org/10.5281/zenodo.18917100
+    source: zenodo://10.5281/zenodo.18917100/anndata_objects.zip
+    nfiles: 58
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
+deps:
+- md5: b31a60ea2a0ba0b06e0afad28a4626f0.dir
+  size: 20783654648
+  nfiles: 58
   hash: md5
+  path: chiro://md5:1c5041b2702dc5ba606c3741a7f4c053
+outs:
+- hash: md5
   path: anndata_objects

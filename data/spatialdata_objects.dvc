@@ -1,6 +1,21 @@
-outs:
-- md5: eed6cadd2d89fdfe2167ab252a1ca3f5.dir
-  size: 28166484532
+md5: 0cca7d6c637133d7e457ea3aad5d18ce
+frozen: true
+meta:
+  archivefs:
+    archive: zenodo
+    record: 10.5281/zenodo.18917100
+    concept_doi: 10.5281/zenodo.18917099
+    container: spatialdata_objects.zip
+    url: https://doi.org/10.5281/zenodo.18917100
+    source: zenodo://10.5281/zenodo.18917100/spatialdata_objects.zip
+    nfiles: 6
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
+deps:
+- md5: 9619368410ff0ef31c543abba0848e81.dir
+  size: 28166286250
   nfiles: 6
   hash: md5
+  path: chiro://md5:81aa36a43b3135747d5bd891b7b2a72e
+outs:
+- hash: md5
   path: spatialdata_objects

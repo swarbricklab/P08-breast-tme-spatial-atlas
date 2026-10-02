@@ -1,0 +1,35 @@
+{
+  "schema": "chirograph",
+  "schema_version": "1.1",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "S-BIAD3080/images/he/aligned_images/visium_hd",
+  "concept": "biostudies:S-BIAD3080/images/he/aligned_images/visium_hd",
+  "created": "2026-09-06T23:30:40Z",
+  "generator": "chirograph 0.1.0",
+  "size": 57119238580,
+  "nfiles": 4,
+  "body_hash": "da467248ac2497e503a4fdeb8935c75b",
+  "files": [
+    {
+      "relpath": "P26_HD.ome.tif",
+      "md5": "7a963f23a8b6632504614839294e7e55",
+      "size": 12199482455
+    },
+    {
+      "relpath": "P27_HD.ome.tif",
+      "md5": "d9477510a63532f4a9ceddbc321e1193",
+      "size": 11204012333
+    },
+    {
+      "relpath": "P29_HD.ome.tif",
+      "md5": "7e47bd585ca2e5be784462ca0519c97e",
+      "size": 16334562315
+    },
+    {
+      "relpath": "P32_HD.ome.tif",
+      "md5": "ca908c74c0a05cc4409048959247e9f4",
+      "size": 17381181477
+    }
+  ]
+}

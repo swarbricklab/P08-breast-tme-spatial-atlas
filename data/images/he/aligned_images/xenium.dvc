@@ -1,0 +1,20 @@
+md5: 7ff1055754f24b174ec12e357a110125
+frozen: true
+meta:
+  archivefs:
+    archive: bia
+    study: S-BIAD3080
+    subtree: images/he/aligned_images/xenium
+    url: https://www.ebi.ac.uk/biostudies/studies/S-BIAD3080
+    source: bia://S-BIAD3080/images/he/aligned_images/xenium
+    nfiles: 6
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
+deps:
+- md5: 4d3e6e4fa9551a19c4aff3d86bcea217.dir
+  size: 63279602020
+  nfiles: 6
+  hash: md5
+  path: chiro://md5:d627f3e37f738070b958013c2e707809
+outs:
+- hash: md5
+  path: xenium

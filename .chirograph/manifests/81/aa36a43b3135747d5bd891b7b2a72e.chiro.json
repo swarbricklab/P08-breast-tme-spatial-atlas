@@ -1,0 +1,65 @@
+{
+  "schema": "chirograph",
+  "schema_version": "2.0",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "18917100",
+  "concept": "doi:10.5281/zenodo.18917099",
+  "source_url": "zenodo://10.5281/zenodo.18917100/spatialdata_objects.zip",
+  "created": "2026-09-08T01:54:29Z",
+  "generator": "chirograph 0.1.0",
+  "size": 28166286250,
+  "nfiles": 6,
+  "body_hash": "3d65943021a149f55bf176e6c38f963d",
+  "containers": [
+    {
+      "source_root": "spatialdata_objects.zip",
+      "format": "zip",
+      "md5": "4108cdaca4b0dda64cddc5aa9025ef51"
+    }
+  ],
+  "files": [
+    {
+      "relpath": "xenium/P17_Xe5k.zip",
+      "md5": "6b9780b03b7ccfba15d77ff27195a4a3",
+      "size": 4065046386,
+      "source_path": "spatialdata_objects.zip/xenium/P17_Xe5k.zip",
+      "crc32": "85df0b3e"
+    },
+    {
+      "relpath": "xenium/P22_Xe5k.zip",
+      "md5": "16fe723f89ea8a8c212c46830e1c88ce",
+      "size": 3644477611,
+      "source_path": "spatialdata_objects.zip/xenium/P22_Xe5k.zip",
+      "crc32": "f7d0d6d2"
+    },
+    {
+      "relpath": "xenium/P24_Xe5k.zip",
+      "md5": "c1ce42aa8c623ca6bc71ca23479ae193",
+      "size": 2220678190,
+      "source_path": "spatialdata_objects.zip/xenium/P24_Xe5k.zip",
+      "crc32": "a7235407"
+    },
+    {
+      "relpath": "xenium/P26_Xe5k.zip",
+      "md5": "d01db64be0ebba73d7a7a00398bb8055",
+      "size": 4821696420,
+      "source_path": "spatialdata_objects.zip/xenium/P26_Xe5k.zip",
+      "crc32": "b935d2ef"
+    },
+    {
+      "relpath": "xenium/P29_Xe5k.zip",
+      "md5": "1c12077c49e15e82e292b71e7344b6a6",
+      "size": 5636409105,
+      "source_path": "spatialdata_objects.zip/xenium/P29_Xe5k.zip",
+      "crc32": "a46e6549"
+    },
+    {
+      "relpath": "xenium/P32_Xe5k.zip",
+      "md5": "d729f8c45bcce41899760238f5fea9d5",
+      "size": 7777978538,
+      "source_path": "spatialdata_objects.zip/xenium/P32_Xe5k.zip",
+      "crc32": "53075d37"
+    }
+  ]
+}
