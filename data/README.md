@@ -6,11 +6,11 @@ For an overview of which samples are available per modality, see the sample shee
 
 ## Data availability
 
-Each dataset below is tracked by a DVC import (a `.dvc` file) that points directly at the archive it was deposited in. Once the environment described in [Getting the data](../README.md#getting-the-data) is set up, fetch a dataset with `dvc pull <.dvc file>` — files are downloaded from the archive, verified against the checksums pinned in this repository, and placed at the location shown. Pull individual `.dvc` files rather than everything at once (~1.4 TB in total).
+Each dataset below is tracked by the `.dvc` file shown and is fetched into the location shown; see [Getting the data](../README.md#getting-the-data) for how.
 
 ### Zenodo
 
-A curated subset of this data is published on Zenodo: **[10.5281/zenodo.18917100](https://doi.org/10.5281/zenodo.18917100)** — *"Spatial Transcriptomics Data for Breast Cancer TLS and HEV Analysis"*. Each archive unpacks to the same folder layout used in this repository; `dvc pull` places the unpacked files directly, without downloading or extracting the `.zip` yourself:
+A curated subset of this data is published on Zenodo: **[10.5281/zenodo.18917100](https://doi.org/10.5281/zenodo.18917100)** — *"Spatial Transcriptomics Data for Breast Cancer TLS and HEV Analysis"*. Each archive unpacks to the same folder layout used in this repository (DVC fetches the unpacked files directly):
 
 | Zenodo archive | Unpacks to | Location in this repo | DVC file | Size |
 |---|---|---|---|---|
@@ -34,6 +34,12 @@ Imaging data — H&E images, alignment files, CytAssist images, and IHC images (
 
 
 ### GEO
+
+The single-cell reference used for cell type mapping is pulled from its original GEO deposit, [GSE176078](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176078) ([Wu et al., 2021](https://doi.org/10.1038/s41588-021-00911-1)):
+
+| Contents | Location in this repo | DVC file | Size |
+|---|---|---|---|
+| scRNA-seq reference (compressed archive) | `resources/sc_ref/` | `resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc` | 533 MB |
 
 Raw sequencing and pipeline outputs (`data/processed/` — Space Ranger / Xenium Onboard Analysis, used to build the AnnData/SpatialData objects) will be deposited on **GEO** (accession number to be added). Until then, `data/processed.dvc` points at an internal data repository and cannot be pulled from outside the lab.
 

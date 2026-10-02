@@ -6,7 +6,7 @@ Link to Project description shared doc: [https://docs.google.com/document/d/1iX6
 
 ## Getting the data
 
-All input data are tracked as DVC imports that point directly at the public archives the data were deposited in (Zenodo, BioImage Archive), so no access to our own storage is needed. `dvc pull` fetches each file from the archive and verifies it against the checksum pinned in this repository.
+All input data are tracked as DVC imports that point directly at the public archives holding the data (Zenodo, BioImage Archive, GEO), so no access to our own storage is needed. `dvc pull` fetches files from the archive and verifies them against the checksums pinned in this repository. [data/README.md](data/README.md#data-availability) lists each `.dvc` file, what it contains, and its size.
 
 ```bash
 git clone https://github.com/swarbricklab/P08-Spatial-Benchmarking-Analysis-for-publication.git
@@ -17,10 +17,11 @@ conda activate data-access
 archivefs dvc enable    # once per environment: lets DVC resolve chiro://, zenodo://, bia:// and geo:// URLs
 archivefs dvc status    # should report "installed: True"
 
-dvc pull data/pathology_annotations.dvc    # pull only what you need
+dvc list -R --size . data/pathology_annotations    # inspect what a target contains, without downloading it
+dvc pull data/pathology_annotations.dvc            # fetch it
 ```
 
-- Pull individual `.dvc` files rather than running a bare `dvc pull` — together they total ~1.4 TB. See [data/README.md](data/README.md#data-availability) for what each one contains and its size.
+- `dvc pull` with no target fetches everything (~1.4 TB), so pulling selectively is usually more practical. `data/processed.dvc` cannot yet be pulled from outside the lab (see [data/README.md](data/README.md#geo)).
 - Run `dvc` from inside the repository: the archive manifests the pins refer to live in `.chirograph/`.
 - `Unsupported URL type chiro://` means `archivefs dvc enable` has not been run in the active environment.
 - The ssh remote in `.dvc/config` is our internal cache and is not needed to pull the data.
