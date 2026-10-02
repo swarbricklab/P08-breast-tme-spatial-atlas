@@ -26,15 +26,20 @@ Cell type reference information:
 Single-cell reference data for cell type deconvolution:
 
 **Data retrieval:**
-The single-cell reference data was imported with `dvc import-url` and is stored as a compressed archive. To access the data, download it directly from the source URL specified in `resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc`:
+The single-cell reference data is a compressed archive from GEO ([GSE176078](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176078)), tracked with DVC (see [Getting the data](../README.md#getting-the-data)). Pull and extract it:
 
 ```bash
-# Download from the URL in the .dvc file (GEO accession GSE176078)
+dvc pull resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc
 cd resources/sc_ref
-wget "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE176078&format=file&file=GSE176078%5FWu%5Fetal%5F2021%5FBRCA%5FscRNASeq%2Etar%2Egz"
+tar -xzf GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz    # creates Wu_etal_2021_BRCA_scRNASeq/
+```
 
-# Extract the tar archive to get the Wu_etal_2021_BRCA_scRNASeq directory
-tar -xzf GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz
+Without DVC, the same file can be downloaded directly from GEO (then extract as above):
+
+```bash
+cd resources/sc_ref
+wget "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE176078&format=file&file=GSE176078%5FWu%5Fetal%5F2021%5FBRCA%5FscRNASeq%2Etar%2Egz" \
+    -O GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz
 ```
 
 **Contents:**
