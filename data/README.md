@@ -33,6 +33,10 @@ Imaging data — H&E images, alignment files, CytAssist images, and IHC images (
 | IHC images | `data/images/ihc/` | `data/images/ihc.dvc` | 398 GB |
 
 
+### EGA
+
+Sequencing reads (FASTQ) are deposited at the **European Genome-phenome Archive** under study [EGAS00001008558](https://ega-archive.org/studies/EGAS00001008558). Access is controlled: apply to the study's Data Access Committee through EGA. The reads are not tracked in this repository; the analyses here start from the pipeline outputs in `processed/`.
+
 ### GEO
 
 The single-cell reference used for cell type mapping is pulled from its original GEO deposit, [GSE176078](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176078) ([Wu et al., 2021](https://doi.org/10.1038/s41588-021-00911-1)):
@@ -41,7 +45,7 @@ The single-cell reference used for cell type mapping is pulled from its original
 |---|---|---|---|
 | scRNA-seq reference (compressed archive) | `resources/sc_ref/` | `resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc` | 533 MB |
 
-Raw sequencing and pipeline outputs (`data/processed/` — Space Ranger / Xenium Onboard Analysis, used to build the AnnData/SpatialData objects) will be deposited on **GEO** (accession number to be added). Until then, `data/processed.dvc` points at an internal data repository and cannot be pulled from outside the lab.
+Pipeline outputs (`data/processed/` — Space Ranger / Xenium Onboard Analysis, used to build the AnnData/SpatialData objects) will be deposited on **GEO** (accession number to be added). Until then, `data/processed.dvc` points at an internal data repository and cannot be pulled from outside the lab.
 
 ### Recreate from source
 
