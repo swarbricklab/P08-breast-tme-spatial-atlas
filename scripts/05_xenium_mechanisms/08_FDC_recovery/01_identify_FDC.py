@@ -97,14 +97,10 @@ crop_coord = auto_crop_xenium(adata)
 
 
 # --- Load subset-level cell-type annotations
-# Primary path, falling back to the regenerated label-transfer results if absent.
 
 level = 'subset'
 annotation_file = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium',
                                f'{level}_level', f'{sample_id}_{level}_pred_cell_types.csv')
-if not os.path.exists(annotation_file):
-    annotation_file = os.path.join(res_dir, '02_cell_type_mapping_regenerated', 'label_transfer',
-                                   'xenium', f'{level}_level', f'{sample_id}_{level}_pred_cell_types.csv')
 print(f'Using cell-type annotations: {annotation_file}')
 annotations = pd.read_csv(annotation_file, index_col=0)
 

@@ -5,8 +5,10 @@ This directory contains scripts for the high-resolution, single-cell spatial ana
 ## Directory Structure
 
 - **01_identify_TLS_regions/** 
-  Single-cell spatial identification of TLS architectures.
+  Single-cell spatial identification of TLS architectures, plus their cellular composition and gene expression. *(Figures S7B–D)*
   - `01_identify_TLS.py`: Automatically segment TLS regions based on the density and spatial co-localization of T cells and B cells.
+  - `02_composition_TLS.py`: Cohort cellular composition of TLS regions — cell-type proportions inside vs outside TLS (S7B) and average relative abundance within TLS (S7C).
+  - `03_gene_expression_TLS.py`: Cohort CD40 / CD40LG expression across the subset-level cell types within TLS regions (S7D).
 
 - **02_identify_HEV_regions/** 
   Single-cell identification of high endothelial venules.

@@ -135,15 +135,11 @@ def label_color(label):
     return SHORT_COLORS.get(label, 'grey')
 
 
-# --- Cell-type annotation loader (P08 label-transfer; regenerated dir as a fallback)
+# --- Cell-type annotation loader (label transfer)
 
 def load_subset_labels(sample):
-    primary = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
-                           'xenium', 'subset_level', f'{sample}_subset_pred_cell_types.csv')
-    fallback = os.path.join(project_dir, 'results', '02_cell_type_mapping_regenerated',
-                            'label_transfer', 'xenium', 'subset_level',
-                            f'{sample}_subset_pred_cell_types.csv')
-    path = primary if os.path.exists(primary) else fallback
+    path = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
+                        'xenium', 'subset_level', f'{sample}_subset_pred_cell_types.csv')
     df = pd.read_csv(path, index_col=0)
     df.index = df.index.astype(str)
     return df['pred_cell_type']
