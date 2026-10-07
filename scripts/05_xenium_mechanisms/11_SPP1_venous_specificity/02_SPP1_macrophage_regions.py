@@ -103,9 +103,6 @@ microns_per_pixel = adata.uns['spatial'][sample_id]['scalefactors']['microns_per
 def celltype_csv(sample, level='subset'):
     p = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium',
                      f'{level}_level', f'{sample}_{level}_pred_cell_types.csv')
-    if not os.path.exists(p):
-        p = os.path.join(res_dir, '02_cell_type_mapping_regenerated', 'label_transfer',
-                         'xenium', f'{level}_level', f'{sample}_{level}_pred_cell_types.csv')
     return p
 
 

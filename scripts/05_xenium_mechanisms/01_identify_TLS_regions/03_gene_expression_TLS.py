@@ -118,9 +118,6 @@ major_cell_types_sorted = sorted(
 def load_label_transfer(sample, level):
     annot_path = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium',
                               f'{level}_level', f'{sample}_{level}_pred_cell_types.csv')
-    if not os.path.exists(annot_path):
-        annot_path = os.path.join(res_dir, '02_cell_type_mapping_regenerated', 'label_transfer',
-                                  'xenium', f'{level}_level', f'{sample}_{level}_pred_cell_types.csv')
     return pd.read_csv(annot_path, index_col=0)['pred_cell_type']
 
 tls_csv_dir = os.path.join(res_dir, '05_xenium_mechanisms', '01_identify_TLS_regions', 'csv_files')

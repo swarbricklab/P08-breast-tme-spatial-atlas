@@ -128,26 +128,15 @@ def pretty_zone(z):
     return z.replace('_', ' ')
 
 
-# --- Cell-type helper (major-level T/B call, subset->major fallback)
-
-subset_class = pd.read_csv(os.path.join(project_dir, 'resources', 'cell_types', 'miniatlas',
-                                        'miniatlas_subset_classifications.csv'))
-subset_to_major = dict(zip(subset_class['miniatlas_subset'], subset_class['miniatlas_major']))
-
+# --- Cell-type helper (major-level T/B call)
 
 def load_major_labels(sample):
-    """Return a Series (index = cell_id) of major-level cell types.
-    Primary: label_transfer/{level}_level; fallback: regenerated subset_level mapped to major."""
-    primary = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
-                           'xenium', f'{annotation_level}_level',
-                           f'{sample}_{annotation_level}_pred_cell_types.csv')
-    if os.path.exists(primary):
-        df = pd.read_csv(primary, index_col=0)
-        return df['pred_cell_type']
-    fb = os.path.join(project_dir, 'results', '02_cell_type_mapping_regenerated', 'label_transfer',
-                      'xenium', 'subset_level', f'{sample}_subset_pred_cell_types.csv')
-    df = pd.read_csv(fb, index_col=0)
-    return df['pred_cell_type'].map(subset_to_major)
+    """Return a Series (index = cell_id) of major-level cell types."""
+    path = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
+                        'xenium', f'{annotation_level}_level',
+                        f'{sample}_{annotation_level}_pred_cell_types.csv')
+    df = pd.read_csv(path, index_col=0)
+    return df['pred_cell_type']
 
 
 # --- Load per-sample step-01 outputs

@@ -165,12 +165,9 @@ os.makedirs(csv_dir, exist_ok=True)
 
 
 def celltype_csv(sample, level='subset'):
-    """Label-transfer predicted cell types (col 'pred_cell_type'); regenerated fallback."""
+    """Label-transfer predicted cell types (col 'pred_cell_type')."""
     p = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium',
                      f'{level}_level', f'{sample}_{level}_pred_cell_types.csv')
-    if not os.path.exists(p):
-        p = os.path.join(project_dir, 'results', '02_cell_type_mapping_regenerated', 'label_transfer',
-                         'xenium', f'{level}_level', f'{sample}_{level}_pred_cell_types.csv')
     return p
 
 

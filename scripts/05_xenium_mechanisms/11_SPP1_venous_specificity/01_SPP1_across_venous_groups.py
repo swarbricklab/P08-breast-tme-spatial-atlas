@@ -193,13 +193,7 @@ for sample in samples:
         res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium',
         f'{annotation_level}_level',
         f'{sample}_{annotation_level}_pred_cell_types.csv')
-    if not os.path.exists(annot_path):
-        # Fallback: regenerated label-transfer outputs (materialised for all samples)
-        annot_path = os.path.join(
-            res_dir, '02_cell_type_mapping_regenerated', 'label_transfer',
-            'xenium', f'{annotation_level}_level',
-            f'{sample}_{annotation_level}_pred_cell_types.csv')
-    ann = pd.read_csv(annot_path, index_col=0)['pred_cell_type'].astype(str)
+    ann =pd.read_csv(annot_path, index_col=0)['pred_cell_type'].astype(str)
     ann = ann.reindex(adata.obs_names)
 
     # TLS per-cell annotation
