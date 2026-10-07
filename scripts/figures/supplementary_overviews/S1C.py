@@ -3,7 +3,7 @@
 # --- Aim
 # Make a presence matrix showing which pathology annotation categories
 # are present in which samples, split by annotation layer
-# This creates Supplementary Figure 1C
+# This creates Figure S1C
 
 # --- Define environment
 # env: spatial-pilot
@@ -545,7 +545,7 @@ plt.suptitle('Overview of available pathology annotations per sample', y=title_y
 out_dir = os.path.join(res_dir, 'figures', 'supplementary_overviews')
 os.makedirs(out_dir, exist_ok=True)
 
-filename = "pathology_presence_matrix.pdf"
+filename = "Fig_S1C.pdf"
 
 # Save with high resolution
 plt.savefig(os.path.join(out_dir, filename), bbox_inches='tight')

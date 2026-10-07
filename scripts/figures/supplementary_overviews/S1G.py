@@ -7,6 +7,7 @@
 # term enrichment on the up-regulated genes, and draw the enrichment dot plot
 # (top terms per region; dot size = combined enrichment score, colour = -log10 adjusted P)
 # together with a bar of the total spot count per annotation.
+# This creates Figure S1G
 
 # --- Define environment
 # env: gseapy
@@ -181,15 +182,15 @@ for layer in annotation_layers:
 out_dir = os.path.join(res_dir, 'figures', 'supplementary_overviews')
 os.makedirs(out_dir, exist_ok=True)
 
-csv_dir = os.path.join(out_dir, 'pathology_go_enrichment')
+csv_dir = os.path.join(out_dir, 'csv_files')
 os.makedirs(csv_dir, exist_ok=True)
 
-# Save the marker genes per layer
-for layer in annotation_layers:
-    deg_dict[layer].to_csv(os.path.join(csv_dir, f'All_samples_{layer}_marker_genes.csv'), index=False)
+# Save the marker genes of all layers in one table
+marker_genes_df = pd.concat(deg_dict, names=['annotation_layer']).reset_index(level=0)
+marker_genes_df.to_csv(os.path.join(csv_dir, 'S1G_pathology_marker_genes.csv'), index=False)
 
 # Keep a record of which samples were used
-pd.DataFrame({'sample_id': annotated_samples}).to_csv(os.path.join(csv_dir, 'Samples_included.csv'), index=False)
+pd.DataFrame({'sample_id': annotated_samples}).to_csv(os.path.join(csv_dir, 'S1G_samples_included.csv'), index=False)
 
 
 # --- Load the desired category order per layer
@@ -236,8 +237,13 @@ for layer in annotation_layers:
             # Strip the trailing GO identifier from the term names
             enr_up.res2d.Term = enr_up.res2d.Term.str.split(r" \(GO").str[0]
             enr_dict_full[layer][group] = enr_up.res2d
-            # Save the enrichment table
-            enr_up.res2d.to_csv(os.path.join(csv_dir, f'All_samples_{layer}_{group}_gene_enrichment.csv'), index=False)
+
+# Save the enrichment results of all annotation categories in one table
+enr_df = pd.concat(
+    {(layer, group): enr_dict_full[layer][group] for layer in enr_dict_full for group in enr_dict_full[layer]},
+    names=['annotation_layer', 'group'],
+).reset_index(level=[0, 1])
+enr_df.to_csv(os.path.join(csv_dir, 'S1G_pathology_GO_enrichment.csv'), index=False)
 
 
 # --- Identify the top terms per category and filter
@@ -521,145 +527,9 @@ plt.suptitle(f'Gene enrichment analysis - top {top_n} terms per annotation categ
              x=title_x, y=title_y, fontweight='bold', fontsize=12)
 
 
-# --- Plot 2: horizontal version (categories on y-axis, terms on x-axis, spot-count bars to the right)
-
-axs_h, grid_spec_h = dotplot_functions.prepare_dotplot(ordered_major_cat_dict, height=6, width=6)
-
-for n, layer in enumerate(available_layers_with_data):
-    dot_plot_df = dot_plot_df_dict_limited[layer]
-    if len(dot_plot_df) == 0:
-        continue
-    ax = axs_h[n]
-    sns.scatterplot(
-        data=dot_plot_df,
-        x='term',
-        y='category',
-        hue='neg_log10_pval',
-        size='combined_score',
-        sizes=(0, 400),
-        palette='Reds',
-        edgecolor='black',
-        linewidth=0.8,
-        ax=ax,
-        hue_norm=(vmin, vmax),
-        size_norm=(size_min, max_combined_score),
-    )
-    ax.set_title('')
-    ax.set_xlabel('')
-    ax.set_ylabel(layer.capitalize().replace('_', ' '), fontweight='bold', fontsize=10)
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0, ha='right')
-    ax.set_xticks(range(len(all_terms_unique)))
-    if n == len(available_layers_with_data) - 1:
-        ax.set_xticklabels(all_terms_unique, rotation=90, ha='center')
-    else:
-        ax.set_xticklabels([])
-    dim_y = len(dot_plot_df['category'].unique())
-    dim_x = len(all_terms_unique)
-    ax_pos = ax.get_position()
-    ax.set_position([ax_pos.x0, ax_pos.y0, space_per_dot*dim_x*0.75, space_per_dot*dim_y])
-    num_cats_x = len(all_terms_unique)
-    num_cats_y = len(dot_plot_df['category'].unique())
-    ax.set_xlim(-0.75, num_cats_x-1+0.75)
-    ax.set_ylim(num_cats_y-1+0.75, -0.75)
-    if ax.get_legend():
-        ax.get_legend().remove()
-
-# Stack the dot plots vertically
-for n, layer in enumerate(available_layers_with_data):
-    ax = axs_h[n]
-    dim_y = len(list(ordered_major_cat_dict[layer]))
-    new_height = space_per_dot * dim_y
-    dim_x = len(all_terms_unique)
-    new_width = space_per_dot * dim_x * 0.75
-    new_x = 0.1
-    if n == 0:
-        new_y = 0.8
-        ax.set_position([new_x, new_y - new_height, new_width, new_height])
-        prev_y = new_y - new_height
-    else:
-        new_y = prev_y - 0.01
-        ax.set_position([new_x, new_y - new_height, new_width, new_height])
-        prev_y = new_y - new_height
-
-# Spot-count bars to the right of each dot plot
-bar_axs_h = []
-
-for n, layer in enumerate(available_layers_with_data):
-    ax = axs_h[n]
-    ax_pos = ax.get_position()
-    categories_in_plot = list(ordered_major_cat_dict[layer])[::-1]  # Reverse for the y-axis
-    counts = [spot_counts_per_category[layer].get(cat, 0) for cat in categories_in_plot]
-    bar_width = 0.08
-    bar_ax = plt.gcf().add_axes([ax_pos.x1 + 0.01, ax_pos.y0, bar_width, ax_pos.height])
-    bar_ax.set_facecolor('none')
-    y_positions = range(len(categories_in_plot))
-    color = top_cat_colors.get(layer, 'lightgray')
-    bar_ax.barh(y_positions, counts, color=color, edgecolor='black', linewidth=0.8, alpha=0.9)
-    for i, count in enumerate(counts):
-        label = f'{count/1000:.1f}k' if count >= 1000 else str(count)
-        offset = max_count_all * 0.1
-        bar_ax.text(count + offset, i, label, ha='left', va='center', fontsize=8)
-    bar_ax.set_ylim(-0.75, len(categories_in_plot) - 0.25)
-    bar_ax.set_xlim(0, max_count_all * 1.1)
-    bar_ax.set_yticks([])
-    bar_ax.spines['top'].set_visible(False)
-    bar_ax.spines['right'].set_visible(False)
-    if n != len(available_layers_with_data) - 1:
-        bar_ax.set_xticks([bar_ax.get_xticks()[1]])
-    if len(available_layers_with_data) - 1 == n:
-        bar_ax.set_xlabel('# spots', fontsize=10)
-        bar_ax.tick_params(axis='x', labelsize=10)
-        if max_count_all > 1000:
-            bar_ax.xaxis.set_major_formatter(FuncFormatter(format_func))
-    else:
-        bar_ax.set_xticklabels([])
-        bar_ax.tick_params(axis='x', labelsize=10)
-    bar_axs_h.append(bar_ax)
-
-for ax in axs_h:
-    ax.grid(True, which='both', axis='both', linestyle='-', linewidth=0.5, alpha=0.5)
-    ax.set_axisbelow(True)
-
-# Colour bar and size legend on the last plot
-if len(available_layers_with_data) > 0:
-    last_ax_h = bar_axs_h[-1]
-    norm = plt.Normalize(vmin, vmax)
-    sm = plt.cm.ScalarMappable(cmap='Reds', norm=norm)
-    sm.set_array([])
-    fig = plt.gcf()
-    cbar_height = space_per_dot * 5
-    cax_h = fig.add_axes([last_ax_h.get_position().x1 + 0.1, last_ax_h.get_position().y0, 0.02, cbar_height])
-    fig.colorbar(sm, cax=cax_h, orientation='vertical')
-    cax_h.set_ylabel('-log10(Adj. P-value)', fontsize=10, rotation=90, labelpad=5)
-    cax_h.yaxis.set_label_position("left")
-    last_ax_h = axs_h[-1]
-    legend = add_size_legend(dotplot_ax=last_ax_h, target_ax=cax_h, size='combined_score',
-                             size_title='Combined\nscore', limit_circles=True,
-                             labelspacing=1, fontsize=10, handletextpad=0.5, loc='lower left', bbox_to_anchor=(-2, 1.1))
-    legend.get_title().set_fontsize(10)
-    legend.get_title().set_fontweight('normal')
-
-# Clean the y tick labels
-for ax in axs_h:
-    new_labels = []
-    for label in ax.get_yticklabels():
-        text = label.get_text()
-        text = text.upper() if text in caps else text.capitalize()
-        text = text.replace('_', ' ')
-        new_labels.append(text)
-    ax.set_yticklabels(new_labels, rotation=0, ha='right')
-
-axs_h[0].set_title(f'GO enrichment - top {top_n} terms per annotation category', fontweight='bold', fontsize=12)
-
-title_x_h = (axs_h[0].get_position().x0 + axs_h[0].get_position().x1) / 2
-title_y_h = axs_h[0].get_position().y1 + 0.1
-plt.suptitle(f'Gene enrichment analysis - top {top_n} terms per annotation category (horizontal, combined score capped at {comb_score_limit})',
-             x=title_x_h, y=title_y_h, fontweight='bold', fontsize=12)
-
-
 # --- Save the plots
 
-filename = f'pathology_go_enrichment_top{top_n}.pdf'
+filename = 'Fig_S1G.pdf'
 save_multi_image(os.path.join(out_dir, filename))
 plt.close('all')
 
