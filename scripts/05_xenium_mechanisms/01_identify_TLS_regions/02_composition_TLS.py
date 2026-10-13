@@ -159,7 +159,18 @@ def inside_outside_proportions(tls_df, annotation_key):
     mean_true = sample_prop_all.groupby(annotation_key)['True'].mean()
     std_true = sample_prop_all.groupby(annotation_key)['True'].std()
     mean_false = 1 - mean_true
-    return mean_true, std_true, mean_false
+    return mean_true, std_true, mean_false, sample_prop_all
+
+
+def add_sample_dots(ax, sample_props, annotation_key, sorted_cells, value_col, dot_size=3):
+    """Per-sample points on top of the mean bars (as in Fig. 3G); sample_props is long format,
+    one row per sample x cell type."""
+    x_lut = dict(zip(sorted_cells, np.arange(len(sorted_cells))))
+    # Fixed horizontal slot per sample so samples with identical values don't stack on top of each other
+    sample_offset = dict(zip(sample_list, np.linspace(-0.3, 0.3, len(sample_list))))
+    df = sample_props[sample_props[annotation_key].isin(x_lut)]
+    ax.scatter(df[annotation_key].map(x_lut) + df['sample_id'].map(sample_offset), df[value_col],
+               s=dot_size, color='black', linewidth=0, zorder=3, clip_on=False)
 
 
 ncols = len(levels)
@@ -173,7 +184,7 @@ if ncols == 1:
 
 for n, level in enumerate(levels):
     ax = axs[n]
-    mean_true, std_true, mean_false = inside_outside_proportions(tls_df, level)
+    mean_true, std_true, mean_false, sample_prop_all = inside_outside_proportions(tls_df, level)
     sorted_cells = mean_true.sort_values(ascending=False).index
     mean_true = mean_true.loc[sorted_cells]
     std_true = std_true.loc[sorted_cells]
@@ -182,6 +193,8 @@ for n, level in enumerate(levels):
     ax.bar(sorted_cells, mean_true, color=colors, yerr=std_true, ecolor='black',
            error_kw=dict(lw=0.8, capsize=3, capthick=1), width=0.9)
     ax.bar(sorted_cells, mean_false, bottom=mean_true, label='Outside TLS', color='lightgray', width=0.9)
+    # Per-sample proportions inside TLS
+    add_sample_dots(ax, sample_prop_all, level, sorted_cells, value_col='True')
     ax.set_title(f'Cells in TLS regions\n(Annotations: {level})', fontweight='bold')
     ax.set_ylabel('Proportion of cells')
 
@@ -252,6 +265,9 @@ for n, level in enumerate(levels):
     colors = [color_dict.get(cell_type, 'lightgrey') for cell_type in sorted_cells]
     ax.bar(sorted_cells, mean_true, color=colors, yerr=std_true, ecolor='black',
            error_kw=dict(lw=0.8, capsize=3, capthick=1), width=0.9)
+    # Per-sample proportions
+    sample_props = avg_tls_compos.rename_axis(level).reset_index().melt(id_vars=level, var_name='sample_id', value_name='prop')
+    add_sample_dots(ax, sample_props, level, sorted_cells, value_col='prop')
     ax.set_title(f'TLS composition\n(Annotations: {level})', fontweight='bold', fontsize=10)
     ax.set_ylabel('Proportion of cells')
 
@@ -307,14 +323,17 @@ save_multi_image(os.path.join(plots_dir, 'All_samples_TLS_cellular_composition.p
 
 # Save the underlying per-cell-type statistics for each annotation level
 for level in levels:
-    mean_true, std_true, _ = inside_outside_proportions(tls_df, level)
+    mean_true, std_true, _, sample_prop_all = inside_outside_proportions(tls_df, level)
     inside_stats = pd.DataFrame({'mean_prop_inside_TLS': mean_true, 'std_prop_inside_TLS': std_true})
     inside_stats.to_csv(os.path.join(csv_dir, f'All_samples_{level}_inside_vs_outside_TLS.csv'))
+    # Per-sample values plotted as points
+    sample_prop_all.to_csv(os.path.join(csv_dir, f'All_samples_{level}_inside_vs_outside_TLS_per_sample.csv'), index=False)
 
     compos = tls_composition(tls_df, level)
     compos_stats = pd.DataFrame({'mean_abundance_in_TLS': compos.mean(axis=1),
                                  'std_abundance_in_TLS': compos.std(axis=1)})
     compos_stats.to_csv(os.path.join(csv_dir, f'All_samples_{level}_TLS_composition.csv'))
+    compos.to_csv(os.path.join(csv_dir, f'All_samples_{level}_TLS_composition_per_sample.csv'))
 
 
 # --- Finish

@@ -15,6 +15,7 @@ import anndata as ad
 import scanpy as sc
 
 import pandas as pd
+import numpy as np
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -302,7 +303,17 @@ def prepare_plot(tls_df, annotation_key):
     std_true = sample_prop_all.groupby(annotation_key)['True'].std()
     # Calculate false fractions based on mean_true
     mean_false = 1 - mean_true
-    return mean_true, std_true, mean_false
+    return mean_true, std_true, mean_false, sample_prop_all
+
+# Per-sample points on top of the mean bars (as in Fig. 3G)
+def add_sample_dots(ax, sample_props, annotation_key, sorted_cells, value_col, dot_size=2):
+    # sample_props: long format, one row per sample x cell type
+    x_lut = dict(zip(sorted_cells, np.arange(len(sorted_cells))))
+    # Fixed horizontal slot per sample so samples with identical values don't stack on top of each other
+    sample_offset = dict(zip(sample_list, np.linspace(-0.3, 0.3, len(sample_list))))
+    df = sample_props[sample_props[annotation_key].isin(x_lut)]
+    ax.scatter(df[annotation_key].map(x_lut) + df['sample_id'].map(sample_offset), df[value_col],
+               s=dot_size, color='black', linewidth=0, zorder=3, clip_on=False)
 
 def plot_heatmap(adata, ax, gene, annotation_key, vmin=0, vmax=1, last_ax=False):
     dp = sc.pl.matrixplot(
@@ -361,7 +372,7 @@ total_genes = sum(len(genes) for genes in top_genes_dict.values())
 all_genes = [gene for genes in top_genes_dict.values() for gene in genes]
 
 # Sort cells according to enrichment within TLS
-mean_true, std_true, mean_false = prepare_plot(tls_df, level)
+mean_true, std_true, mean_false, sample_prop_all = prepare_plot(tls_df, level)
 
 # Sort by highest mean_true
 sorted_cells = mean_true.sort_values(ascending=False).index
@@ -430,6 +441,9 @@ bar_ax.bar(sorted_cells, mean_true, color=palette, yerr=std_true, ecolor='black'
 
 # Plot 'Not corresponding' (False_fraction) on top
 bar_ax.bar(sorted_cells, mean_false, bottom=mean_true, label='Outside TLS', color='lightgray', width=0.9)
+
+# Per-sample proportions inside TLS
+add_sample_dots(bar_ax, sample_prop_all, level, sorted_cells, value_col='True')
 
 # Adjust the xlims
 bar_ax.set_xlim(-0.5, len(sorted_cells)-0.5)
