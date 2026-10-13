@@ -212,6 +212,10 @@ spp1_avg['TLS_distance_bin'] = pd.cut(
 # Count how many hevs per bin
 hev_counts = spp1_avg['TLS_distance_bin'].value_counts().sort_index()
 
+# Count bars: only HEVs with ACKR1+ endothelial cells have a value in the plot (matches the number of points)
+hev_counts_plot = (spp1_avg.loc[spp1_avg[f'avg_{gene_of_interest}_expression_ACKR1'].notna(), 'TLS_distance_bin']
+                   .value_counts().reindex(hev_counts.index, fill_value=0))
+
 
 # --- Load the HEV colors
 
@@ -390,7 +394,7 @@ for ax in axs:
 # Add ax with count bars on top of each ax
 for ax in axs:
     count_ax = plt.gcf().add_axes([ax.get_position().x0, ax.get_position().y1 + 0.02, ax.get_position().width, ax.get_position().height * 0.3])
-    sns.barplot(x=hev_counts.index, y=hev_counts.values, color='lightgrey', edgecolor='black', ax=count_ax, hue=hev_counts.index, palette=color_dict_bins,
+    sns.barplot(x=hev_counts_plot.index, y=hev_counts_plot.values, color='lightgrey', edgecolor='black', ax=count_ax, hue=hev_counts_plot.index, palette=color_dict_bins,
                    saturation=1)
     # Annotate counts
     for n, p in enumerate(count_ax.patches):
