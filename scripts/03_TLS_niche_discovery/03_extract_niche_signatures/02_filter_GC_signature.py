@@ -316,8 +316,6 @@ plot_gc_dotplot(
     subtitle=f'All samples - gene expression GC score in spots annotated as {annotation} (use_layer={use_layer}, vmax={vmax})',
 )
 
-plt.savefig('test.pdf', bbox_inches='tight')
-
 # --- Plot 1b: Same as above but for the top 50 genes
 
 top = 50

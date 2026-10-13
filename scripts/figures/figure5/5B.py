@@ -387,8 +387,6 @@ title_x = (axs[0,0].get_position().x0 + axs[0,-1].get_position().x1) / 2
 title_y = axs[0,0].get_position().y1 + 0.2
 plt.suptitle(f'{sample_id} ({subtype}) - HEV + transcripts of interest', x=title_x, y=title_y, fontsize=30, fontweight='bold')
 
-plt.savefig('test.pdf', bbox_inches='tight')
-
 # --- Save plot
 
 out_dir = os.path.join(res_dir, 'figures')

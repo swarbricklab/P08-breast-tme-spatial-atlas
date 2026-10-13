@@ -427,8 +427,6 @@ plt.subplots_adjust(wspace=0.6, hspace=0.3)
 
 plt.suptitle(f'{sample_id} ({subtype}) - HEVs + other vessels overlap (min_overlap={min_overlap})', y=1.2, x=0.5, fontweight='bold')
 
-plt.savefig('test2.pdf', bbox_inches='tight')
-
 
 
 
