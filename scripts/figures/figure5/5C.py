@@ -804,8 +804,6 @@ title_y = bar_ax_pos.y1 + 0.2
 
 plt.suptitle(f'All samples - Gene expression in TLS regions (min_cells={min_cells_pct}%, annotation_key={annotation_key})', x=title_x, y=title_y, fontweight='bold')
 
-plt.savefig('test.pdf', bbox_inches='tight')
-
 # --- Save the output
 
 out_dir = os.path.join(res_dir, 'figures')
