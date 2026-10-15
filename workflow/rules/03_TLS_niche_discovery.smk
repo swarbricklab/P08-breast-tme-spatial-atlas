@@ -277,6 +277,7 @@ rule v03_cluster_TLS_high:
         samples = VIS_SAMPLE_ARGS,
     threads: 2
     resources:
+        threads = 2,
         mem_mb  = 68000,       # peak 51.1 GB (1 jobs)
         runtime = 15,          # peak 7 min
     log:

@@ -498,6 +498,7 @@ rule h04_run_LR_analysis_stlearn:
         args = base_args("visium_hd"),
     threads: 16
     resources:
+        threads = 16,          # PBS ncpus come from this resource (the profile default is 4), not the threads: directive
         mem_mb  = 128000,
         runtime = 2880,
     log:
