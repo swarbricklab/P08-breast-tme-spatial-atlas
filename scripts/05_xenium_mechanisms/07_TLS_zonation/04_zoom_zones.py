@@ -29,6 +29,7 @@ import argparse
 import json
 import os
 import shutil
+import sys
 
 import anndata as ad
 import pandas as pd
@@ -42,8 +43,6 @@ from matplotlib.lines import Line2D
 from matplotlib.collections import PatchCollection, LineCollection
 from matplotlib_scalebar.scalebar import ScaleBar
 
-import PIL
-import tifffile
 import spatialdata as sd
 from spatialdata.transformations import get_transformation
 
@@ -77,6 +76,9 @@ grid_um            = args["grid_um"]
 overview_margin_um = args["overview_margin_um"]
 scalebar_val_overview = args["scalebar_overview_um"]
 scalebar_val_zoom     = args["scalebar_zoom_um"]
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import read_tiff_region
 
 if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
@@ -146,12 +148,8 @@ microns_per_pixel = adata.uns['spatial'][sample_id]['scalefactors']['microns_per
 
 image_path = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'xenium',
                           f'{sample_id}.ome.tif')
-PIL.Image.MAX_IMAGE_PIXELS = 24078974976
-# The aligned H&E is a large whole-slide image; only small crops are displayed but the whole
-# image is read (lazy tiled reads via tifffile.aszarr need zarr>=3, and spatdat ships zarr 2.x).
-# The job is submitted to a high-memory node (see the mem request for this script).
-img = tifffile.imread(image_path)
-print(f'Loaded aligned H&E: {img.shape}')
+# The aligned H&E is a large whole-slide image; only the zoom and overview crops are read,
+# tile by tile at full resolution (read_tiff_region in crop_image below).
 
 
 # --- Load spatialdata + filter transcripts to the plotted genes (image_space)
@@ -167,9 +165,10 @@ sdata = sd.read_zarr(zarr_path)
 sdata.points['transcripts'] = sdata.points['transcripts'][
     sdata.points['transcripts']['feature_name'].isin(transcripts_to_plot)
 ]
-transformed_sdata = sd.transform(sdata, to_coordinate_system='image_space')
-tx_df = transformed_sdata.points['transcripts'].compute()
-print(f'Loaded {len(tx_df)} transcripts across {len(transcripts_to_plot)} genes')
+# Transform only the transcripts: sd.transform(sdata, ...) would also resample the
+# full-resolution label rasters into image_space
+tx_df = sd.transform(sdata.points['transcripts'], to_coordinate_system='image_space').compute()
+print(f'Loaded {len(tx_df)} transcripts across {len(transcripts_to_plot)} genes', flush=True)
 
 
 # --- Xenium micron -> aligned-image (image_space) pixel transform (as in 03_zoom_GCs.py)
@@ -233,12 +232,8 @@ zone_bins = zone_bins[zone_bins['TLS_zone'].isin(zone_color_dict)].copy()
 
 # --- Helpers
 
-def crop_image(img, coords):
-    x_min = max(coords[0], 0)
-    x_max = min(coords[1], img.shape[1])
-    y_min = max(coords[2], 0)
-    y_max = min(coords[3], img.shape[0])
-    return img[y_min:y_max, x_min:x_max], (x_min, x_max, y_min, y_max)
+def crop_image(coords):
+    return read_tiff_region(image_path, *coords)
 
 
 def move_plots_x_y(axs, x_offset=0.02, y_offset=0.02, remove_title=True):
@@ -267,7 +262,7 @@ fig, axs = plt.subplots(nrows, ncols, figsize=(5, 5))
 he_zoom_axes = []
 for i, area in enumerate(area_names_zoom):
     coords = zoom_coords[area]
-    crop_img, adjusted_coords = crop_image(img, coords)
+    crop_img, adjusted_coords = crop_image(coords)
     width_crop = coords[1] - coords[0]
 
     for j, (_col_title, gene_list) in enumerate(zoom_col_specs):
@@ -322,7 +317,7 @@ ax_height   = ax_top_y - ax_bottom_y
 ax_x        = axs[0, 0].get_position().x0 - overview_gap - ax_height
 new_ax = fig.add_axes([ax_x, ax_bottom_y, ax_height, ax_height])
 
-ov_crop_img, ov_adjusted = crop_image(img, overview_coords)
+ov_crop_img, ov_adjusted = crop_image(overview_coords)
 new_ax.imshow(ov_crop_img)
 width_ov = overview_coords[1] - overview_coords[0]
 new_ax.set_xlim(0, width_ov); new_ax.set_ylim(width_ov, 0)

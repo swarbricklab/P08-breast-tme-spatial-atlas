@@ -340,7 +340,7 @@ plt.rcParams.update({'font.size': 12})
 # --- Also make the same plots for decon results
 
 level = 'major'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
 
 
 # --- Read in colors for the barplot

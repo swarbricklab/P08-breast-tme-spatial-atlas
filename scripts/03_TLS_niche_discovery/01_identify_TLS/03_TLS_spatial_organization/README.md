@@ -31,8 +31,8 @@ This is implemented once in the shared helper `discrete_tls.py` and reused by `0
 
 ## Inputs
 
-- Permissive TLS groupings: `results/03_TLS_niche_discovery/01_identify_TLS/02_group_TLS_high/threshold_01/csv_files/<date>/{s}_TLS_groups.csv`
-- TLS-model scores: `results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model/<date>/{s}_TLS_model.csv`
+- Permissive TLS groupings: `results/03_TLS_niche_discovery/01_identify_TLS/02_group_TLS_high/threshold_01/csv_files/{s}_TLS_groups.csv`
+- TLS-model scores: `results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model/{s}_TLS_model.csv`
 - Visium objects: `data/anndata_objects/visium/{s}.h5ad`
 - Pathology annotations: `data/pathology_annotations/visium/{s}_pathology_annotations.csv` (`epithelial` column; `invasive`/`in_situ` = cancer)
 - `config/sample_sheet_visium.csv`; `resources/tissue_metadata.csv`; subtype colours `resources/plotting_colors/SCSubtype_colors.csv`

@@ -132,7 +132,7 @@ def pretty_zone(z):
 
 def load_major_labels(sample):
     """Return a Series (index = cell_id) of major-level cell types."""
-    path = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
+    path = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer',
                         'xenium', f'{annotation_level}_level',
                         f'{sample}_{annotation_level}_pred_cell_types.csv')
     df = pd.read_csv(path, index_col=0)

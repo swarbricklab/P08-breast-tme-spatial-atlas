@@ -107,7 +107,7 @@ with open(path_to_file, 'r') as json_file:
 # --- Load the deconvolution results
 
 decon_level = 'major'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{decon_level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{decon_level}_level')
 
 decon_dict = {}
 

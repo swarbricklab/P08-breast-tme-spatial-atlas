@@ -11,7 +11,6 @@
 
 import argparse
 import os
-from datetime import datetime, date
 import sys
 
 import anndata as ad
@@ -94,7 +93,7 @@ adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 # Decide which annotation level to use
 level = 'major'
 
-annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
 
@@ -108,7 +107,7 @@ adata.obs[probability_key] = annotations['pred_cell_type_prob']
 # Also add the subset annotations
 level = 'subset'
 
-annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
 adata.obs[level] = annotations['pred_cell_type']
@@ -197,31 +196,9 @@ cell_type_orders = {
 
 # --- Load the HEV annotations
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
 
-most_recent_distance = find_most_recent(distance_dir)
+most_recent_distance = distance_dir
 
 # Also load HEV niche barcode and add to adata
 filename = f'{sample_id}_HEV_niches_cell_to_niche.csv'
@@ -798,13 +775,10 @@ plt.suptitle(f'{sample_id} ({subtype}) - STING & type I IFN signature scores in 
 
 out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '04_score_signatures', '01_score_STING_signatures')
 
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 # Save the figures

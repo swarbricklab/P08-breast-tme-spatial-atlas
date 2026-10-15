@@ -11,7 +11,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import anndata as ad
 
@@ -43,6 +42,7 @@ parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--gene_of_interest", help="Gene to correlate all other genes with (TMEM173 = STING)", default='TMEM173')
 
 args = vars(parser.parse_args())
 
@@ -93,31 +93,9 @@ for sample in sample_list:
 
 # --- Load the HEV annotations
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions',)
 
-most_recent_distance = find_most_recent(distance_dir)
+most_recent_distance = distance_dir
 
 for sample in sample_list:
     # Also load HEV niche barcode and add to adata
@@ -165,7 +143,7 @@ mean_adata.obs['niche_id'] = mean_adata.obs.index
 # --- Calculate correlations between STING expression and all other genes
 
 # Pick a gene of interest
-gene_of_i = 'TMEM173'  # STING gene symbol
+gene_of_i = args["gene_of_interest"]  # e.g. TMEM173 (STING gene symbol) or SPP1
 
 correlation_df = pd.DataFrame(columns=['gene', 'correlation', 'p_value'])
 
@@ -258,8 +236,7 @@ plt.suptitle(f'All samples - Correlation between mean {gene_of_i} expression and
 
 out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '05_gene_gene_correlations', '01_investigate_gene_correlations', f'{gene_of_i}_correlations')
 
-today = datetime.now().strftime('%Y%m%d')
-out_dir_plots = os.path.join(out_dir, today, 'plots')
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Save the figures
@@ -267,7 +244,7 @@ filename = f'All_samples_HEV_{gene_of_i}_gene_correlations.pdf'
 save_multi_image(os.path.join(out_dir_plots, filename))
 
 # Also save the correlation data
-out_dir_csv = os.path.join(out_dir, today, 'csv_files')
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 correlation_df.to_csv(os.path.join(out_dir_csv, f'All_samples_HEV_{gene_of_i}_gene_correlations.csv'))

@@ -15,8 +15,6 @@ import os
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import date
-from datetime import datetime
 import numpy as np
 import matplotlib.lines as mlines
 
@@ -46,7 +44,7 @@ args = vars(parser.parse_args())
 # Arguments
 project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
-res_dir = args["res_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
@@ -130,29 +128,7 @@ for sample in adata_dict.keys():
 
 class_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'identify_endothelial_high',)
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-most_recent_dir_path = find_most_recent(class_res_dir)
+most_recent_dir_path = class_res_dir
 
 # Read in the results & add to anndata
 for sample in adata_dict.keys():
@@ -175,14 +151,10 @@ color_dict = {
 
 # --- Prepare for saving
 
-# Put in a timestamped folder to avoid overwriting older plots
 qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'create_endothelial_object',)
 os.makedirs(qc_dir, exist_ok=True)
 
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir = os.path.join(qc_dir, today)
+out_dir = qc_dir
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
@@ -278,9 +250,9 @@ subtype_colors = list(color_lut.reindex(sorted_subtypes)['color'])
 
 # Go back to the unfiltered gene list
 # Bc we want to filter against vascular background rather than TLS background
-harmony_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
 
-gene_dir = find_most_recent(harmony_dir)
+gene_dir = harmony_dir
 
 filename = 'csv_files/All_samples_leiden_clusters_DEGS.csv'
 

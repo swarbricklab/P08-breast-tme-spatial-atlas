@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -127,30 +126,6 @@ color_dict = colors_df.set_index('endothelial_type')['color'].to_dict()
 
 # --- Load normalized endothelial numbers
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-        return None
-
-# Find most recent results
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
@@ -158,7 +133,7 @@ threshold_adj = str(threshold).split('.')[-1]
 vessel_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature',
                           '01_classify_vessels', 'csv_files')
 
-most_recent_dir_path = find_most_recent(vessel_dir)
+most_recent_dir_path = vessel_dir
 
 for sample in sample_list:
     # And also load the normalized endothelial cell numbers
@@ -479,7 +454,7 @@ plt.suptitle(f'Vessel morphology (scalebar={scalebar_val} {scalebar_units})',
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_3C.pdf'

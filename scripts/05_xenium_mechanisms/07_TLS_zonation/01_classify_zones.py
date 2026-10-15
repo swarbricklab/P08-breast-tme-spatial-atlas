@@ -122,7 +122,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
-# Raw counts live in layers['filtered_counts'] for Xenium Prime 5K (.X is log-norm)
+# layers['filtered_counts'] holds counts scaled to 10,000 per cell
 raw_counts = adata.layers['filtered_counts']
 if not sp.issparse(raw_counts):
     raw_counts = sp.csr_matrix(raw_counts)

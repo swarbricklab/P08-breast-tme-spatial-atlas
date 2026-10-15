@@ -12,7 +12,6 @@ import argparse
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
 import seaborn as sns
 import matplotlib as mpl
 
@@ -80,29 +79,7 @@ for sample in sample_list:
 
 GC_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '02_group_high_score_areas', 'GC_score',)
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
-most_recent_dir_path = find_most_recent(GC_group_dir)
+most_recent_dir_path = GC_group_dir
 
 GC_number_dict = {}
 
@@ -129,8 +106,7 @@ GC_numbers['subtype'] = GC_numbers['sample'].map(subtype_dict)
 
 TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
-# Apply function
-most_recent_dir_path = find_most_recent(TLS_res_dir)
+most_recent_dir_path = TLS_res_dir
 
 # Read in the results & add to anndata
 for sample in sample_list:
@@ -237,7 +213,7 @@ plt.suptitle(f'Number of spatially separate GCs normalized by total spots', y=1.
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_2H.pdf'

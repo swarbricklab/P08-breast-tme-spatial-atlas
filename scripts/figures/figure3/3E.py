@@ -41,6 +41,7 @@ args = vars(parser.parse_args())
 
 # Arguments
 project_dir = args["project_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, 'results')  # default: <project_dir>/results
 
 print(f'Project directory: {project_dir}')
 
@@ -77,7 +78,10 @@ miniatlas.var_names = miniatlas.var[gene_symbol_name].astype(str)
 
 # --- Renormalize after subsetting
 
-miniatlas_renorm = miniatlas.raw.to_adata().copy()
+if miniatlas.raw is not None:
+    miniatlas_renorm = miniatlas.raw.to_adata().copy()
+else:   # the P08 miniatlas_GEO.h5ad keeps the raw counts in layers['counts'] instead of .raw
+    miniatlas_renorm = sc.AnnData(X=miniatlas.layers['counts'].copy(), obs=miniatlas.obs.copy(), var=miniatlas.var.copy())
 miniatlas_renorm.var_names = miniatlas_renorm.var[gene_symbol_name].astype(str)
 
 miniatlas_renorm.layers['norm'] = sc.pp.normalize_total(miniatlas_renorm, target_sum=1e4, inplace=False)['X']
@@ -310,7 +314,7 @@ plt.suptitle(f'Miniatlas PVLs - top {top} genes per PVL subtype', y=title_y, x=t
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_3E.pdf'

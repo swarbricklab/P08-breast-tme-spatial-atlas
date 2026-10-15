@@ -16,7 +16,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -124,26 +123,10 @@ subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 # (Figure S3B definition) written by 01 and 02. Total spot counts per section come
 # from the per-sample TLS-model CSVs.
 
-def find_most_recent(parent):
-    candidates = []
-    for d in os.listdir(parent):
-        full = os.path.join(parent, d)
-        if not os.path.isdir(full):
-            continue
-        try:
-            datetime.strptime(d, '%Y%m%d')
-            candidates.append(d)
-        except ValueError:
-            continue
-    if not candidates:
-        raise FileNotFoundError(f"No dated subdirectory found in {parent}")
-    return os.path.join(parent, max(candidates, key=lambda x: datetime.strptime(x, '%Y%m%d')))
-
-
 tls_model_parent = os.path.join(
     res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model',
 )
-tls_model_dir = find_most_recent(tls_model_parent)
+tls_model_dir = tls_model_parent
 print(f"Per-sample TLS_model from: {tls_model_dir}")
 
 # Per-TLS distances/topology (produced by 01_TLS_distances_topology.py); optional.

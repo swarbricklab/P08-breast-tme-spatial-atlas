@@ -48,6 +48,7 @@ data_dir = args["data_dir"]
 h5ad_dir = args["h5ad_dir"]
 sample_list = args["samples"]
 project_dir = args['project_dir']
+res_dir = args["res_dir"] or os.path.join(project_dir, 'results')  # default: <project_dir>/results
 
 
 # --- Extract some info from the sample sheet
@@ -80,7 +81,7 @@ subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
 # --- Load the decon results
 
 level = 'major'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
 
 decon_dict = {}
 
@@ -219,7 +220,7 @@ if 'B-cells' in result_df.columns and 'T-cells' in result_df.columns:
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_1F.pdf'

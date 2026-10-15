@@ -3,7 +3,7 @@
 # --- Aim
 # S10I + S10J: render the close-vs-far DEG table (DEG_close_vs_far.csv from
 # 02_DEG_close_vs_far.py) as:
-#   - S10I: a volcano of the mean log-norm difference (close - far) vs -log10 BH-P,
+#   - S10I: a volcano of the mean log-transformed difference (close - far) vs -log10 BH-P,
 #           coloured by significance (purple = higher close to GC, brown = lower,
 #           grey = ns), with canonical HEV markers outlined + bold-labelled and all
 #           significant genes labelled (adjustText avoids overlaps).
@@ -191,7 +191,7 @@ def draw_volcano(deg, annotate_df, title, figsize=(4, 4),
                      label_size=label_size, bold_genes=set(hev_markers),
                      priority_genes=priority_genes)
 
-    ax.set_xlabel('Mean log-norm difference (close − far)')
+    ax.set_xlabel('Mean expression difference (close − far)')
     ax.set_ylabel('−log10(BH-adjusted p)')
     draw_directional_arrows(ax, left_label='Far from GC', right_label='Close to GC')
 

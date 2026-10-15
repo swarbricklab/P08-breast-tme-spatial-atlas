@@ -102,7 +102,7 @@ crop_coord = auto_crop_xenium(adata)
 # Decide which annotation level to use
 level = 'major'
 
-annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)

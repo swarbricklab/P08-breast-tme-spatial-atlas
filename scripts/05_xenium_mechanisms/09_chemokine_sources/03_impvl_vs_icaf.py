@@ -138,7 +138,7 @@ def label_color(label):
 # --- Cell-type annotation loader (label transfer)
 
 def load_subset_labels(sample):
-    path = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
+    path = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer',
                         'xenium', 'subset_level', f'{sample}_subset_pred_cell_types.csv')
     df = pd.read_csv(path, index_col=0)
     df.index = df.index.astype(str)

@@ -89,7 +89,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
 
 
 # --- Load data
-# adata.X is log-normalised in the P08 Xenium objects.
+# adata.X holds log1p-transformed counts in the P08 Xenium objects.
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
@@ -149,7 +149,7 @@ tfh = adata[tfh_mask, :].copy()
 
 # --- Re-process the Tfh subset
 
-# adata.X is already log-normalised — scale + PCA on the full panel (no HVG: targeted panel is small).
+# adata.X is already log1p-transformed — scale + PCA on the full panel (no HVG: targeted panel is small).
 n_comps = min(n_pcs, tfh.n_obs - 1, tfh.n_vars - 1)
 sc.pp.scale(tfh, max_value=scale_max)
 sc.pp.pca(tfh, n_comps=n_comps, random_state=seed)
@@ -185,7 +185,7 @@ deg_df = pd.concat(deg_records, ignore_index=True)
 def _rank(df_c, gene):
     return int(df_c.loc[gene, 'rank']) if gene in df_c.index else 10**9
 
-# Compute pct expressing per cluster from the unscaled log-norm matrix (adata.X)
+# Compute pct expressing per cluster from the unscaled log1p matrix (adata.X)
 cr2_pct = {}
 cr1_pct = {}
 if 'CR2' in adata.var_names:

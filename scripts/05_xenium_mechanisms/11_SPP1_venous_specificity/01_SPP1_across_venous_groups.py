@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Compare SPP1 log-norm expression across four ACKR1+ venous EC groups and
+# Compare SPP1 log-transformed expression across four ACKR1+ venous EC groups and
 # produce Figure S10C (SPP1 + venous/HEV-marker per-gene-max dot plot with
 # per-group cell-count bars) plus the supporting violin/box panels.
 #
@@ -40,7 +40,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import anndata as ad
 import pandas as pd
@@ -128,24 +127,6 @@ def _load_group_colors():
 group_colors = _load_group_colors()
 
 
-# --- Helpers
-
-def find_most_recent(dir_path):
-    valid = []
-    for d in os.listdir(dir_path):
-        if not os.path.isdir(os.path.join(dir_path, d)):
-            continue
-        try:
-            datetime.strptime(d, '%Y%m%d')
-            valid.append(d)
-        except ValueError:
-            pass
-    if not valid:
-        raise FileNotFoundError(f'No YYYYMMDD subdirectory in {dir_path}')
-    return os.path.join(dir_path,
-                        max(valid, key=lambda x: datetime.strptime(x, '%Y%m%d')))
-
-
 # --- Sample sheet & subtype mapping
 
 if args.get("sample_sheet"):
@@ -171,7 +152,7 @@ tls_csv_dir = os.path.join(res_dir, '05_xenium_mechanisms',
 
 hev_root = os.path.join(res_dir, '05_xenium_mechanisms',
                         '02_identify_HEV_regions')
-hev_recent = find_most_recent(hev_root)
+hev_recent = hev_root
 print(f'HEV niche CSVs from: {hev_recent}')
 
 
@@ -185,7 +166,7 @@ for sample in samples:
 
     print(f'\n=== {sample} ===')
 
-    # Load anndata (.X = log-norm)
+    # Load anndata (.X = log1p counts)
     adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample}.h5ad'))
 
     # Subset-level annotations
@@ -245,7 +226,7 @@ for sample in samples:
     m4 = ackr1_mask & in_niche & niche_close
     venous_group.loc[m4] = 'HEV venous (in TLS)'
 
-    # SPP1 log-norm expression
+    # SPP1 log-transformed expression
     if spp1_gene not in adata.var_names:
         print(f'  WARNING: {spp1_gene} not in panel for {sample}; skipping')
         samples_no_spp1.append(sample)
@@ -269,7 +250,7 @@ for sample in samples:
         'y': coords[keep_mask, 1],
         'in_TLS': in_tls.values[keep_mask],
         'in_HEV_niche': in_niche.values[keep_mask],
-        'SPP1_lognorm': spp1_expr[keep_mask],
+        'SPP1_log1p': spp1_expr[keep_mask],
     })
     per_sample_dfs.append(sample_df)
     print(f'  ACKR1+ ECs in groups: {len(sample_df)} ('

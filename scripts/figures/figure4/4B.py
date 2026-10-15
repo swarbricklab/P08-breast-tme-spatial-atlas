@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 import sys
 import anndata as ad
 
@@ -91,30 +90,8 @@ for sample in sample_list:
 
 # --- Load the HEV distance to TLS calculations
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
-most_recent_distance = find_most_recent(distance_dir)
+most_recent_distance = distance_dir
 
 distance_dict = {}
 
@@ -146,7 +123,7 @@ level = 'subset'
 
 for sample in sample_list:
     annotation_file = f'{sample}_{level}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium')
+    annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium')
     annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
     # Add to adata
     adata_dict[sample].obs[level] = annotations['pred_cell_type']

@@ -6,9 +6,9 @@
 # vs GC-distal (far) cells, pooled across the GC-positive samples. The unit is the
 # cell (S10I reports cell counts, e.g. ~795 close / ~4021 far).
 #
-# For every gene detected in >= 10 % of the pooled cells, close vs far log-norm
+# For every gene detected in >= 10 % of the pooled cells, close vs far log-transformed
 # expression is compared with a two-sided Mann-Whitney U test, Benjamini-Hochberg
-# corrected; the effect size is the mean log-norm difference (close - far). The
+# corrected; the effect size is the mean log-transformed difference (close - far). The
 # per-gene table is written to DEG_close_vs_far.csv and rendered by
 # 03_volcano_dotplot.py.
 #
@@ -23,7 +23,6 @@
 
 import argparse
 import os
-from datetime import datetime
 
 import anndata as ad
 import pandas as pd
@@ -68,24 +67,6 @@ annotation_level = args["annotation_level"]
 min_pct_detected = args["min_pct_detected"]
 
 
-# --- Helpers
-
-def find_most_recent(dir_path):
-    valid = []
-    for d in os.listdir(dir_path):
-        full = os.path.join(dir_path, d)
-        if not os.path.isdir(full):
-            continue
-        try:
-            datetime.strptime(d, '%Y%m%d')
-            valid.append(d)
-        except ValueError:
-            pass
-    if not valid:
-        raise FileNotFoundError(f'No YYYYMMDD subdirectory in {dir_path}')
-    return os.path.join(dir_path, max(valid, key=lambda x: datetime.strptime(x, '%Y%m%d')))
-
-
 # --- Load per-sample HEV-GC distance CSVs and drop samples without GCs
 
 dist_csv_dir = os.path.join(res_dir, '05_xenium_mechanisms', '10_HEV_GC_proximity',
@@ -115,10 +96,10 @@ dist_df = dist_df[dist_df['sample_id'].isin(samples_to_keep)].copy()
 # --- Build per-cell expression table (ACKR1+ intra-TLS HEV endothelial cells)
 
 hev_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
-hev_recent = find_most_recent(hev_dir)
+hev_recent = hev_dir
 print(f'HEV niches loaded from: {hev_recent}')
 
-label_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping',
+label_dir = os.path.join(res_dir, '02_cell_type_mapping',
                          'label_transfer', 'xenium', f'{annotation_level}_level')
 
 all_expr = []
@@ -205,7 +186,7 @@ X_far_k   = X_far[:, detected]
 
 mean_close = X_close_k.mean(axis=0)
 mean_far   = X_far_k.mean(axis=0)
-mean_diff  = mean_close - mean_far          # log-norm space ~ log fold change
+mean_diff  = mean_close - mean_far          # log1p space ~ log fold change
 
 pct_close = (X_close_k > 0).mean(axis=0)
 pct_far   = (X_far_k   > 0).mean(axis=0)

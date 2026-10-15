@@ -16,8 +16,6 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import date
-from datetime import datetime
 import squidpy as sq
 
 from matplotlib.colors import LinearSegmentedColormap
@@ -49,6 +47,7 @@ res_dir = args["res_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir = res_dir or os.path.join(project_dir, "results")
 
 sys.path.append(os.path.join(project_dir, 'scripts'))
 from helper_functions import auto_crop_scanpy, save_multi_image
@@ -109,24 +108,7 @@ TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS',
 if run_lymph_node:
     TLS_res_dir = os.path.join(TLS_res_dir, 'lymph_nodes')
 
-# Find most recent results
-subdirs = [d for d in os.listdir(TLS_res_dir) if os.path.isdir(os.path.join(TLS_res_dir, d))]
-
-# Filter subdirectories to keep only those with date format YYYYmmdd
-date_format = '%Y%m%d'
-valid_subdirs = []
-for subdir in subdirs:
-    try:
-        datetime.strptime(subdir, date_format)
-        valid_subdirs.append(subdir)
-    except ValueError:
-        pass
-if valid_subdirs:
-    most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-    most_recent_dir_path = os.path.join(TLS_res_dir, most_recent_dir)
-    print("Most recent results:", most_recent_dir_path)
-else:
-    print("No valid directories found.")
+most_recent_dir_path = TLS_res_dir
 
 # Read in the results & add to anndata
 
@@ -138,8 +120,7 @@ adata.obs['TLS_model'] = TLS_results
 # --- Prepare for saving the plots
 
 # Output to results/03_TLS_niche_discovery/01_identify_TLS/
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high')
-today = date.today().strftime("%Y%m%d")
+base_results = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high')
 qc_dir = base_results
 os.makedirs(qc_dir, exist_ok=True)
 
@@ -194,12 +175,12 @@ if len(adata_sub) == 0 or len(adata_sub) == 1:
     out_dir = os.path.join(qc_dir, f'threshold_{threshold_adj}')
     os.makedirs(out_dir, exist_ok=True)
     # Save plots
-    out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)
+    out_dir_plots = os.path.join(out_dir, 'plots', 'groups')
     os.makedirs(out_dir_plots, exist_ok=True)
     filename = f'{sample_id}_TLS_groups.pdf'
     save_multi_image(os.path.join(out_dir_plots, filename))
     # Also save the groupings as a .csv
-    out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+    out_dir_csv = os.path.join(out_dir, 'csv_files')
     os.makedirs(out_dir_csv, exist_ok=True)
     to_save_df = adata_sub.obs[['TLS_model']]
     to_save_df['group'] = ''
@@ -364,7 +345,7 @@ if run_lymph_node:
     os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)
+out_dir_plots = os.path.join(out_dir, 'plots', 'groups')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 filename = f'{sample_id}_TLS_groups.pdf'
@@ -373,7 +354,7 @@ save_multi_image(os.path.join(out_dir_plots, filename))
 
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 to_save_df = adata_sub.obs[['TLS_model', 'group', 'group_singleton', 'TLS_group']]

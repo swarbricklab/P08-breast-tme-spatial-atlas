@@ -12,7 +12,6 @@ import argparse
 import math
 import os
 import sys
-from datetime import date, datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -136,31 +135,9 @@ out_name = endo_of_interest.split(' ')[-1]
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
+most_recent_dir_path = TLS_group_dir
 
 for sample in sample_list:
     filename = f'{sample}_vessel_classification.csv'
@@ -172,7 +149,7 @@ for sample in sample_list:
 
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels', 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 for sample in sample_list:
     filename = f'{sample}_vessel_HEV_overlap_spot_level.csv'
@@ -230,18 +207,14 @@ list_all_samples = sorted(sample_list, key=lambda s: (sorted_subtypes.index(subt
 
 # --- Prepare for saving
 
-# Put in a timestamped folder to avoid overwriting older plots
 qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '03_compare_HEV_to_other_venous', '02_compare_gene_expression')
 os.makedirs(qc_dir, exist_ok=True)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
 
 out_dir = os.path.join(qc_dir,)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 
@@ -352,7 +325,7 @@ plt.close('all')
 
 # --- Save output
 
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 #  Save the differential genes

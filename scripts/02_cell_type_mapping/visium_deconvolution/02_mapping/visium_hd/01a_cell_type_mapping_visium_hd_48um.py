@@ -49,6 +49,7 @@ args = vars(parser.parse_args())
 # --- Arguments
 sample_id = args['sample_id']
 project_dir = args['project_dir']
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 h5ad_dir = args['h5ad_dir']
 
 
@@ -71,7 +72,7 @@ sc_ref = 'miniatlas_GEO'
 # Decide which level to run
 level = 'major'
 
-model_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
+model_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 
 adata_file = f"reference_signatures/sc.h5ad"
 adata_ref = sc.read_h5ad(os.path.join(model_dir, adata_file))
@@ -128,7 +129,7 @@ adata_vis = adata_vis[:, ~adata_vis.var['MT_gene'].values]
 
 # --- Prepare for saving
 
-out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{level}_level', resolution, sample_id)
+out_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{level}_level', resolution, sample_id)
 os.makedirs(out_dir, exist_ok=True)
 
 # Also make an output directory for the plots

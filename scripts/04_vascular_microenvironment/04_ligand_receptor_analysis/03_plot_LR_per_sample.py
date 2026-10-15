@@ -12,7 +12,6 @@
 import argparse
 import os
 import sys
-from datetime import date, datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -40,6 +39,8 @@ parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--bin_size", type=int, default=25,
+                    help="Bin size (µm) of the 01_run_LR_analysis_stlearn.py / 02_analyze_LR_all.py runs to plot")
 
 args = vars(parser.parse_args())
 
@@ -106,35 +107,12 @@ class_df = pd.read_csv(os.path.join(class_dir, class_file))
 
 # --- Load HEV groups
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-# Find most recent results
-bin_size = 25
+bin_size = args["bin_size"]
 
 lr_sample_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
                               '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_dir_path = find_most_recent(lr_sample_dir)
+most_recent_dir_path = lr_sample_dir
 
 adata_file = f'{sample_id}_HEV_LR_analysis_stlearn.h5ad'
 stlearn_adata = ad.read_h5ad(os.path.join(most_recent_dir_path, adata_file))
@@ -145,7 +123,7 @@ stlearn_adata = ad.read_h5ad(os.path.join(most_recent_dir_path, adata_file))
 lr_all_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
                            '02_analyze_LR_all', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_dir_path = find_most_recent(lr_all_dir)
+most_recent_dir_path = lr_all_dir
 
 # Use the spatial group level results
 filename = 'All_samples_group_counts.csv'
@@ -162,20 +140,17 @@ lr_summary = lr_summary.sort_values(by='LFC', ascending=False)
 
 # --- Prepare for saving
 
-today = date.today()
-today = today.strftime("%Y%m%d")
-
 out_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
                        '03_plot_LR_per_sample', f'{bin_size}um_bin')
 
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 

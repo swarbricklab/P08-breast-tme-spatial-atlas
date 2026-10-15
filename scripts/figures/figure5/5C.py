@@ -64,7 +64,7 @@ level = 'subset'
 
 for sample in sample_list:
     annotation_file = f'{sample}_{level}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium')
+    annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium')
     annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
     # Add to adata
     adata_dict[sample].obs[level] = annotations['pred_cell_type']
@@ -528,16 +528,6 @@ lr_pairs = [('CCL19', 'CCR7'), ('CCL21', 'CCR7'), ('CXCL13', 'CXCR5'), ('CXCL12'
             ('TNFSF14', 'TNFRSF14'), ('LTA', 'TNFRSF1A'), ('LTA', 'TNFRSF1B'), ('CD40LG', 'CD40'), ('CXCL9', 'CXCR3'), ('IL7', 'IL7R'),
             ('CXCL14', 'CXCR4')]
 
-# Rename some of the genes to make it easier to interpret
-gene_rename_dict = {
-    'TNFSF14': 'LIGHT',
-    'TNFRSF14': 'HVEM',
-    'TNFRSF1A': 'TNFR1',
-    'TNFRSF1B': 'TNFR2',
-    'LTB': 'LTβ',
-    'LTA': 'LTα',
-    'LTBR': 'LTβR',
-}
 
 # Check if genes are in the object
 for zone, genes in top_genes_dict.items():
@@ -555,8 +545,6 @@ for lig, rec in lr_pairs:
         print(f'Warning: Receptor {rec} is missing from the data and will be skipped in the ligand-receptor brackets.')
         lr_pairs.remove((lig, rec))
 
-# Rename the LR pairs
-lr_pairs = [(gene_rename_dict.get(lig, lig), gene_rename_dict.get(rec, rec)) for lig, rec in lr_pairs]
 
 # Also define some cell types of interest
 cells_of_interest = []
@@ -644,9 +632,6 @@ size_ax.text(0.15, 0.05, 'min', ha='center', va='top', fontsize=8)
 size_ax.text(0.85, 0.05, 'max', ha='center', va='top', fontsize=8)
 
 # Join the ligand-receptor pairs
-# Rename the genes if needed
-for heatmap_ax in heatmap_axs:
-    heatmap_ax.set_yticklabels([gene_rename_dict.get(label.get_text(), label.get_text()) for label in heatmap_ax.get_yticklabels()])
 
 # Force canvas draw to update tick label positions before drawing brackets
 fig.canvas.draw()

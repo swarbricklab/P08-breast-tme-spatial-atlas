@@ -164,7 +164,7 @@ adata.uns['spatial'] = {sample_id: {
 out_dir = os.path.join(h5ad_dir, 'xenium')
 os.makedirs(out_dir, exist_ok=True)
 
-adata.write_h5ad(os.path.join(out_dir, f'{sample_id}.h5ad'))
+adata.write_h5ad(os.path.join(out_dir, f'{sample_id}.h5ad'), compression='gzip')
 
 
 # --- Finish

@@ -29,9 +29,9 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
 
 - **04_ligand_receptor_analysis/** 
   Ligand-receptor (L-R) interaction analysis within the vascular microenvironment. *(Generates data for **Table S11** and Figure 4)*.
-  - `01_run_LR_analysis_stlearn.py`: Execute `stLearn` to identify significant L-R co-expression in HEV-localized (0 µm) and HEV-perivascular (25 µm) neighborhoods.
-  - `02_analyze_LR_all.py`: Aggregate interaction results across samples, calculating directional signaling vectors (e.g., Perivascular → HEV) and identifying TLS-enriched pathways.
-  - `03_plot_LR_per_sample.py`: Generate per-sample visualizations of significant ligand-receptor interactions, including spatial plots and dotplots stratified by distance to HEV.
+  - `01_run_LR_analysis_stlearn.py`: Execute `stLearn` to identify significant L-R co-expression in HEV-localized (0 µm) and HEV-perivascular (25 µm) neighborhoods (one run each, `--bin_size 0` / `--bin_size 25`; default 0).
+  - `02_analyze_LR_all.py`: Aggregate interaction results across samples, calculating directional signaling vectors (e.g., Perivascular → HEV) and identifying TLS-enriched pathways (`--bin_size 0` / `--bin_size 25`, matching the stLearn run; default 25).
+  - `03_plot_LR_per_sample.py`: Generate per-sample visualizations of significant ligand-receptor interactions, including spatial plots and dotplots stratified by distance to HEV (`--bin_size`, default 25).
   - `04_check_composition_LTB_signaling_bins.py`: Deconstruct the cellular composition of spatial bins sending LTB signals to endothelial LTBR (e.g., cDC2 enrichment).
 
 ## Workflow Overview

@@ -9,7 +9,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -63,36 +62,11 @@ sample_lut = sample_sheet.set_index('section_id')
 bin_size = 25  # um
 
 
-# --- Function to find most recent results
-
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-        return None
-
-
 # --- Load group counts and LR summary from CSV files
 
 lr_summary_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', 
                                '02_analyze_LR_all', f'{bin_size}um_bin', 'csv_files')
-most_recent_lr_summary = find_most_recent(lr_summary_dir)
+most_recent_lr_summary = lr_summary_dir
 
 # Load group counts CSV
 group_counts_file = 'All_samples_group_counts.csv'

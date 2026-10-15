@@ -14,7 +14,6 @@
 
 import argparse
 import os
-from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -73,29 +72,13 @@ subtype_dict = dict(zip(sample_meta['section_id'], sample_meta['clinical_subtype
 sample_list = args["samples"] or list(sample_sheet['section_id'])
 
 
-# --- Locate the most recent TLS_groups directory
-
-def find_most_recent(parent):
-    candidates = []
-    for d in os.listdir(parent):
-        full = os.path.join(parent, d)
-        if not os.path.isdir(full):
-            continue
-        try:
-            datetime.strptime(d, '%Y%m%d')
-            candidates.append(d)
-        except ValueError:
-            continue
-    if not candidates:
-        raise FileNotFoundError(f"No dated subdirectory found in {parent}")
-    return os.path.join(parent, max(candidates, key=lambda x: datetime.strptime(x, '%Y%m%d')))
-
+# --- Locate the TLS_groups directory
 
 groups_parent = os.path.join(
     res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high',
     f'threshold_{TLS_threshold_adj}', 'csv_files',
 )
-groups_dir = find_most_recent(groups_parent)
+groups_dir = groups_parent
 print(f"Reading TLS_groups from: {groups_dir}")
 
 

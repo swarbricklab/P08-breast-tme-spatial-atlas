@@ -11,7 +11,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 import sys
 
 import scanpy as sc
@@ -78,30 +77,6 @@ merged_df = pd.merge(sample_sheet, tissue_metadata, on='tissue_id')
 subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
 
 
-# --- Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-        most_recent_dir_path = None
-    return most_recent_dir_path
-
-
 # --- Define thresholds and version
 GC_threshold = 0.7
 GC_threshold_adj = str(GC_threshold).split('.')[-1]
@@ -130,7 +105,7 @@ for sample in adata_dict.keys():
 
 GC_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '02_group_high_score_areas', 'GC_score')
 
-most_recent_dir_path = find_most_recent(GC_group_dir)
+most_recent_dir_path = GC_group_dir
 
 # Read in the results & add to anndata
 group_key = 'group_too_small_removed'
@@ -150,7 +125,7 @@ for sample in sample_list:
 GC_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures',
                           '01_score_signatures', 'GC_score')
 
-most_recent_dir_path = find_most_recent(GC_res_dir)
+most_recent_dir_path = GC_res_dir
 
 num_genes = 20
 GC_key = f'GC_score_{num_genes}'
@@ -395,7 +370,8 @@ padded_axs = axs + [None] * (nrows * ncols - len(axs))
 
 # Reshape the padded list
 axs_grid = np.array(padded_axs).reshape(nrows, ncols)
-axs_grid_cleaned = np.array([[ax for ax in row if ax is not None] for row in axs_grid if any(ax is not None for ax in row)])
+# list of rows (the last row can be shorter, so not a 2-D array)
+axs_grid_cleaned = [[ax for ax in row if ax is not None] for row in axs_grid if any(ax is not None for ax in row)]
 
 move_plots_x_y(axs_grid_cleaned, x_offset_small=0.01, x_offset_large=0.03, y_offset=0.03, remove_title=False)
 

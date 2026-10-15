@@ -11,7 +11,6 @@
 import argparse
 import math
 import os
-from datetime import date
 
 import anndata as ad
 import matplotlib as mpl
@@ -106,7 +105,7 @@ resolution_numbers = int(resolution_numbers)
 
 decon_level = 'minor'
 
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
 
 decon_file = f'{sample_id}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
 
@@ -894,20 +893,17 @@ plt.suptitle(f'{sample_id} ({subtype}) - Grouping overview (high_thresh={high_th
 
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels')
-
-today = date.today()
-today = today.strftime("%Y%m%d")
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels')
 
 out_dir = os.path.join(qc_dir)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 # Save plots

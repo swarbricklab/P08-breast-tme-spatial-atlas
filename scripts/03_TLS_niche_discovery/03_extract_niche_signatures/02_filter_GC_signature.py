@@ -18,8 +18,6 @@ import numpy as np
 import os
 import sys
 
-from datetime import date
-
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib as mpl
@@ -51,6 +49,7 @@ h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_list = args["samples"]
 project_dir = args["project_dir"]
+res_dir = res_dir or os.path.join(project_dir, "results")
 
 print(f'Samples in python: {sample_list}')
 
@@ -164,7 +163,7 @@ ncols = len(sorted_subtypes)
 
 # --- Load the GC gene list
 
-gene_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
+gene_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
 gene_file = 'germinal_center_top_genes_filtered.csv'
 
 gene_table = pd.read_csv(os.path.join(gene_dir, gene_file))
@@ -574,7 +573,7 @@ axs[-1].set_xticklabels(xtick_labels)
 
 # --- Save the output to results/03_TLS_niche_discovery/03_extract_niche_signatures
 
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '02_filter_GC_signature')
+base_results = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '02_filter_GC_signature')
 os.makedirs(base_results, exist_ok=True)
 
 # Save the filtered gene list
@@ -586,14 +585,13 @@ out_file = os.path.join(base_results, 'germinal_center_filtering_documentation.c
 gene_table.to_csv(out_file, index=False)
 
 # Also save the plots
-today = date.today().strftime("%Y%m%d")
-plot_dir = os.path.join(base_results, 'plots', today)
+plot_dir = os.path.join(base_results, 'plots')
 os.makedirs(plot_dir, exist_ok=True)
 filename = 'All_samples_GC_score_filtering.pdf'
 save_multi_image(os.path.join(plot_dir, filename))
 
 # Also save the values per sample
-out_dir_csv = os.path.join(base_results, 'csv_files', today)
+out_dir_csv = os.path.join(base_results, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 filename = 'All_samples_mean_pct_expressing_per_gene.csv'

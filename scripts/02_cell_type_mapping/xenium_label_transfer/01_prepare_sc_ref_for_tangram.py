@@ -38,7 +38,7 @@ args = vars(parser.parse_args())
 
 project_dir = args['project_dir']
 h5ad_dir = args['h5ad_dir']
-res_dir=args["res_dir"]
+res_dir=args["res_dir"] or os.path.join(project_dir, "results")
 
 
 # --- Load data
@@ -101,7 +101,7 @@ ref.layers['norm'] = sc.pp.normalize_total(ref, target_sum=1e4, inplace=False)['
 ref.layers['log_norm'] = sc.pp.log1p(ref.layers['norm'], copy=True)
 
 # Create output directory
-out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', 'reference')
+out_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', 'reference')
 os.makedirs(out_dir, exist_ok=True)
 
 # Loop through each annotation level

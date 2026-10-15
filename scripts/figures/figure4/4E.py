@@ -12,7 +12,6 @@
 
 import argparse
 import os
-from datetime import datetime
 
 import anndata as ad
 import scanpy as sc
@@ -74,7 +73,7 @@ anno_df = pd.DataFrame()
 for sample in sample_list:
     tmp_df = pd.DataFrame()
     annotation_file = f'{sample}_{level}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium')
+    annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium')
     annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
     # Add to adata
     adata_dict[sample].obs[level] = annotations['pred_cell_type']
@@ -132,28 +131,6 @@ miniatlas_sub_dict = miniatlas_df.set_index('miniatlas_subset')[['miniatlas_subs
 
 # --- Load the HEV distances and bin
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 def bin_distances(df, column_name, bin_size, max_distance):
     # Define the bin edges
     bins = np.arange(0, max_distance + bin_size, bin_size)
@@ -170,7 +147,7 @@ max_distance = 200  # in microns
 file_extension = 'closest_HEV_distances' # for all HEVs
 
 distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '03_HEV_microenvironment', '01_calculate_distance')
-most_recent = find_most_recent(distance_dir)
+most_recent = distance_dir
 
 # Load closest distance to any HEV (TLS-associated or not)
 for sample in sample_list:

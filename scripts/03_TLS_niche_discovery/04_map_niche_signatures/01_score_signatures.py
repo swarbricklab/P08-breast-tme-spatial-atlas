@@ -17,8 +17,6 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import date
-from datetime import datetime
 
 from matplotlib.colors import LinearSegmentedColormap
 from mycolorpy import colorlist as mcp
@@ -117,26 +115,7 @@ TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS',
 if run_lymph_node:
     TLS_res_dir = os.path.join(TLS_res_dir, 'lymph_nodes')
 
-# Find most recent results
-subdirs = [d for d in os.listdir(TLS_res_dir) if os.path.isdir(os.path.join(TLS_res_dir, d))]
-
-# Filter subdirectories to keep only those with date format YYYYmmdd
-date_format = '%Y%m%d'
-valid_subdirs = []
-for subdir in subdirs:
-    try:
-        datetime.strptime(subdir, date_format)
-        valid_subdirs.append(subdir)
-    except ValueError:
-        pass
-
-# Sort the valid subdirectories by date and get the most recent one
-if valid_subdirs:
-    most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-    most_recent_dir_path = os.path.join(TLS_res_dir, most_recent_dir)
-    print("Most recent results:", most_recent_dir_path)
-else:
-    print("No valid directories found.")
+most_recent_dir_path = TLS_res_dir
 
 # Read in the results & add to anndata
 
@@ -157,24 +136,7 @@ TLS_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS
 if run_lymph_node:
     TLS_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high', f'threshold_{threshold_adj}', 'lymph_nodes', 'csv_files')
 
-# Find most recent results
-subdirs = [d for d in os.listdir(TLS_group_dir) if os.path.isdir(os.path.join(TLS_group_dir, d))]
-
-valid_subdirs = []
-for subdir in subdirs:
-    try:
-        datetime.strptime(subdir, date_format)
-        valid_subdirs.append(subdir)
-    except ValueError:
-        pass
-
-# Sort the valid subdirectories by date and get the most recent one
-if valid_subdirs:
-    most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-    most_recent_dir_path = os.path.join(TLS_group_dir, most_recent_dir)
-    print("Most recent results:", most_recent_dir_path)
-else:
-    print("No valid directories found.")
+most_recent_dir_path = TLS_group_dir
 
 # Read in the results & add to anndata
 TLS_file_name = f'{sample_id}_TLS_groups.csv'
@@ -185,7 +147,7 @@ adata.obs[TLS_results.columns] = TLS_results
 # --- Load the genes from a file
 
 # Choose between resource signatures or newly generated results based on argument
-use_resource_signatures = False
+use_resource_signatures = True   # published signatures (resources/gene_lists/TLS_niche_signatures)
 
 if use_resource_signatures:
     print("Using niche signatures from resources directory")
@@ -364,7 +326,6 @@ for score_name in gene_lists_dict.keys():
 
     out_name = f'{score_name}_score'
 
-    # Put in a timestamped folder to avoid overwriting older plots
     qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '01_score_signatures')
 
     if run_lymph_node:
@@ -375,10 +336,7 @@ for score_name in gene_lists_dict.keys():
     filename = f"{sample_id}_{out_name}.pdf"
     filename = filename.replace('/', '_')  # Replace / with underscores for file naming
 
-    today = date.today()
-    today = today.strftime("%Y%m%d")
-
-    out_dir = os.path.join(qc_dir, out_name, today, 'plots')
+    out_dir = os.path.join(qc_dir, out_name, 'plots')
     os.makedirs(out_dir, exist_ok=True)
 
     print(f'Saving plot as {filename} in {out_dir}')
@@ -386,7 +344,7 @@ for score_name in gene_lists_dict.keys():
     plt.close('all')
 
     # Also save the scores + which genes were used
-    out_dir = os.path.join(qc_dir, out_name, today, 'csv_files')
+    out_dir = os.path.join(qc_dir, out_name, 'csv_files')
     os.makedirs(out_dir, exist_ok=True)
 
     score_keys = [f'{score_name}_score_' + str(item) for item in cutoffs]

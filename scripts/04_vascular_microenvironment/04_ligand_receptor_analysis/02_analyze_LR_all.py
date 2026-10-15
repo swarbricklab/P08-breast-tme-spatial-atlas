@@ -14,7 +14,6 @@ import os
 import re
 import sys
 from collections.abc import Iterable
-from datetime import date, datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -49,6 +48,8 @@ parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--bin_size", type=int, default=25,
+                    help="Bin size (µm) of the 01_run_LR_analysis_stlearn.py run to analyze (0 or 25)")
 
 args = vars(parser.parse_args())
 
@@ -80,38 +81,15 @@ sample_lut = sample_sheet.set_index('section_id')
 
 # --- Load the adata object with LR results
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-# Find most recent results
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 resolution = 'square_016um'
-bin_size = 25  # um
+bin_size = args["bin_size"]  # um
 
-lr_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 
+lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 
                         'csv_files')
 
-most_recent_dir_path = find_most_recent(lr_dir)
+most_recent_dir_path = lr_dir
 
 adata_dict = {}
 
@@ -134,7 +112,7 @@ for sample in adata_dict.keys():
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', resolution, f'threshold_{threshold_adj}',)
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 # Read in the results & add to anndata
 score_of_i = 'HEVs'
@@ -1068,21 +1046,18 @@ plt.suptitle(f'All samples - stlearn significant LR interactions top {top} by LF
 
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '02_analyze_LR_all', f'{bin_size}um_bin')
-
-today = date.today()
-today = today.strftime("%Y%m%d")
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '02_analyze_LR_all', f'{bin_size}um_bin')
 
 out_dir = os.path.join(qc_dir)
 
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 # Save plots

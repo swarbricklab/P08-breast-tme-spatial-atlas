@@ -348,29 +348,14 @@ for n, TLS in enumerate(TLS_coords):
     
     # Load TLS model results
     if 'TLS_model' not in adata.obs.columns:
-        from datetime import datetime
         TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
         if os.path.exists(TLS_res_dir):
-            # Find most recent results directory
-            subdirs = [d for d in os.listdir(TLS_res_dir) if os.path.isdir(os.path.join(TLS_res_dir, d))]
-            date_format = '%Y%m%d'
-            valid_subdirs = []
-            for subdir in subdirs:
-                try:
-                    datetime.strptime(subdir, date_format)
-                    valid_subdirs.append(subdir)
-                except ValueError:
-                    pass
-            if valid_subdirs:
-                most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-                TLS_file = os.path.join(TLS_res_dir, most_recent_dir, f'{new_sample_id}_TLS_model.csv')
-                if os.path.exists(TLS_file):
-                    adata.obs['TLS_model'] = pd.read_csv(TLS_file, index_col=0)
-                    print(f"  Loaded TLS model results from: {TLS_file}")
-                else:
-                    print(f"  Warning: TLS model file not found: {TLS_file}")
+            TLS_file = os.path.join(TLS_res_dir, f'{new_sample_id}_TLS_model.csv')
+            if os.path.exists(TLS_file):
+                adata.obs['TLS_model'] = pd.read_csv(TLS_file, index_col=0)
+                print(f"  Loaded TLS model results from: {TLS_file}")
             else:
-                print(f"  Warning: No dated TLS model results directories found in {TLS_res_dir}")
+                print(f"  Warning: TLS model file not found: {TLS_file}")
         else:
             print(f"  Warning: TLS model results directory not found: {TLS_res_dir}")
     
@@ -386,37 +371,22 @@ for n, TLS in enumerate(TLS_coords):
     for script_name, file_name in signature_mapping.items():
         score_col = f'{script_name}_score_{top_genes}'
         if score_col not in adata.obs.columns:
-            from datetime import datetime
-            score_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', 
+            score_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures',
                                         '01_score_signatures', file_name)
             if os.path.exists(score_res_dir):
-                # Find most recent results directory
-                subdirs = [d for d in os.listdir(score_res_dir) if os.path.isdir(os.path.join(score_res_dir, d))]
-                date_format = '%Y%m%d'
-                valid_subdirs = []
-                for subdir in subdirs:
-                    try:
-                        datetime.strptime(subdir, date_format)
-                        valid_subdirs.append(subdir)
-                    except ValueError:
-                        pass
-                if valid_subdirs:
-                    most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-                    score_file = os.path.join(score_res_dir, most_recent_dir, 'csv_files', 
-                                            f'{new_sample_id}_{file_name}.csv')
-                    if os.path.exists(score_file):
-                        score_results = pd.read_csv(score_file, index_col=0)
-                        # Map file column name to script column name
-                        file_col = f'{file_name}_{top_genes}'
-                        if file_col in score_results.columns:
-                            adata.obs[score_col] = score_results[file_col]
-                            print(f"  Loaded {script_name} signature score from: {score_file}")
-                        else:
-                            print(f"  Warning: Column {file_col} not found in {score_file}")
+                score_file = os.path.join(score_res_dir, 'csv_files',
+                                        f'{new_sample_id}_{file_name}.csv')
+                if os.path.exists(score_file):
+                    score_results = pd.read_csv(score_file, index_col=0)
+                    # Map file column name to script column name
+                    file_col = f'{file_name}_{top_genes}'
+                    if file_col in score_results.columns:
+                        adata.obs[score_col] = score_results[file_col]
+                        print(f"  Loaded {script_name} signature score from: {score_file}")
                     else:
-                        print(f"  Warning: Signature score file not found: {score_file}")
+                        print(f"  Warning: Column {file_col} not found in {score_file}")
                 else:
-                    print(f"  Warning: No dated results directories found in {score_res_dir}")
+                    print(f"  Warning: Signature score file not found: {score_file}")
             else:
                 print(f"  Warning: Signature scoring directory not found: {score_res_dir}")
     
@@ -734,7 +704,7 @@ plt.suptitle(f'TLSs of interest: H&E, pathology annotations, TLS model & niche s
 
 
 # --- Save the output
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_2F.pdf'

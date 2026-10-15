@@ -20,8 +20,6 @@ import os
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import date
-from datetime import datetime
 import numpy as np
 import matplotlib.patches as patches
 
@@ -138,29 +136,7 @@ for sample in adata_dict.keys():
 
 TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-most_recent_dir_path = find_most_recent(TLS_res_dir)
+most_recent_dir_path = TLS_res_dir
 
 # Read in the results & add to anndata
 for sample in adata_dict.keys():
@@ -194,7 +170,7 @@ threshold_adj = str(threshold).split('.')[-1]
 TLS_group_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high', 
                                 f'threshold_{threshold_adj}', 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 # Read in the results & add to anndata
 group_key = 'group_singleton_removed'
@@ -466,14 +442,10 @@ plt.suptitle(f'All samples - leiden clusters TLS groups (threshold={threshold}) 
 
 # --- Save output
 
-# Put in a timestamped folder to avoid overwriting older plots
 qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
 os.makedirs(qc_dir, exist_ok=True)
 
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir = os.path.join(qc_dir, today)
+out_dir = qc_dir
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots

@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 
 import matplotlib.pyplot as plt
 from matplotlib import patheffects
@@ -54,31 +53,6 @@ sample_sheet = pd.read_csv(sample_sheet_path)
 sample_lut = sample_sheet.set_index('section_id')
 
 
-# --- Function to find the most recent results
-
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-        most_recent_dir_path = None
-    return most_recent_dir_path
-
-
 # --- Load GC annotations and scores, create plotting dataframe
 
 # Only plot annotated GCs
@@ -90,7 +64,7 @@ GC_key = 'GC_score_20'
 GC_annotations_dir = os.path.join(project_dir, 'data', 'pathology_annotations', 'visium_lymph_nodes')
 GC_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures',
                           '01_score_signatures', 'lymph_nodes', 'GC_score')
-most_recent_scores_dir = find_most_recent(GC_res_dir)
+most_recent_scores_dir = GC_res_dir
 
 # Load data per sample and merge
 df_list = []

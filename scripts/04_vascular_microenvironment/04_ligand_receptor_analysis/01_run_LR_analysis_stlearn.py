@@ -11,7 +11,6 @@
 import argparse
 import os
 import sys
-from datetime import date, datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -40,6 +39,8 @@ parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--bin_size", type=int, default=0,
+                    help="Include bins within this distance (µm) of an HEV (0 = HEV bins only, 25 = HEV + perivascular bins)")
 
 args = vars(parser.parse_args())
 
@@ -100,29 +101,6 @@ class_df = pd.read_csv(os.path.join(class_dir, class_file))
 
 # --- Load HEV groups
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-# Find most recent results
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
@@ -130,7 +108,7 @@ threshold_adj = str(threshold).split('.')[-1]
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', resolution, f'threshold_{threshold_adj}',)
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 # Read in the results & add to anndata
 score_of_i = 'HEVs'
@@ -146,15 +124,15 @@ adata.obs[group_key] = TLS_results[group_key_source]
 # --- Also load the HEV distance calculations
 
 decon_resolution = resolution
-dist_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '01_identify_HEV_niches', '05_calculate_all_HEV_distances', decon_resolution, 'csv_files')
+dist_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '05_calculate_all_HEV_distances', decon_resolution, 'csv_files')
 
-most_recent = find_most_recent(dist_dir)
+most_recent = dist_dir
 dist_file = f'{sample_id}_HEV_distances_all_spots.csv'
 
 distance_df = pd.read_csv(os.path.join(most_recent, dist_file))
 
-# For each HEV group, find all spots within 25 µm
-bin_size = 0
+# For each HEV group, find all spots within bin_size µm (--bin_size; 0 = HEV bins only)
+bin_size = args["bin_size"]
 distance_col = 'nearest_016um_dist_um'
 # Filter the distance DataFrame to only include spots within the specified bin size
 distance_df = distance_df[distance_df[distance_col] <= bin_size]
@@ -180,10 +158,10 @@ spot_dict = create_spot_dict(distance_df, 'HEV_group', distance_col)
 
 class_key = 'HEV_classification'
 
-base_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '01_identify_HEV_niches', '03b_calculate_HEV_TLS_distance', resolution, f'threshold_{threshold_adj}',)
+base_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '03b_calculate_HEV_TLS_distance', resolution, f'threshold_{threshold_adj}',)
 TLS_group_dir = os.path.join(base_dir, 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 filename = f'{sample_id}_HEV_closest_TLS_distance_classifications.csv'
 
 HEV_TLS_class_df = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
@@ -625,20 +603,17 @@ plt.tight_layout()
 
 # --- Save the output
 
-qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn',)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn',)
 
 out_dir = os.path.join(qc_dir, f'{bin_size}um_bin')
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 # Save plots

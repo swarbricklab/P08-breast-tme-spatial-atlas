@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 
 import pandas as pd
 
@@ -51,28 +50,6 @@ os.makedirs(destination_dir, exist_ok=True)
 
 # --- Identify files
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
 def copy_top_300_csv(source_file, destination_file):
     if os.path.exists(source_file):
         try:
@@ -102,7 +79,7 @@ copy_top_300_csv(source_file, destination_file)
 
 # Now copy hev signature post general endothelial filtering
 sig_dir = os.path.join(source_dir, '03_filter_HEV_signature', 'filter_HEV_signature')
-most_recent_dir = find_most_recent(sig_dir)
+most_recent_dir = sig_dir
 filename = 'hevs_filtered_endothelial_genes.csv'
 if most_recent_dir:
     source_file = os.path.join(most_recent_dir, 'csv_files', filename)

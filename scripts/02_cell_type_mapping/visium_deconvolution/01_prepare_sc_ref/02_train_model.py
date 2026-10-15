@@ -50,6 +50,7 @@ args = vars(parser.parse_args())
 # --- Arguments
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 h5ad_dir=args["h5ad_dir"]
 
 
@@ -58,7 +59,7 @@ h5ad_dir=args["h5ad_dir"]
 # Decide which level to run
 level = 'major'
 
-out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
+out_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 os.makedirs(out_dir, exist_ok=True)
 
 # Also make an output directory for the plots

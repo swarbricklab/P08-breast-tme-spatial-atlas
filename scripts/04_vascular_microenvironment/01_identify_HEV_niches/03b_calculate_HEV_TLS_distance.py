@@ -11,7 +11,6 @@
 import argparse
 import os
 import sys
-from datetime import date, datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -98,33 +97,13 @@ for resolution in resolutions:
 
 
 # --- Load TLS zone groups
-# Function to find the most recent results
-def find_most_recent(dir):
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-        most_recent_dir_path = dir
-    return most_recent_dir_path
 
-# Find most recent results
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '03a_identify_TLS_areas', 'square_048um', 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 # Read in the results & add to anndata
 TLS_file_name = f'{sample_id}_TLS_zones_groups.csv'
@@ -172,7 +151,7 @@ threshold_hev_adj = str(threshold_hev).split('.')[-1]
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', 'square_016um', f'threshold_{threshold_hev_adj}')
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 # Read in the results & add to anndata
 score_of_i = 'HEVs'
@@ -205,7 +184,7 @@ for score_name, filename in clusters_of_i.items():
     else:
         resolution = 'square_016um'
     GC_res_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', f'{score_name}_score', resolution)
-    most_recent_dir_path = find_most_recent(GC_res_dir)
+    most_recent_dir_path = GC_res_dir
     # Read results and add to adata
     GC_file_name = f'{sample_id}_{out_name}.csv'
     GC_results = pd.read_csv(os.path.join(most_recent_dir_path, 'csv_files', GC_file_name), index_col=0)
@@ -745,10 +724,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - Relationship HEV size vs TLS classifica
 
 # --- Save output
 
-qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '01_identify_HEV_niches', '03b_calculate_HEV_TLS_distance')
-
-today = date.today()
-today = today.strftime("%Y%m%d")
+qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '03b_calculate_HEV_TLS_distance')
 
 threshold_adj = str(threshold).split('.')[-1]
 out_dir = os.path.join(qc_dir, 'square_016um', f'threshold_{threshold_adj}')
@@ -756,11 +732,11 @@ out_dir = os.path.join(qc_dir, 'square_016um', f'threshold_{threshold_adj}')
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 # Save plots

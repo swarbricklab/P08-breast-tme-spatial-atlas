@@ -23,6 +23,7 @@
 import argparse
 import os
 import shutil
+import sys
 
 import anndata as ad
 import pandas as pd
@@ -37,8 +38,6 @@ from matplotlib.collections import PatchCollection, LineCollection
 from matplotlib.lines import Line2D
 from matplotlib_scalebar.scalebar import ScaleBar
 
-import PIL
-import tifffile
 import spatialdata as sd
 from spatialdata.transformations import get_transformation
 
@@ -90,6 +89,12 @@ grid_um      = args["grid_um"]
 top_n_genes  = args["top_n_genes"]
 genes_per_ax = args["genes_per_ax"]
 pad_um       = args["pad_um"]
+
+
+# --- Local helper import
+
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import tiff_shape, read_tiff_region, read_tiff_overview
 
 
 # --- Sample metadata
@@ -176,14 +181,12 @@ microns_per_pixel = adata.uns['spatial'][sample_id]['scalefactors']['microns_per
 
 image_dir  = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'xenium')
 image_path = os.path.join(image_dir, f'{sample_id}.ome.tif')
-PIL.Image.MAX_IMAGE_PIXELS = 24078974976
-# Load the aligned full-res H&E. This is a large whole-slide image (~40-50 GB in RAM),
-# so the job is submitted to a high-memory node (see the mem request for this script in
-# submit_array_jobs_nci.sh). Only small GC crops are displayed, but the whole image is
-# read because lazy tiled reads via tifffile.aszarr require zarr>=3, and the spatdat env
-# ships zarr 2.x.
-img = tifffile.imread(image_path)
-print(f'Loaded aligned H&E: {img.shape}')
+# The aligned H&E is a large whole-slide image, so it is never loaded whole: the GC crops are
+# read tile by tile at full resolution (read_tiff_region) and the overview panel uses a
+# low-resolution pyramid level drawn in full-resolution pixel coordinates.
+img_h, img_w = tiff_shape(image_path)
+overview_img = read_tiff_overview(image_path)
+print(f'Aligned H&E: {img_h} x {img_w} px; overview level {overview_img.shape}', flush=True)
 
 
 # --- Load spatialdata + filter transcripts to the top-N GC genes
@@ -199,9 +202,10 @@ sdata = sd.read_zarr(zarr_path)
 sdata.points['transcripts'] = sdata.points['transcripts'][
     sdata.points['transcripts']['feature_name'].isin(top_genes)
 ]
-transformed_sdata = sd.transform(sdata, to_coordinate_system='image_space')
-tx_df = transformed_sdata.points['transcripts'].compute()
-print(f'Loaded {len(tx_df)} transcripts for the top {len(top_genes)} GC genes')
+# Transform only the transcripts: sd.transform(sdata, ...) would also resample the
+# full-resolution label rasters into image_space
+tx_df = sd.transform(sdata.points['transcripts'], to_coordinate_system='image_space').compute()
+print(f'Loaded {len(tx_df)} transcripts for the top {len(top_genes)} GC genes', flush=True)
 
 
 # --- Xenium micron -> aligned-image (image_space) pixel transform
@@ -231,10 +235,8 @@ def micron_to_he_pixel(x_um, y_um):
     return out[:, 0], out[:, 1]
 
 
-def crop_image(img, x0, x1, y0, y1):
-    x0 = max(int(x0), 0); x1 = min(int(x1), img.shape[1])
-    y0 = max(int(y0), 0); y1 = min(int(y1), img.shape[0])
-    return img[y0:y1, x0:x1], (x0, x1, y0, y1)
+def crop_image(x0, x1, y0, y1):
+    return read_tiff_region(image_path, x0, x1, y0, y1)
 
 
 # --- Plot one page per discrete GC
@@ -262,7 +264,7 @@ with PdfPages(pdf_path) as pdf:
         x0_px, x1_px = ctr_x - side / 2, ctr_x + side / 2
         y0_px, y1_px = ctr_y - side / 2, ctr_y + side / 2
 
-        crop_img, (cx0, cx1, cy0, cy1) = crop_image(img, x0_px, x1_px, y0_px, y1_px)
+        crop_img, (cx0, cx1, cy0, cy1) = crop_image(x0_px, x1_px, y0_px, y1_px)
         crop_w, crop_h = cx1 - cx0, cy1 - cy0
 
         # Bin centres + per-bin pixel size for the GC overlay
@@ -339,7 +341,7 @@ with PdfPages(pdf_path) as pdf:
 
         # Panel 1: overview with bbox
         ax = axs[0]
-        ax.imshow(img)
+        ax.imshow(overview_img, extent=(0, img_w, img_h, 0))
         ax.add_patch(mpatches.Rectangle((cx0, cy0), crop_w, crop_h, linewidth=2,
                                         edgecolor='black', facecolor='none'))
         ax.set_xticks([]); ax.set_yticks([])

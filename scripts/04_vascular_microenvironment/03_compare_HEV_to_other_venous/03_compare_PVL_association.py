@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import date, datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -143,29 +142,6 @@ PVL_classes = sorted(PVL_classes)
 
 # --- Load vessel groups
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-# Find most recent results
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
@@ -174,9 +150,9 @@ endo_of_interest = 'Endothelial ACKR1'
 out_name = endo_of_interest.split(' ')[-1]
 
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 filename = f'{sample_id}_vessel_classification.csv'
 vessel_classes = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
@@ -192,7 +168,7 @@ adata_dict[base_res].obs['vessel_class'] = collapsed_col
 resolution_numbers = re.findall(r'\d+', decon_resolution)[0]
 resolution_numbers = int(resolution_numbers)
 
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', decon_resolution,)
 
 decon_file = f'{sample_id}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
 
@@ -210,7 +186,7 @@ out_name = endo_of_interest.split(' ')[-1]
 
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels', 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 filename = f'{sample_id}_vessel_HEV_overlap_spot_level.csv'
 overlap_df = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
@@ -590,17 +566,14 @@ plt.suptitle(f'{sample_id} ({subtype}) - PVL composition across distance bins (t
 
 # --- Save output
 
-qc_dir = os.path.join(project_dir, 'results')
-
-today = date.today()
-today = today.strftime("%Y%m%d")
+qc_dir = res_dir
 
 out_dir = os.path.join(qc_dir, '04_vascular_microenvironment', '03_compare_HEV_to_other_venous', '03_compare_PVL_association',)
 
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Save plots
@@ -610,7 +583,7 @@ save_multi_image(os.path.join(out_dir_plots, filename))
 plt.close('all')
 
 # Also save csv file for convenience
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 group_keys = [f'dist_bin_{cell_type}' for cell_type in group_types]

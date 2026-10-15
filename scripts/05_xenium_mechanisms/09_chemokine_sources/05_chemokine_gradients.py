@@ -166,24 +166,9 @@ os.makedirs(csv_dir, exist_ok=True)
 
 def celltype_csv(sample, level='subset'):
     """Label-transfer predicted cell types (col 'pred_cell_type')."""
-    p = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium',
+    p = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium',
                      f'{level}_level', f'{sample}_{level}_pred_cell_types.csv')
     return p
-
-
-def find_most_recent(directory):
-    """Return the most recent YYYYmmdd subdir path (matches 05/02,03,06)."""
-    from datetime import datetime
-    subdirs = [d for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d))]
-    valid = []
-    for d in subdirs:
-        try:
-            datetime.strptime(d, '%Y%m%d'); valid.append(d)
-        except ValueError:
-            pass
-    if not valid:
-        raise FileNotFoundError(f'No YYYYmmdd subdir under {directory}')
-    return os.path.join(directory, max(valid, key=lambda x: datetime.strptime(x, '%Y%m%d')))
 
 
 # --- Per-sample extraction
@@ -224,7 +209,7 @@ def extract_one_sample(sample):
     subset_df.index = subset_df.index.astype(str)
 
     hev_root = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
-    hev_recent = find_most_recent(hev_root)
+    hev_recent = hev_root
     niche_df = pd.read_csv(os.path.join(hev_recent, 'csv_files',
                                         f'{sample}_HEV_niches_cell_to_niche.csv'), index_col=0)
     niche_df.index = niche_df.index.astype(str)

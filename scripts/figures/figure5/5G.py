@@ -67,7 +67,7 @@ anno_df = pd.DataFrame()
 for sample in sample_list:
     tmp_df = pd.DataFrame()
     annotation_file = f'{sample}_{level}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium')
+    annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium')
     annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
     # Add to adata
     adata_dict[sample].obs[level] = annotations['pred_cell_type']

@@ -19,8 +19,6 @@ import squidpy as sq
 import math
 import sys
 
-from datetime import date
-
 
 # --- Argparse arguments
 
@@ -82,7 +80,7 @@ sc.set_figure_params(fontsize=15)
 
 # Choose between resource signatures or newly generated results
 # Set to True to use curated signatures from resources directory
-use_resource_signatures = False
+use_resource_signatures = True   # published signatures (resources/gene_lists/TLS_niche_signatures)
 
 for resolution in resolutions:
 
@@ -238,13 +236,10 @@ for resolution in resolutions:
 
         out_name = f'{score_name}_score'
 
-        today = date.today()
-        today = today.strftime("%Y%m%d")
-
-        qc_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', out_name)
+        qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', out_name)
         os.makedirs(qc_dir, exist_ok=True)
 
-        out_dir = os.path.join(qc_dir, resolution, today, 'plots')
+        out_dir = os.path.join(qc_dir, resolution, 'plots')
         os.makedirs(out_dir, exist_ok=True)
 
         filename = f'{sample_id}_{out_name}_{resolution}.pdf'
@@ -254,7 +249,7 @@ for resolution in resolutions:
         plt.close('all')
 
         # Also save the scores + which genes were used
-        out_dir_csv = os.path.join(qc_dir, resolution, today, 'csv_files')
+        out_dir_csv = os.path.join(qc_dir, resolution, 'csv_files')
         os.makedirs(out_dir_csv, exist_ok=True)
 
         score_keys = [f'{score_name}_score_' + str(item) for item in cutoffs]
