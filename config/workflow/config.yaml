@@ -1,0 +1,18 @@
+# Snakemake workflow config (workflow/Snakefile). Paths are relative to the repository root, where
+# snakemake is run. The workflow starts from the published inputs (DVC imports from Zenodo and the
+# BioImage Archive): data/anndata_objects, data/spatialdata_objects, data/pathology_annotations,
+# data/images and results/02_cell_type_mapping. Steps 01 (preprocessing) and 02 (cell type
+# mapping) are not part of the workflow.
+
+res_dir: "results"
+h5ad_dir: "data/anndata_objects"        # override e.g. with --config h5ad_dir=data/anndata_objects_normfix
+
+sample_sheets:
+  visium: "config/sample_sheet_visium.csv"
+  visium_hd: "config/sample_sheet_visium_hd.csv"
+  visium_lymph_nodes: "config/sample_sheet_visium_lymph_nodes.csv"
+  xenium: "config/sample_sheet_xenium.csv"
+
+# Xenium HEV niche detection (05_xenium_mechanisms/02_identify_HEV_regions/01_identify_HEV.py)
+hev_high_thr: 0.6        # HEV score threshold for core cells
+hev_low_thr: 0.2         # HEV score threshold for expansion candidates
