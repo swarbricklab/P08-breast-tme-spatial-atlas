@@ -530,7 +530,9 @@ st.tl.cci.run_cci(data, 'cell_type', # Spot cell information either in data.obs 
                                       # so spots can have multiple cell types if score>cell_prop_cutoff
                   cell_prop_cutoff=0.2, # Spot considered to have cell type if score>0.2
                   sig_spots=True, # Only consider neighbourhoods of spots which had significant LR scores.
-                  n_perms=1000 # Permutations of cell information to get background, recommend ~1000
+                  n_perms=1000, # Permutations of cell information to get background, recommend ~1000
+                  n_cpus=len(os.sched_getaffinity(0)), # CPUs allocated to the job; stLearn's default (1) runs
+                                                       # the permutations single-threaded
                  )
 
 
