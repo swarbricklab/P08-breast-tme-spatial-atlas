@@ -42,7 +42,7 @@ rule all_xenium:
         + [RES + "/figures/Fig_" + f + ".pdf" for f in XEN_FIGS]
 
 # Visium and Visium HD analyses (03, 04) and their figure panels (Fig. 1-3, supplementary overviews);
-# all_visium_long adds the Visium HD ligand-receptor analysis (~24 h per sample) and the panels built on it
+# all_visium_long adds the Visium HD ligand-receptor analysis (stLearn, up to ~4 h per sample) and the panels built on it
 def _is_visium(t):
     return ("/03_TLS_niche_discovery/" in t or "/04_vascular_microenvironment/" in t
             or "/figures/Fig_1" in t or "/figures/Fig_2" in t or "/figures/Fig_3" in t or "/supplementary_overviews/" in t)

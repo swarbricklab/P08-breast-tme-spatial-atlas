@@ -5,7 +5,7 @@
 #   03 compare HEV vs venous    - microenvironment, PVL association (per sample); DEGs (all samples)
 #   04 ligand-receptor (stLearn) - run per sample at 0 µm (HEV bins only) and 25 µm (HEV + perivascular),
 #                                  aggregate per bin size, per-sample plots and LTB composition (25 µm).
-#                                  stLearn takes up to ~24 h per sample, so step 04 is in TARGETS_LONG.
+#                                  stLearn takes up to ~4 h per sample (P29_HD, 25 µm), so step 04 is in TARGETS_LONG.
 #
 # All scripts read and write results under --res_dir (config res_dir). Niche signatures come from the published
 # list in resources/gene_lists/TLS_niche_signatures/niche_signatures.csv (01_score_signature.py:
@@ -475,7 +475,7 @@ rule h04_compare_PVL_association:
 
 rule h04_run_LR_analysis_stlearn:
     """01: stLearn LR analysis per sample in HEV neighbourhoods; lr_bin 0 = HEV bins only,
-    25 = HEV + perivascular bins (~24 h for the largest sample)."""
+    25 = HEV + perivascular bins (~4 h for the largest sample, P29_HD)."""
     input:
         h5ad      = expand(HD_H5AD, res="square_016um"),
         hev       = HEV_GROUPS,
@@ -499,8 +499,8 @@ rule h04_run_LR_analysis_stlearn:
     threads: 16
     resources:
         threads = 16,          # PBS ncpus come from this resource (the profile default is 4), not the threads: directive
-        mem_mb  = 128000,
-        runtime = 2880,
+        mem_mb  = 48000,       # peak 34.9 GB (8 jobs)
+        runtime = 465,         # peak 230 min
     log:
         LOGW + "/h04_run_LR_analysis_stlearn/{sample}_{lr_bin}um_bin.log",
     shell:
@@ -528,8 +528,8 @@ rule h04_analyze_LR_all:
         args    = base_args("visium_hd"),
         samples = " ".join(HD_SAMPLES),
     resources:
-        mem_mb  = 32000,
-        runtime = 60,
+        mem_mb  = 8000,        # peak 5.4 GB (2 jobs)
+        runtime = 15,          # peak 6 min
     log:
         LOGW + "/h04_analyze_LR_all/{lr_bin}um_bin.log",
     shell:
@@ -559,8 +559,8 @@ rule h04_plot_LR_per_sample:
     params:
         args = base_args("visium_hd"),
     resources:
-        mem_mb  = 64000,
-        runtime = 120,
+        mem_mb  = 16000,       # peak 9.6 GB (4 jobs)
+        runtime = 15,          # peak 3 min
     log:
         LOGW + "/h04_plot_LR_per_sample/{sample}_{lr_bin}um_bin.log",
     shell:
@@ -588,8 +588,8 @@ rule h04_check_composition_LTB_signaling_bins:
         args    = base_args("visium_hd"),
         samples = " ".join(HD_SAMPLES),
     resources:
-        mem_mb  = 32000,
-        runtime = 60,
+        mem_mb  = 8000,        # peak 4.1 GB (1 jobs)
+        runtime = 15,          # peak 2 min
     log:
         LOGW + "/h04_check_composition_LTB_signaling_bins.log",
     shell:

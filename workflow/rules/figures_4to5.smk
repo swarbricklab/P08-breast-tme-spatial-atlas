@@ -1,7 +1,7 @@
 # Rules for scripts/figures/figure4-5: one rule per manuscript panel (Fig_4A ... Fig_5H).
 #   Xenium panels (4A-4E, 4K, 5A-5C, 5E-5H) read the Xenium objects + 05_xenium_mechanisms outputs.
 #   Visium HD panels (4F-4J, 5D) read 04_vascular_microenvironment outputs, incl. the Visium HD
-#   ligand-receptor analysis (~24 h), so their figures go into TARGETS_LONG.
+#   ligand-receptor analysis (up to ~4 h per sample), so their figures go into TARGETS_LONG.
 #
 # Multi-sample scripts get --samples (see scripts/run_multi_sample_job.sh); 4F, 5B and 5E are set up
 # for a single sample (hard-coded in the script) and get --sample_id (see run_single_sample_job.sh).
@@ -250,8 +250,8 @@ rule fig_4F:
     params:
         args = base_args("visium_hd"),
     resources:
-        mem_mb  = 64000,     # full-resolution H&E image
-        runtime = 60,
+        mem_mb  = 44000,       # peak 31.9 GB (1 jobs)
+        runtime = 15,          # peak 5 min
     log:
         LOGW + "/fig_4F.log",
     shell:
@@ -274,13 +274,13 @@ rule fig_4G:
     output:
         pdf = F45_FIG + "/Fig_4G.pdf",
     conda:
-        "vis-hd"
+        "shapely"          # adjustText (only in this env)
     params:
         args    = base_args("visium_hd"),
         samples = " ".join(HD_SAMPLES),
     resources:
-        mem_mb  = 4000,      # earlier run: 0.5 GB
-        runtime = 15,
+        mem_mb  = 4000,        # peak 0.8 GB (1 jobs)
+        runtime = 15,          # peak 3 min
     log:
         LOGW + "/fig_4G.log",
     shell:
@@ -310,8 +310,8 @@ rule fig_4H:
         args    = base_args("visium_hd"),
         samples = " ".join(HD_SAMPLES),
     resources:
-        mem_mb  = 16000,
-        runtime = 30,
+        mem_mb  = 4000,        # peak 2.7 GB (1 jobs)
+        runtime = 15,          # peak 2 min
     log:
         LOGW + "/fig_4H.log",
     shell:
@@ -341,8 +341,8 @@ rule fig_4I:
         args    = base_args("visium_hd"),
         samples = " ".join(HD_SAMPLES),
     resources:
-        mem_mb  = 24000,     # earlier run: 12.2 GB
-        runtime = 30,
+        mem_mb  = 20000,       # peak 12.8 GB (1 jobs)
+        runtime = 15,          # peak 2 min
     log:
         LOGW + "/fig_4I.log",
     shell:
@@ -375,8 +375,8 @@ rule fig_4J:
         args    = base_args("visium_hd"),
         samples = " ".join(HD_SAMPLES),
     resources:
-        mem_mb  = 32000,
-        runtime = 30,
+        mem_mb  = 8000,        # peak 4.1 GB (1 jobs)
+        runtime = 15,          # peak 1 min
     log:
         LOGW + "/fig_4J.log",
     shell:
@@ -537,8 +537,8 @@ rule fig_5D:
         args    = base_args("visium_hd"),
         samples = " ".join(HD_SAMPLES),
     resources:
-        mem_mb  = 8000,      # earlier run: 1.4 GB
-        runtime = 30,
+        mem_mb  = 4000,        # peak 1.0 GB (1 jobs)
+        runtime = 15,          # peak 2 min
     log:
         LOGW + "/fig_5D.log",
     shell:

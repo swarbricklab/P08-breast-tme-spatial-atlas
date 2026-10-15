@@ -829,8 +829,8 @@ rule x05_volcano_dotplot:
     params:
         args = X05_ARGS + X05_SAMPLE_ARGS,
     resources:
-        mem_mb  = 4000,        # peak 0.8 GB (4 jobs)
-        runtime = 15,          # peak 1 min
+        mem_mb  = 4000,        # peak 0.8 GB (6 jobs)
+        runtime = 15,          # peak 2 min
     log:
         LOGW + "/x05_volcano_dotplot.log",
     shell:
@@ -857,8 +857,8 @@ rule x05_SPP1_across_venous_groups:
     params:
         args = X05_ARGS + X05_SAMPLE_ARGS,
     resources:
-        mem_mb  = 28000,       # peak 21.0 GB (3 jobs)
-        runtime = 15,          # peak 3 min
+        mem_mb  = 28000,       # peak 21.0 GB (4 jobs)
+        runtime = 15,          # peak 4 min
     log:
         LOGW + "/x05_SPP1_across_venous_groups.log",
     shell:
