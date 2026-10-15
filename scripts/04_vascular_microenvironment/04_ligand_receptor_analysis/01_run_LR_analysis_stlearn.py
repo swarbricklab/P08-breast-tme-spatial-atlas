@@ -335,8 +335,10 @@ radius_max = radius_max*scalef
 
 # --- Prepare an object for stlearn
 
-# Make an object with just the normalized data (not log1p)
-lr_obj = ad.AnnData(adata_sub.layers['norm'])
+# Make an object with just the normalized data (not log1p): counts scaled to 10,000 per bin, recomputed
+# from the raw counts in .X as in 01_preprocessing/visium_hd/02_log_norm.py (the released objects keep
+# only layers['log_norm'])
+lr_obj = ad.AnnData(sc.pp.normalize_total(adata_sub, target_sum=1e4, inplace=False)['X'])
 lr_obj.var = adata_sub.var
 lr_obj.obs = adata_sub.obs
 lr_obj.obsm = adata_sub.obsm
