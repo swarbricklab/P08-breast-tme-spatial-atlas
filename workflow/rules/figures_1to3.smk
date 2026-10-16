@@ -759,9 +759,8 @@ rule fig_ED1G:
     params:
         args = F13_VIS_ARGS,
     resources:
-        # Concatenates all 33 sections; needs ~190 GB (script header), so hugemem with margin
-        mem_mb  = 256000,
-        runtime = 240,
+        mem_mb  = 44000,       # peak 32.5 GB (1 jobs)
+        runtime = 165,         # peak 80 min
     log:
         LOGW + "/fig_ED1G.log",
     shell:

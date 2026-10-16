@@ -11,8 +11,8 @@
 
 # --- Define environment
 # env: gseapy
-# Note: memory-heavy — concatenates all 33 Visium sections for the cohort-wide
-# differential expression, so run on a large-memory node (~190 GB); it OOMs on smaller allocations.
+# Note: concatenates all 33 Visium sections for the cohort-wide differential expression
+# (peak ~33 GB).
 
 # --- Load packages
 
@@ -113,22 +113,25 @@ print(f'Samples with annotations and AnnData: {annotated_samples}')
 
 
 # --- Load the AnnData objects and attach the annotations
+# Only the log-normalized expression and the annotations are needed, so each object is reduced to
+# those (log_norm as .X) as it is read; keeping the 33 full objects needed ~190 GB.
 
-adata_dict = {}
+adata_list = []
 
 for sample in annotated_samples:
     adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample}.h5ad'))
+    obs = pd.DataFrame(index=adata.obs_names)
     # Record the sample of origin
-    adata.obs['sample_id'] = sample
+    obs['sample_id'] = sample
     # Attach the per-layer annotations (index aligned on spot barcodes)
     for layer in annotation_layers:
-        adata.obs[layer] = annotation_dict[sample][layer]
-    adata_dict[sample] = adata
+        obs[layer] = annotation_dict[sample][layer]
+    adata_list.append(ad.AnnData(X=adata.layers[use_layer], obs=obs, var=pd.DataFrame(index=adata.var_names)))
+    del adata
 
 
 # --- Concatenate into a single object
 
-adata_list = list(adata_dict.values())
 all_adata = ad.concat(adata_list, merge='same')
 all_adata.obs_names_make_unique()
 
@@ -148,7 +151,7 @@ for layer in annotation_layers:
     # Spots without an annotation for this layer form the reference group
     all_adata.obs[f'{layer}_2'] = np.where(all_adata.obs[f'{layer}_2'].isna(), f'non_{layer}', all_adata.obs[f'{layer}_2'])
     # Rank genes (Wilcoxon, group vs. rest)
-    sc.tl.rank_genes_groups(all_adata, f'{layer}_2', use_raw=False, layer=use_layer, method='wilcoxon',
+    sc.tl.rank_genes_groups(all_adata, f'{layer}_2', use_raw=False, method='wilcoxon',   # .X = use_layer
                             key_added=rank_genes_key, pts=True)
 
 
