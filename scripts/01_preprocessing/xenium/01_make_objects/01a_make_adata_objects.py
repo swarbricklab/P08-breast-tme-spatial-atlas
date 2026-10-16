@@ -109,7 +109,7 @@ n_low_qc = sum(adata.obs['low_qc'] == 'low counts')
 print(f'Low quality cells: {n_low_qc}/{len(adata.obs_names)} ({round(n_low_qc/len(adata.obs_names)*100, 2)}%)')
 
 # Filter before log normalization
-adata.layers['filtered_counts'] = adata.X
+adata.layers['filtered_counts'] = adata.X.copy()
 sc.pp.filter_cells(adata, min_counts=min_count)
 
 # Filter genes expressed in fewer than 5 cells
@@ -117,9 +117,11 @@ sc.pp.filter_genes(adata, min_cells=5)
 
 
 # --- Normalize
-
+# layers['filtered_counts']: counts scaled to 10,000 per cell, used for bin-level
+# sums (TLS zonation, chemokine densities)
 sc.pp.normalize_total(adata, layer='filtered_counts', target_sum=1e4, inplace=True)
-# log transform
+
+# X: log1p of the counts.
 sc.pp.log1p(adata)
 
 
@@ -133,6 +135,6 @@ os.makedirs(outs_dir, exist_ok=True)
 print(f"Saving .h5ad files to {outs_dir}")
 
 # save processed data object
-adata.write(filename = os.path.join(outs_dir, f"{sample_id}.h5ad"))
+adata.write(filename = os.path.join(outs_dir, f"{sample_id}.h5ad"), compression='gzip')
 
 print("Script succesfully completed")

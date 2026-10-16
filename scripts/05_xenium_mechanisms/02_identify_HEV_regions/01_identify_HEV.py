@@ -33,20 +33,18 @@ sc.set_figure_params(figsize=(8, 8), fontsize=20)
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Identify HEV niches in Xenium data from an HEV gene signature score",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
 
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
-parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--res_dir", help="Path to results directory")
-parser.add_argument("--seed", help="Seed for reproducibility", type=int)
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--hev_high_thr", help="HEV score threshold for core cells", type=float, default=0.6)
+parser.add_argument("--hev_low_thr", help="HEV score threshold for expansion candidates", type=float, default=0.2)
 
 
 args = vars(parser.parse_args())
@@ -100,7 +98,7 @@ crop_coord = auto_crop_xenium(adata)
 # Decide which annotation level to use
 level = 'major'
 
-annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
 
@@ -114,7 +112,7 @@ adata.obs[probability_key] = annotations['pred_cell_type_prob']
 # Also add the subset annotations
 level = 'subset'
 
-annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
 
@@ -229,7 +227,7 @@ HEV_transcripts = ['TSPAN7', 'MEOX2', 'RAMP3', 'SPNS2', 'IL33']
 sc.tl.score_genes(adata, gene_list=HEV_transcripts, score_name='HEV_score')
 
 # Define a threshold for HEV score
-threshold = 0.6
+threshold = args["hev_high_thr"]
 adata.obs['HEV_positive'] = adata.obs['HEV_score'] > threshold
 
 
@@ -447,10 +445,10 @@ def find_spatial_niches(
 # Define parameters
 r_um = 30.0         # Radius (microns) for neighbor search and region expansion
 high_thr = threshold      # Threshold for high HEV score (core cell inclusion)
-low_thr = 0.2       # Threshold for low HEV score (expansion candidates)
+low_thr = args["hev_low_thr"]       # Threshold for low HEV score (expansion candidates)
 min_neighbors = 0   # Minimum number of neighbors for a cell to be considered part of a core
 min_core_size = 1   # Minimum number of core cells to form a spatial niche
-min_expanded_size = 2  # Minimum number of cells in expanded niche to be kept
+min_expanded_size = 5  # Minimum number of cells in expanded niche to be kept (the published runs used the function default, 5)
 do_expand = True    # Whether to expand regions to include lower-scoring neighbors
 
 # Run the function
@@ -463,6 +461,7 @@ niche_dict = find_spatial_niches(
     low_thr=low_thr,
     min_neighbors=min_neighbors,
     min_core_size=min_core_size,
+    min_expanded_size=min_expanded_size,
     do_expand=do_expand,
 )
 
@@ -604,9 +603,10 @@ dist_matrix = distance_matrix(hev_coords, tls_coords)
 # Find the minimum distance for each HEV niche
 min_distances = dist_matrix.min(axis=1)
 
-# Make a df with niche id and distance
+# Make a df with niche id and distance; each niche takes the distance of its member cell closest to a TLS
 hev_niches = adata[adata.obs['niche_id'].notna()].obs[['niche_id']].copy()
 hev_niches['min_distance_to_TLS'] = min_distances
+hev_niches['min_distance_to_TLS'] = hev_niches['niche_id'].map(hev_niches.groupby('niche_id')['min_distance_to_TLS'].min())
 
 # Add the distance to the adata
 dist_dict = hev_niches.set_index('niche_id')['min_distance_to_TLS'].to_dict()
@@ -665,7 +665,7 @@ cell_to_niche = pd.merge(cell_to_niche, adata.obs[['HEV_score']], left_index=Tru
 hev_niches = hev_niches.drop_duplicates(subset=['niche_id']).reset_index(drop=True)
 
 # Sort by numerical part of the niche id
-hev_niches['niche_id'] = hev_niches['niche_id'].str.extract('(\d+)').astype(int)
+hev_niches['niche_id'] = hev_niches['niche_id'].str.extract(r'(\d+)').astype(int)
 hev_niches = hev_niches.sort_values(by='niche_id')
 
 hev_niches['niche_id'] = 'HEV_' + hev_niches['niche_id'].astype(str)
@@ -733,10 +733,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - Distance of HEV niches to nearest TLS r
 
 # --- Save the output
 
-today = pd.Timestamp.now().strftime('%Y%m%d')
 out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
-
-out_dir = os.path.join(out_dir, today)
 os.makedirs(out_dir, exist_ok=True)
 
 out_dir_plots = os.path.join(out_dir, 'plots')

@@ -16,12 +16,10 @@ import os
 import pandas as pd
 import numpy as np
 
-from datetime import date
-
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Score Visium spots with the TLS model of Andersson et al. (2021)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -40,6 +38,7 @@ res_dir = args["res_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir = res_dir or os.path.join(project_dir, "results")
 
 
 # --- Extract some info from the sample sheet
@@ -145,14 +144,13 @@ to_score_df = pd.DataFrame.from_dict(to_score, orient='index').T
 
 # --- Save the plots
 
-# Output to results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model/<date>
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
+# Output to results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model
+base_results = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
 if run_lymph_node:
     base_results = os.path.join(base_results, 'lymph_nodes')
 
-today = date.today().strftime("%Y%m%d")
-out_dir = os.path.join(base_results, today)
+out_dir = base_results
 os.makedirs(out_dir, exist_ok=True)
 
 # Save the TLS model output as a dataframe

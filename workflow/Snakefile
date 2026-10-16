@@ -1,0 +1,80 @@
+# Analysis workflow: runs the analysis scripts (03-05) and figure scripts in dependency order,
+# starting from the published inputs (see config/workflow/config.yaml).
+#
+#   snakemake --profile config/profiles/nci_a56 -n            # dry run
+#   snakemake --profile config/profiles/nci_a56               # everything
+#   snakemake --profile config/profiles/nci_a56 all_no_images # everything that does not need the H&E images (data/images)
+#   snakemake --profile config/profiles/nci_a56 all_xenium    # Xenium analyses and figures only
+#   snakemake --profile config/profiles/nci_a56 all_visium    # Visium / Visium HD analyses and figures
+#
+# Run from the repository root with Snakemake 7.32.4.
+
+configfile: "config/workflow/config.yaml"
+
+include: "rules/common.smk"
+include: "rules/02_sc_reference.smk"
+include: "rules/03_TLS_niche_discovery.smk"
+include: "rules/04_vascular_microenvironment.smk"
+include: "rules/05_xenium_mechanisms.smk"
+include: "rules/figures_1to3.smk"
+include: "rules/figures_4to5.smk"
+
+rule all:
+    input:
+        TARGETS
+
+# Xenium analyses and Xenium figure panels only (05_xenium_mechanisms + Figs. 4a–e,k and 5a–c,e–h)
+def _flat(x):
+    for i in x:
+        if isinstance(i, (list, tuple)) or type(i).__name__ in ("Namedlist", "OutputFiles", "InputFiles"):
+            yield from _flat(i)
+        else:
+            yield str(i)
+
+XEN_FIGS = ["4A", "4B", "4C", "4D-1", "4D-2", "4E", "4K", "5A", "5B", "5C", "5E", "5F", "5G", "5H"]
+
+rule all_xenium:
+    input:
+        [t for t in _flat(TARGETS) if "/05_xenium_mechanisms/" in t]
+        + [RES + "/figures/Fig_" + f + ".pdf" for f in XEN_FIGS]
+
+# Visium and Visium HD analyses (03, 04) and their figure panels (Figs. 1, 3, 4f–j and 5d, Extended Data Fig. 1)
+VIS_HD_FIGS = ["4F", "4G", "4H", "4I", "4J", "5D"]
+
+def _is_visium(t):
+    return ("/03_TLS_niche_discovery/" in t or "/04_vascular_microenvironment/" in t
+            or "/figures/Fig_1" in t or "/figures/Fig_2" in t or "/figures/Fig_3" in t or "/extended_data/" in t
+            or any("/figures/Fig_" + f + "." in t for f in VIS_HD_FIGS))
+
+rule all_visium:
+    input:
+        [t for t in _flat(TARGETS) if _is_visium(t)]
+
+# Everything in `all` that does not need the aligned H&E images (data/images, ~400 GB to pull). Rules
+# reading from data/images/, and any rule using their outputs, are found from the rule inputs; their
+# targets (figure panels and zoom plots drawn on the H&E) are left out.
+import re as _re
+
+def _pattern_re(p):
+    return _re.compile("^" + _re.sub(r"\\\{[^}]*\\\}", ".+", _re.escape(str(p))) + "$")
+
+def _image_rules():
+    rules_ = list(workflow.rules)
+    img = {r.name for r in rules_ if any("data/images/" in str(f) for f in r.input if not callable(f))}
+    changed = True
+    while changed:
+        changed = False
+        outs = [_pattern_re(o) for r in rules_ if r.name in img for o in r.output]
+        for r in rules_:
+            if r.name not in img and any(rx.match(_re.sub(r"\{[^}]*\}", "x", str(f)))
+                                         for f in r.input if not callable(f) for rx in outs):
+                img.add(r.name)
+                changed = True
+    return img
+
+_IMAGE_RULES = _image_rules()
+_IMAGE_OUT = [_pattern_re(o) for r in workflow.rules if r.name in _IMAGE_RULES for o in r.output]
+
+rule all_no_images:
+    input:
+        [t for t in _flat(TARGETS) if not any(rx.match(t) for rx in _IMAGE_OUT)]

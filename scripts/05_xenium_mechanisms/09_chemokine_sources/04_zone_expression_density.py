@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S9E: cohort library-normalised (CP10K) expression density of the niche chemokines CXCL13 &
+# Extended Data Fig. 9e: cohort library-normalized (CP10K) expression density of the niche chemokines CXCL13 &
 # CCL19 across three zone categories, per mm² of occupied 50 µm bins:
 #   - B_cell_zone   (TLS, B zone)
 #   - T_cell_zone   (TLS, T zone)
@@ -9,7 +9,7 @@
 #                    roughly match the B+T bin count as a baseline)
 # One panel per gene, per-sample dots, two-sided paired Wilcoxon signed-rank (n=6) for
 # B-T, B-non_TLS, T-non_TLS. Density = sum(filtered_counts) / bin area; the `filtered_counts`
-# layer is library-normalised to 1e4/cell (CP10K), so this is CP10K signal / mm².
+# layer is library-normalized to 1e4/cell (CP10K), so this is CP10K signal / mm².
 
 # --- Define environment
 # env: xen-hev
@@ -38,7 +38,7 @@ TICK_FS, SUP_FS, ANNO_FS = 8, 12, 7
 # (50 µm grid, B/T threshold 0.3, CP10K, avg_BT baseline) are hard-coded defaults.
 
 parser = argparse.ArgumentParser(
-    description="S9E CXCL13/CCL19 lib-norm (CP10K) expression density per zone (cohort)",
+    description="Extended Data Fig. 9e CXCL13/CCL19 lib-norm (CP10K) expression density per zone (cohort)",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-s", "--samples", nargs='+', required=True)
 parser.add_argument("--h5ad_dir", required=True)
@@ -350,7 +350,7 @@ print()
 fig_transcripts = make_density_figure(
     panel_specs=[(g, f'{g}_per_mm2') for g in genes],
     ylabel='Norm. expression / mm²',
-    suptitle=(f'S9E — lib-norm (CP10K) density per zone — non-TLS baseline subsampled '
+    suptitle=(f'Extended Data Fig. 9e — lib-norm (CP10K) density per zone — non-TLS baseline subsampled '
               f'per sample ({subsample_strategy})'),
 )
 
@@ -365,7 +365,7 @@ os.makedirs(plot_dir, exist_ok=True)
 os.makedirs(csv_dir,  exist_ok=True)
 
 suffix = f'{subsample_strategy}_seed{seed}'
-pdf_path = os.path.join(plot_dir, f'S9E_cohort_expression_density_libnorm_{suffix}.pdf')
+pdf_path = os.path.join(plot_dir, f'ED9E_cohort_expression_density_libnorm_{suffix}.pdf')
 fig_transcripts.savefig(pdf_path, bbox_inches='tight', dpi=300)
 plt.close('all')
 

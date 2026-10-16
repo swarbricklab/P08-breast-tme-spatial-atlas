@@ -16,8 +16,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-from datetime import date
-from datetime import datetime
 import squidpy as sq
 import re
 
@@ -35,7 +33,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Group contiguous bins with high TLS zone (T or B cell zone) scores into TLS areas",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -99,31 +97,6 @@ coords = auto_crop_scanpy(adata, border_size=0.1)
 coord_squidpy = auto_crop(adata, border_size=0.1)
 
 
-# --- Function to find the most recent results
-
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-
 # --- Make groups based on a combination of scores
 
 clusters_of_i = {
@@ -136,7 +109,7 @@ score_keys = []
 for score_name, filename in clusters_of_i.items():
     out_name = f'{score_name}_score'
     GC_res_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', out_name, resolution)
-    most_recent_dir_path = find_most_recent(GC_res_dir)
+    most_recent_dir_path = GC_res_dir
     # Read results and add to adata
     GC_file_name = f'{sample_id}_{out_name}.csv'
     GC_results = pd.read_csv(os.path.join(most_recent_dir_path, 'csv_files', GC_file_name), index_col=0)
@@ -189,12 +162,8 @@ for score_name in clusters_of_i:
 
 # --- Prepare for saving the plots
 
-# Put in a timestamped folder to avoid overwriting older plots
 qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '03a_identify_TLS_areas')
 os.makedirs(qc_dir, exist_ok=True)
-
-today = date.today()
-today = today.strftime("%Y%m%d")
 
 
 # --- Prepare for grouping: figure out which spots above threshold
@@ -284,7 +253,7 @@ radius_max = c*2
 # Round up to whole pixel
 radius_max = math.ceil(radius_max)
 
-# Enlarge the neighbour radius slightly so all spots are captured; the exact
+# Enlarge the neighbor radius slightly so all spots are captured; the exact
 # radius occasionally misses spots near region boundaries.
 radius_max = radius_max * 1.1
 
@@ -447,11 +416,11 @@ out_dir = os.path.join(qc_dir, resolution,)
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', 'groups', today)
+out_dir_plots = os.path.join(out_dir, 'plots', 'groups')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 # Save plots

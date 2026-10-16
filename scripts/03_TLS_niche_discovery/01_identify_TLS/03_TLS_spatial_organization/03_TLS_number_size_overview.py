@@ -2,7 +2,7 @@
 
 # --- Aim
 # Figure-quality cohort overview of per-sample TLS characteristics across the
-# Visium cohort (Supplementary Figure S3B): a per-sample sorted bar of TLS number
+# Visium cohort (Extended Data Fig. 3b): a per-sample sorted bar of TLS number
 # with stacked panels for TLS size, spatial clustering (DBSCAN clustered vs lone)
 # and topology (intratumoral / peritumoral / stromal_distant). Reads the
 # per-sample TLS-model spot counts and the per-TLS distances/clustering tables
@@ -16,7 +16,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -84,7 +83,10 @@ parser = argparse.ArgumentParser(
     description="Cohort overview of TLS number, size, clustering and topology",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
+parser.add_argument("-s", "--samples", nargs="*", type=str, default=None,
+                    help="List of section_ids (default: all in the sample sheet)")
 parser.add_argument("--project_dir", required=True, help="Project directory (root)")
+parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad files (not used; accepted like the other scripts)")
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 parser.add_argument("--TLS_threshold", type=float, default=0.01)
@@ -105,6 +107,8 @@ else:
     sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
+if args["samples"]:
+    sample_sheet = sample_sheet[sample_sheet['section_id'].isin(args["samples"])]
 tissue_metadata = pd.read_csv(os.path.join(project_dir, 'resources', 'tissue_metadata.csv'))
 sample_meta = pd.merge(
     sample_sheet, tissue_metadata[['tissue_id', 'clinical_subtype']], on='tissue_id',
@@ -121,29 +125,13 @@ subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 
 # --- Locate inputs
 # Number / size / clustering / topology are all reported on the discrete-TLS set
-# (Figure S3B definition) written by 01 and 02. Total spot counts per section come
+# (Extended Data Fig. 3b definition) written by 01 and 02. Total spot counts per section come
 # from the per-sample TLS-model CSVs.
-
-def find_most_recent(parent):
-    candidates = []
-    for d in os.listdir(parent):
-        full = os.path.join(parent, d)
-        if not os.path.isdir(full):
-            continue
-        try:
-            datetime.strptime(d, '%Y%m%d')
-            candidates.append(d)
-        except ValueError:
-            continue
-    if not candidates:
-        raise FileNotFoundError(f"No dated subdirectory found in {parent}")
-    return os.path.join(parent, max(candidates, key=lambda x: datetime.strptime(x, '%Y%m%d')))
-
 
 tls_model_parent = os.path.join(
     res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model',
 )
-tls_model_dir = find_most_recent(tls_model_parent)
+tls_model_dir = tls_model_parent
 print(f"Per-sample TLS_model from: {tls_model_dir}")
 
 # Per-TLS distances/topology (produced by 01_TLS_distances_topology.py); optional.
@@ -275,7 +263,7 @@ def _soften_bars(ax):
         bar.set_edgecolor('black')
 
 
-# --- Per-sample sorted overview (one bar per section, coloured by subtype)
+# --- Per-sample sorted overview (one bar per section, colored by subtype)
 # Stack from bottom up:
 #   bar (count) → size box → TLS clustering stack → TLS topology stack
 #   → subtype strip → capture-area strip + title.
@@ -329,7 +317,7 @@ def _draw_box_per_sample(ax, source_df, value_col, sample_order, bar_colors,
         patch_artist=True, showfliers=False,
         medianprops={'color': 'black', 'linewidth': 1.2},
     )
-    # Recolour each box (fill semi-transparent, outline in the subtype colour)
+    # Recolor each box (fill semi-transparent, outline in the subtype color)
     # so identity stays readable despite the faded fill. Whiskers stay black.
     for i, color in enumerate(bar_colors):
         r, g, b, _ = mpl.colors.to_rgba(color)
@@ -370,7 +358,7 @@ LONE_COLOR           = '#fdae61'           # amber
 
 
 def cluster_stack(sample_id):
-    """Ordered (heights, colors) for the fraction-normalised clustering stack.
+    """Ordered (heights, colors) for the fraction-normalized clustering stack.
     Bottom -> top: cluster 1 (largest) .. cluster k as blue shades, then one
     amber segment per lone TLS. Every segment is a single spatial group, so its
     height is that group's TLS count (a cluster's members, or 1 for a lone TLS);
@@ -401,7 +389,7 @@ def cluster_stack(sample_id):
 
 
 def _draw_cluster_stack(ax, sample_order, ylabel):
-    """Per-sample fraction-normalised stacked bar of clustered (blue shades,
+    """Per-sample fraction-normalized stacked bar of clustered (blue shades,
     one per distinct cluster) vs lone (amber) TLS. The number of distinct
     clusters reads straight off the number of blue shades in each bar."""
     for i, s in enumerate(sample_order):

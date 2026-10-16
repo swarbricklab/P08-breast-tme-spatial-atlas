@@ -20,7 +20,7 @@ from spatialdata_io import xenium
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Create Xenium SpatialData objects with segmentation masks and transcript locations",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -29,7 +29,6 @@ parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
 parser.add_argument("--res_dir", help="Path to results directory")
 
@@ -90,7 +89,7 @@ n_low_qc = sum(sdata.tables['table'].obs['low_qc'] == 'low counts')
 print(f'Low quality cells: {n_low_qc}/{len(sdata.tables['table'].obs_names)} ({round(n_low_qc/len(sdata.tables['table'].obs_names)*100, 2)}%)')
 
 # Filter before log normalization
-sdata.tables['table'].layers['filtered_counts'] = sdata.tables['table'].X
+sdata.tables['table'].layers['filtered_counts'] = sdata.tables['table'].X.copy()
 sc.pp.filter_cells(sdata.tables['table'], min_counts=min_count)
 
 # Filter genes expressed in fewer than 5 cells
@@ -98,9 +97,11 @@ sc.pp.filter_genes(sdata.tables['table'], min_cells=5)
 
 
 # --- Normalize
-
+# layers['filtered_counts']: counts scaled to 10,000 per cell, used for bin-level
+# sums (TLS zonation, chemokine densities)
 sc.pp.normalize_total(sdata.tables['table'], layer='filtered_counts', target_sum=1e4, inplace=True)
-# log transform
+
+# X: log1p of the counts.
 sc.pp.log1p(sdata.tables['table'])
 
 

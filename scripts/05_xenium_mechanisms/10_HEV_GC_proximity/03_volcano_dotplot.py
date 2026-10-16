@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S10I + S10J: render the close-vs-far DEG table (DEG_close_vs_far.csv from
+# Extended Data Fig. 10i + Extended Data Fig. 10j: render the close-vs-far DEG table (DEG_close_vs_far.csv from
 # 02_DEG_close_vs_far.py) as:
-#   - S10I: a volcano of the mean log-norm difference (close - far) vs -log10 BH-P,
-#           coloured by significance (purple = higher close to GC, brown = lower,
-#           grey = ns), with canonical HEV markers outlined + bold-labelled and all
-#           significant genes labelled (adjustText avoids overlaps).
-#   - S10J: a transposed dot plot of the significant genes, split into up-/down-close
+#   - Extended Data Fig. 10i: a volcano of the mean log-transformed difference (close - far) vs -log10 BH-P,
+#           colored by significance (purple = higher close to GC, brown = lower,
+#           gray = ns), with canonical HEV markers outlined + bold-labeled and all
+#           significant genes labeled (adjustText avoids overlaps).
+#   - Extended Data Fig. 10j: a transposed dot plot of the significant genes, split into up-/down-close
 #           blocks, with close (<=500 um) vs far (>500 um) rows, dot size = % of cells
-#           expressing and colour = per-gene-max-scaled mean expression.
+#           expressing and color = per-gene-max-scaled mean expression.
 # Both are built purely from the DEG CSV (no expression reload).
 
 # --- Define environment
@@ -28,7 +28,7 @@ from adjustText import adjust_text
 
 mpl.rcParams['pdf.fonttype'] = 42
 
-# Colour scheme: darkorchid = higher close to GC (up), brown = higher far from GC (down).
+# Color scheme: darkorchid = higher close to GC (up), brown = higher far from GC (down).
 CLOSE_COLOR = '#9932CC'   # darkorchid
 FAR_COLOR   = '#8c6d31'   # brown
 
@@ -36,7 +36,7 @@ FAR_COLOR   = '#8c6d31'   # brown
 # --- Argparse arguments (Methods-fixed thresholds are hard-coded defaults)
 
 parser = argparse.ArgumentParser(
-    description="S10I volcano + S10J dot plot from the close-vs-far DEG table.",
+    description="Extended Data Fig. 10i volcano + Extended Data Fig. 10j dot plot from the close-vs-far DEG table.",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("-s", "--samples", nargs="*", help="Accepted for runner compatibility (unused).")
@@ -46,9 +46,9 @@ parser.add_argument("--res_dir", required=True)
 parser.add_argument("--sample_sheet", default=None, help="Accepted for runner compatibility (unused).")
 parser.add_argument("--near_gc_um", type=float, default=500.0)
 parser.add_argument("--lfc_threshold", type=float, default=0.05,
-                    help="Below |mean diff| this, dots are grey (ns).")
+                    help="Below |mean diff| this, dots are gray (ns).")
 parser.add_argument("--padj_threshold", type=float, default=0.05,
-                    help="Above BH-adjusted p this, dots are grey (ns).")
+                    help="Above BH-adjusted p this, dots are gray (ns).")
 parser.add_argument("--hev_markers", nargs='+',
                     default=['TSPAN7', 'RAMP3', 'MEOX2', 'SPNS2', 'IL33', 'ACKR1',
                              'SELE', 'SELP', 'TMEM173', 'LTBR', 'SPP1'],
@@ -66,7 +66,7 @@ padj_threshold     = args["padj_threshold"]
 hev_markers        = args["hev_markers"]
 min_label_distance = args["min_label_distance"]
 
-unit_label = 'cells'   # DEG is cell-level (S10I reports cell counts)
+unit_label = 'cells'   # DEG is cell-level (Extended Data Fig. 10i reports cell counts)
 
 
 # --- Paths
@@ -83,12 +83,12 @@ n_close = int(deg['n_close'].iloc[0])
 n_far   = int(deg['n_far'].iloc[0])
 
 
-# --- Volcano helpers (adjustText labelling + directional arrows)
+# --- Volcano helpers (adjustText labeling + directional arrows)
 
 def adjust_text_func(ax, df, x_val, y_val, gene_col='gene',
                      min_distance=0.15, label_size=7, color='#0f3c5a', lw=0.4,
                      bold_genes=None, priority_genes=None):
-    """Annotate genes in df. priority_genes are ALWAYS labelled; the rest are
+    """Annotate genes in df. priority_genes are ALWAYS labeled; the rest are
     filtered by min_distance to avoid collisions, then adjustText repositions
     everything so labels don't overlap."""
     priority_set = set(priority_genes) if priority_genes else set()
@@ -191,7 +191,7 @@ def draw_volcano(deg, annotate_df, title, figsize=(4, 4),
                      label_size=label_size, bold_genes=set(hev_markers),
                      priority_genes=priority_genes)
 
-    ax.set_xlabel('Mean log-norm difference (close − far)')
+    ax.set_xlabel('Mean expression difference (close − far)')
     ax.set_ylabel('−log10(BH-adjusted p)')
     draw_directional_arrows(ax, left_label='Far from GC', right_label='Close to GC')
 
@@ -220,7 +220,7 @@ def draw_deg_dotplot_transposed(deg, gene_list, title, bold_genes=None, near_gc_
                                 bar_fill_alpha=0.55):
     """Transposed dot plot: genes on the y-axis (split into up-/down-close blocks,
     most-significant at top), close/far on the x-axis, vertical count bars on top,
-    vertical colourbar + size legend on the right. Built from the DEG CSV."""
+    vertical colorbar + size legend on the right. Built from the DEG CSV."""
     df = deg[deg['gene'].isin(gene_list)].copy()
     if df.empty:
         print('No genes for transposed DEG dotplot — skipping.')
@@ -318,7 +318,7 @@ def draw_deg_dotplot_transposed(deg, gene_list, title, bold_genes=None, near_gc_
     count_ax.set_xlabel(f'n {unit_label}', fontsize=label_fontsize)
     count_ax.xaxis.set_label_position('top')
 
-    # Vertical colourbar (right).
+    # Vertical colorbar (right).
     cbar_pad = 0.03
     cbar_x0 = ax_pos.x1 + cbar_pad
     cbar_width  = space_per_dot * cbar_height_factor
@@ -363,36 +363,36 @@ def draw_deg_dotplot_transposed(deg, gene_list, title, bold_genes=None, near_gc_
 plt.rcParams['axes.axisbelow'] = True
 hev_set = set(hev_markers)
 
-# S10I — volcano: annotate all sig genes + HEV markers (HEV markers always shown,
+# Extended Data Fig. 10i — volcano: annotate all sig genes + HEV markers (HEV markers always shown,
 # even if non-sig). Both HEV markers and every sig gene are priority so no dot is
 # dropped by min_distance; adjustText repositions overlaps.
 sig_mask = (deg['padj'] < padj_threshold) & (deg['mean_diff'].abs() > lfc_threshold)
 sig_genes = set(deg.loc[sig_mask, 'gene'])
 annotate = deg[sig_mask | deg['gene'].isin(hev_set)]
-print(f'S10I annotate set: {len(annotate)} genes ({int(sig_mask.sum())} sig + HEV markers)')
+print(f'Extended Data Fig. 10i annotate set: {len(annotate)} genes ({int(sig_mask.sum())} sig + HEV markers)')
 fig_v = draw_volcano(
     deg, annotate,
-    title=(f'S10I — HEVs close vs far from GC (≤{int(near_gc_um)} µm = close)\n'
+    title=(f'Extended Data Fig. 10i — HEVs close vs far from GC (≤{int(near_gc_um)} µm = close)\n'
            f'{n_close} close vs {n_far} far {unit_label}'),
     figsize=(4, 4), label_size=7, min_distance=min_label_distance,
     highlight_outline=hev_set, priority_genes=hev_set | sig_genes,
 )
-volcano_pdf = os.path.join(plots_dir, 'S10I_DEG_close_vs_far_volcano.pdf')
+volcano_pdf = os.path.join(plots_dir, 'ED10I_DEG_close_vs_far_volcano.pdf')
 fig_v.savefig(volcano_pdf, bbox_inches='tight', dpi=300)
 plt.close(fig_v)
 print(f'Saved: {volcano_pdf}')
 
-# S10J — transposed dot plot of the significant genes (up/down-close blocks).
+# Extended Data Fig. 10j — transposed dot plot of the significant genes (up/down-close blocks).
 sig_gene_list = deg.loc[sig_mask, 'gene'].tolist()
-print(f'S10J dotplot: {len(sig_gene_list)} sig genes')
+print(f'Extended Data Fig. 10j dotplot: {len(sig_gene_list)} sig genes')
 fig_d = draw_deg_dotplot_transposed(
     deg, sig_gene_list,
-    title=(f'S10J — ACKR1+ HEV ECs, close vs far from GC\n'
+    title=(f'Extended Data Fig. 10j — ACKR1+ HEV ECs, close vs far from GC\n'
            f'significant genes (BH-P<{padj_threshold}, |diff|>{lfc_threshold})'),
     bold_genes=hev_set, near_gc_um=near_gc_um,
 )
 if fig_d is not None:
-    dotplot_pdf = os.path.join(plots_dir, 'S10J_DEG_close_vs_far_dotplot.pdf')
+    dotplot_pdf = os.path.join(plots_dir, 'ED10J_DEG_close_vs_far_dotplot.pdf')
     fig_d.savefig(dotplot_pdf, bbox_inches='tight', dpi=300)
     plt.close(fig_d)
     print(f'Saved: {dotplot_pdf}')

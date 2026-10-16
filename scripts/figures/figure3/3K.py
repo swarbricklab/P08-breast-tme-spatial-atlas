@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3K: relationship between number of HEVs and TLS size
+# Plot Fig. 3k: relationship between number of HEVs and TLS size
 # Shows correlation between number of HEVs proximal to a TLS and the size of the TLS (number of 48 µm bins)
 
 # --- Define environment
@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -22,7 +21,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 3k: number of HEVs vs TLS size",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -75,34 +74,11 @@ sample_list = sorted(sample_list)
 
 # --- Load HEV classifications
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
-# Find most recent results
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
 
 HEV_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '03b_calculate_HEV_TLS_distance', 'square_016um', f'threshold_{threshold_adj}', 'csv_files')
-most_recent_dir_path = find_most_recent(HEV_dir)
+most_recent_dir_path = HEV_dir
 
 # Read in the results
 HEV_dict = {}

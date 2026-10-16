@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Try out label transfer from miniatlas for quick annotation of xenium data
+# Transfer cell type labels from the scRNA-seq reference (miniatlas) to Xenium cells
 # Use tangram for label transfer
 
 
@@ -23,7 +23,7 @@ import anndata as ad
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Transfer cell type labels from the scRNA-seq reference to Xenium cells with Tangram",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -43,7 +43,7 @@ sample_id=args["sample_id"]
 
 project_dir=args['project_dir']
 h5ad_dir = args['h5ad_dir']
-res_dir=args["res_dir"]
+res_dir=args["res_dir"] or os.path.join(project_dir, "results")
 
 
 # --- Load data
@@ -71,7 +71,7 @@ adata.X = adata_raw.to_df().loc[list(to_keep),].values
 level = 'subset'
 cell_type_key = f'celltype_{level}'
 
-ref_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', 'reference')
+ref_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', 'reference')
 
 # Load the processed reference
 print(f"Loading pre-processed reference...")
@@ -107,7 +107,7 @@ tg.pp_adatas(ref, adata, genes=markers)
 
 # --- Prepare for saving
 
-out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+out_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 os.makedirs(out_dir, exist_ok=True)
 
 

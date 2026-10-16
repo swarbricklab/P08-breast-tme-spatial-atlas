@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3G: stacked barplot showing proportion of HEV-overlapping vessels per endothelial lineage
+# Plot Fig. 3g: stacked barplot showing proportion of HEV-overlapping vessels per endothelial lineage
 # Shows how different endothelial lineages (arterial, capillary, venous, lymphatic) associate with HEVs based on overlap
 
 # --- Define environment
@@ -11,7 +11,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -22,7 +21,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 3g: proportion of HEV-overlapping vessels per endothelial lineage",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -120,31 +119,9 @@ endo_name_dict = {
 
 # --- Load the vessel classifications
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels', 'csv_files')
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels', 'csv_files')
+most_recent_dir_path = TLS_group_dir
 
 vessel_HEV_overlap = {}
 
@@ -198,24 +175,9 @@ rowsums = counts_df_min[['True', 'False']].sum(axis=1)
 prop_df_min = counts_df_min.copy()
 prop_df_min[['True', 'False']] = counts_df_min[['True', 'False']].div(rowsums, axis=0)
 
-# Step 1: Aggregate by group_type
-agg = prop_df_min.groupby('group_type')[['True', 'False']].agg(['mean', 'std'])
-
-# Flatten the column MultiIndex
-agg.columns = ['_'.join(col).strip() for col in agg.columns.values]
-agg = agg.reset_index()
-
-# Order group_type according to endothelial
-agg['group_type'] = pd.Categorical(agg['group_type'], categories=endothelial, ordered=True)
-# Sort
-agg = agg.sort_values('group_type')
-
-# Step 2: Extract values
-x = np.arange(len(agg))
-true_means = agg['True_mean']
-false_means = agg['False_mean']
-true_stds = agg['True_std']
-false_stds = agg['False_std']
+# Bars show the mean across samples, points the individual samples
+means = prop_df_min.groupby('group_type')[['True', 'False']].mean().reindex(endothelial)
+x = np.arange(len(endothelial))
 
 # Plotting
 nrows = 1
@@ -226,19 +188,41 @@ if ncols == 1:
     axs = np.array([axs])  # Ensure axs is always a 2D array for consistent indexing
 
 ax = axs[0]
-color_list = [color_dict.get(gt, 'lightgray') for gt in agg['group_type']]
+color_list = [color_dict.get(gt, 'lightgray') for gt in endothelial]
 
 # Plot True (bottom)
-bar1 = ax.bar(x, true_means, yerr=true_stds, label='True', color=color_list, ecolor='black',
-    error_kw=dict(lw=1, capsize=3, capthick=1), width=0.9)
+bar1 = ax.bar(x, means['True'], label='True', color=color_list, width=0.9)
 
 # Plot False (on top of True)
-bar2 = ax.bar(x, false_means, bottom=true_means, label='False', color='lightgray', width=0.9)
+bar2 = ax.bar(x, means['False'], bottom=means['True'], label='False', color='lightgray', width=0.9)
 
 plotting_functions.beautify_plot(ax)
 
-plotting_functions.annotate_bars(ax, true_means.reset_index(), x='index', y='True_mean', plot_order=true_means.index,
-                                 round_int=False, offset=list(true_stds), margin=1)
+# Per-sample points, with a fixed horizontal slot per sample so samples with identical values (e.g. all 0)
+# don't stack on top of each other
+dot_size = 16
+samples_sorted = sorted(prop_df_min['sample_id'].unique())
+sample_offset = dict(zip(samples_sorted, np.linspace(-0.25, 0.25, len(samples_sorted))))
+dot_x = prop_df_min['group_type'].map(dict(zip(endothelial, x))) + prop_df_min['sample_id'].map(sample_offset)
+ax.scatter(dot_x, prop_df_min['True'], s=dot_size, facecolor='white', edgecolor='black', linewidth=0.6,
+           zorder=3, clip_on=False)
+
+# Label each bar with its mean, anchored on the highest of bar/points and offset by more than the marker radius
+dot_max = prop_df_min.groupby('group_type')['True'].max().reindex(endothelial)
+gap_pts = np.sqrt(dot_size) / 2 + 2
+labels = []
+for i, e in enumerate(endothelial):
+    anchor = max(means.loc[e, 'True'], dot_max.loc[e])
+    labels.append(ax.annotate(plotting_functions.reformat_number(means.loc[e, 'True'], decimals=2),
+                              xy=(i, anchor), xytext=(0, gap_pts), textcoords='offset points',
+                              ha='center', va='bottom', fontsize=8))
+
+# Grow ylim if a label sits above the axis (sample close to 1)
+ax.set_ylim(0, 1.0)
+renderer = ax.figure.canvas.get_renderer()
+label_top = max(ax.transData.inverted().transform((0, t.get_window_extent(renderer).y1))[1] for t in labels)
+ax.set_ylim(0, max(1.02, label_top * 1.02))
+ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
 
 # Some tweaking
 ax.set_xlabel('')

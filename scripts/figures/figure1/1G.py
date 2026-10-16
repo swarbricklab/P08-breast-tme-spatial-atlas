@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 1G: cell type composition within different pathology annotation categories
+# Plot Fig. 1g: cell type composition within different pathology annotation categories
 # Shows deconvolution results stratified by tissue compartments (invasive, in situ, stroma, etc.)
-# This creates Figure 1G
+# This creates Fig. 1g
 
 # --- Define environment
 # env: spatial-pilot
@@ -28,7 +28,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 1g: cell type composition per pathology annotation category",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -107,7 +107,7 @@ with open(path_to_file, 'r') as json_file:
 # --- Load the deconvolution results
 
 decon_level = 'major'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{decon_level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{decon_level}_level')
 
 decon_dict = {}
 

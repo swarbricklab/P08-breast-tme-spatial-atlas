@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2E: deconvolution results per TLS cluster
+# Plot Fig. 2e: deconvolution results per TLS cluster
 # Shows cell type enrichment of selected cell types in each TLS cluster
 
 
@@ -11,7 +11,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 import math
 
 import pandas as pd
@@ -25,7 +24,7 @@ mpl.rcParams['pdf.fonttype'] = 42  # Use Type 42 (TrueType) fonts in PDF files
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 2e: deconvolution results per TLS cluster",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -42,7 +41,7 @@ args = vars(parser.parse_args())
 # Arguments
 project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
-res_dir = args["res_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, 'results')  # default: <project_dir>/results
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
@@ -84,31 +83,9 @@ for sample in sample_list:
 
 # --- Load clustering results
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
 # Load harmony clustering results
-harmony_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
-most_recent = find_most_recent(harmony_dir)
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
+most_recent = harmony_dir
 
 filename = 'All_samples_leiden_clusters.csv'
 cluster_res = pd.read_csv(os.path.join(most_recent, 'csv_files', filename), index_col=0)
@@ -117,7 +94,7 @@ cluster_res = pd.read_csv(os.path.join(most_recent, 'csv_files', filename), inde
 # --- Load deconvolution results
 
 level = 'subset'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
 
 decon_dict = {}
 
@@ -388,7 +365,7 @@ if len(cell_types_of_int_present) > 0:
 
 # --- Save output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_2E.pdf'

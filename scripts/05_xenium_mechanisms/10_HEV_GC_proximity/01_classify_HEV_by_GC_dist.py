@@ -2,8 +2,8 @@
 
 # --- Aim
 # Classify each intra-TLS HEV niche by its distance to the nearest germinal
-# centre (GC) and label it close (<= 500 um) or far (> 500 um) from a GC.
-# Upstream for Figure S10I/J (HEV endothelial cells stratified by GC proximity).
+# center (GC) and label it close (<= 500 um) or far (> 500 um) from a GC.
+# Upstream for Extended Data Fig. 10i,j (HEV endothelial cells stratified by GC proximity).
 #
 # Only HEV niches that sit within a TLS are considered (close_to_TLS == True,
 # defined as <= 100 um from a TLS in 05/02_identify_HEV_regions). For every such
@@ -25,7 +25,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import anndata as ad
 import scanpy as sc
@@ -103,27 +102,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
                                 'clinical_subtype'].values[0]
 
 
-# --- Helpers
-
-def find_most_recent(dir_path):
-    """Return the most recent YYYYMMDD-named subdirectory of dir_path."""
-    valid = []
-    for d in os.listdir(dir_path):
-        full = os.path.join(dir_path, d)
-        if not os.path.isdir(full):
-            continue
-        try:
-            datetime.strptime(d, '%Y%m%d')
-            valid.append(d)
-        except ValueError:
-            pass
-    if not valid:
-        raise FileNotFoundError(f'No YYYYMMDD subdirectory in {dir_path}')
-    most_recent = max(valid, key=lambda x: datetime.strptime(x, '%Y%m%d'))
-    return os.path.join(dir_path, most_recent)
-
-
-# --- Load data (xenium adata; .X = log-norm)
+# --- Load data (xenium adata; .X = log1p counts)
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 # All diagnostic plotting is in native micron space (x_centroid/y_centroid), matching the
@@ -134,10 +113,10 @@ crop_coord = [cell_um[:, 0].min() - _pad, cell_um[:, 0].max() + _pad,
               cell_um[:, 1].min() - _pad, cell_um[:, 1].max() + _pad]
 
 
-# --- Load HEV niche assignments and info (latest dated 05/02 subdir)
+# --- Load HEV niche assignments and info (05/02)
 
 hev_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
-hev_most_recent = find_most_recent(hev_dir)
+hev_most_recent = hev_dir
 print(f'HEV niches loaded from: {hev_most_recent}')
 
 niche_info = pd.read_csv(
@@ -202,14 +181,7 @@ else:
 print(f'{len(gc_bins)} GC bins for {sample_id} at threshold {gc_threshold}')
 
 
-# --- Distance from each niche centroid to nearest GC bin
-#     centroid-to-centroid Euclidean: min over GC bins of the straight-line
-#     distance between the niche centroid and the GC bin centre (bin_x, bin_y).
-#
-# Note: this measures centroid-to-centroid Euclidean distance rather than
-# centroid-to-square-edge (max(0, |d|-grid/2)). The two differ by <= half a bin
-# diagonal (~35 um at grid=50 um), so the 500 um close/far call is essentially
-# unchanged.
+# --- Distance from each niche centroid to the nearest GC bin edge
 
 n_niches = len(centroid_df)
 if n_niches == 0:
@@ -221,9 +193,10 @@ elif len(gc_bins) == 0:
 else:
     niche_xy = centroid_df[['centroid_x', 'centroid_y']].values        # (n_niches, 2)
     gc_xy    = gc_bins[['bin_x', 'bin_y']].values                       # (n_gc, 2)
-    dx = niche_xy[:, None, 0] - gc_xy[None, :, 0]
-    dy = niche_xy[:, None, 1] - gc_xy[None, :, 1]
-    min_distances = np.sqrt(dx ** 2 + dy ** 2).min(axis=1)
+    dx = np.abs(niche_xy[:, None, 0] - gc_xy[None, :, 0])
+    dy = np.abs(niche_xy[:, None, 1] - gc_xy[None, :, 1])
+    r  = grid_um / 2
+    min_distances = np.sqrt(np.maximum(dx - r, 0) ** 2 + np.maximum(dy - r, 0) ** 2).min(axis=1)
 
 
 # --- Build output table
@@ -243,7 +216,7 @@ print(f'Niches close_to_GC (<= {near_gc_um} um): '
 
 
 # --- Diagnostic spatial plots
-#   Page 1: intra-TLS HEV niche centroids coloured by continuous min distance to GC
+#   Page 1: intra-TLS HEV niche centroids colored by continuous min distance to GC
 #   Page 2: binary close (<= near_gc_um) vs far classification
 # GC bins are drawn as dark-orchid squares; all cells in light gray.
 

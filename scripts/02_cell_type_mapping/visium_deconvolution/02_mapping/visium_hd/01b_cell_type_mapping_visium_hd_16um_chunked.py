@@ -38,10 +38,9 @@ import anndata as ad
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Cell type deconvolution of Visium HD 16 um bins with cell2location (in chunks)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
@@ -54,6 +53,7 @@ args = vars(parser.parse_args())
 # --- Arguments
 sample_id = args['sample_id']
 project_dir = args['project_dir']
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 h5ad_dir = args['h5ad_dir']
 
 
@@ -76,7 +76,7 @@ sc_ref = 'miniatlas_GEO'
 # Decide which level to run
 level = 'major'
 
-model_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
+model_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 
 adata_file = f"reference_signatures/sc.h5ad"
 adata_ref = sc.read_h5ad(os.path.join(model_dir, adata_file))
@@ -125,7 +125,7 @@ inf_aver = inf_aver.loc[intersect, :].copy()
 
 # --- Prepare for saving
 
-out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{level}_level', resolution, sample_id)
+out_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{level}_level', resolution, sample_id)
 os.makedirs(out_dir, exist_ok=True)
 
 # Set ncells per location based on resolution
@@ -225,7 +225,7 @@ for batch in sorted(adata_vis.obs['training_batch'].unique()):
         # the expected average cell abundance: tissue-dependent
         # hyper-prior which can be estimated from paired histology:
         N_cells_per_location=N_cells_per_location,
-        # hyperparameter controlling normalisation of
+        # hyperparameter controlling normalization of
         # within-experiment variation in RNA detection:
         detection_alpha=detection_alpha
     )

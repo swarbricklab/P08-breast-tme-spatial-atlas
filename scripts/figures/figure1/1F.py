@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 1F: scatterplot of T cell vs B cell proportions across samples
+# Plot Fig. 1f: scatterplot of T cell vs B cell proportions across samples
 # Shows relationship between T cell and B cell abundance across breast cancer subtypes
 
 # --- Define environment
@@ -25,7 +25,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Fig. 1f: T cell vs B cell proportions across samples",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--data_dir", help="Path to raw data")
@@ -36,8 +36,6 @@ parser.add_argument("-s", "--samples",
 parser.add_argument("-r", "--res_dir",
                     help="Path to results directory (optional)")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files") # Not necessary for this script
-parser.add_argument("--gene_file", help="Path to a csv file with genes, genes stored in first column") # Not necessary for this script
-parser.add_argument("--use_data", help="Which data to use (SCT or log_norm)") # Not necessary for this script
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
@@ -48,6 +46,7 @@ data_dir = args["data_dir"]
 h5ad_dir = args["h5ad_dir"]
 sample_list = args["samples"]
 project_dir = args['project_dir']
+res_dir = args["res_dir"] or os.path.join(project_dir, 'results')  # default: <project_dir>/results
 
 
 # --- Extract some info from the sample sheet
@@ -80,7 +79,7 @@ subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
 # --- Load the decon results
 
 level = 'major'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
 
 decon_dict = {}
 
@@ -219,7 +218,7 @@ if 'B-cells' in result_df.columns and 'T-cells' in result_df.columns:
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_1F.pdf'

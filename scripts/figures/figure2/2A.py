@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot TLS model overview with zoomed areas (Figure 2A)
+# Plot TLS model overview with zoomed areas (Fig. 2a)
 # Shows TLS model score on full tissue + 2 zoomed areas with H&E and pathology annotations
 # This script is set up for sample P24_Vis
 
@@ -13,7 +13,6 @@
 import argparse
 import os
 import json
-from datetime import datetime
 import sys
 
 import anndata as ad
@@ -36,13 +35,13 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot TLS model overview for Figure 2A",
+parser = argparse.ArgumentParser(description="Plot TLS model overview for Fig. 2a",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P24_Vis", help="Sample shown in the figure")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
@@ -52,9 +51,6 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_id = args["sample_id"]
-
-# Override sample id
-sample_id = 'P24_Vis'
 
 print(f'Sample: {sample_id}')
 
@@ -93,30 +89,7 @@ adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample_id}.h5ad'))
 
 TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
-# Function to find the most recent results
-def find_most_recent(dir_path):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir_path, most_recent_dir)
-        print("Most recent TLS results:", most_recent_dir_path)
-    else:
-        print("No valid TLS results directories found.")
-        most_recent_dir_path = None
-    return most_recent_dir_path
-
-most_recent_dir_path = find_most_recent(TLS_res_dir)
+most_recent_dir_path = TLS_res_dir
 
 # Read in the results & add to anndata
 if most_recent_dir_path:
@@ -588,7 +561,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - TLS model score (scalebar={scalebar_val
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_2A.pdf'

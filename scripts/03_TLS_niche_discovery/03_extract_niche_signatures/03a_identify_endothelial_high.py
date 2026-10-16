@@ -18,8 +18,6 @@ import pandas as pd
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from datetime import date
-from datetime import datetime
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8))
 sc.settings.verbosity = 3
@@ -27,7 +25,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Identify endothelial-high spots, the background used to filter the HEV signature",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -47,6 +45,7 @@ res_dir = args["res_dir"]
 h5ad_dir=args["h5ad_dir"]
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir = res_dir or os.path.join(project_dir, "results")
 
 sys.path.append(os.path.join(project_dir, 'scripts'))
 from helper_functions import auto_crop_scanpy, save_multi_image
@@ -95,32 +94,9 @@ else:
 
 # --- Load clustering results
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-
 # Load harmony clustering results
-harmony_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
-most_recent = find_most_recent(harmony_dir)
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
+most_recent = harmony_dir
 
 filename = 'All_samples_leiden_clusters.csv'
 cluster_res = pd.read_csv(os.path.join(most_recent, 'csv_files', filename), index_col=0)
@@ -130,7 +106,7 @@ results_sub = cluster_res[cluster_res['sample_id'] == sample_id]
 adata.obs['leiden'] = results_sub['leiden'].astype('category')
 
 # Also load the extracted signature list for HEV
-signature_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
+signature_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
 filename = 'hevs_top_genes_filtered.csv'
 
 hev_signature = pd.read_csv(os.path.join(signature_dir, filename))
@@ -142,7 +118,7 @@ hev_cluster = hev_signature['group'].values[0]
 # Decide which level to plot
 level = 'major'
 
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
 
 # Read in the results & add to anndata
 decon_filename = f'{sample_id}_{level}_q05_cell_abundance_w_sf.csv'
@@ -161,11 +137,7 @@ qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signa
 
 os.makedirs(qc_dir, exist_ok=True)
 
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-
-out_dir = os.path.join(qc_dir, today)
+out_dir = qc_dir
 os.makedirs(out_dir, exist_ok=True)
 
 

@@ -4,7 +4,7 @@
 # Per-sample spatial overview of the discrete-TLS classification. For each Visium
 # section a 3-panel figure shows: epithelial pathology annotation, TLS topology
 # (intratumoral / peritumoral / stromal_distant), and DBSCAN spatial clustering
-# (each cluster a distinct colour, lone TLS in grey). All sections are saved in a
+# (each cluster a distinct color, lone TLS in gray). All sections are saved in a
 # single multi-page PDF.
 
 # --- Define environment
@@ -15,7 +15,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -50,7 +49,7 @@ parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 parser.add_argument("--TLS_threshold", type=float, default=0.01)
 parser.add_argument("--min_TLS_spots", type=int, default=3,
                     help="Minimum directly-adjacent spots for a discrete TLS "
-                         "(Figure S3B stringent definition)")
+                         "(Extended Data Fig. 3b stringent definition)")
 parser.add_argument("--dbscan_eps_um", type=int, default=500,
                     help="DBSCAN eps (µm) whose labels are plotted; must exist as "
                          "a dbscan_label_epsX column in clustering_per_TLS.csv")
@@ -84,27 +83,12 @@ subtype_dict = dict(zip(sample_meta['section_id'], sample_meta['clinical_subtype
 sample_list = args["samples"] or list(sample_sheet['section_id'])
 
 
-# --- Locate the most recent TLS_groups directory (permissive grouping input)
+# --- Locate the TLS_groups directory (permissive grouping input)
 
-def find_most_recent(parent):
-    candidates = []
-    for d in os.listdir(parent):
-        if not os.path.isdir(os.path.join(parent, d)):
-            continue
-        try:
-            datetime.strptime(d, '%Y%m%d')
-            candidates.append(d)
-        except ValueError:
-            continue
-    if not candidates:
-        raise FileNotFoundError(f"No dated subdirectory found in {parent}")
-    return os.path.join(parent, max(candidates, key=lambda x: datetime.strptime(x, '%Y%m%d')))
-
-
-groups_dir = find_most_recent(os.path.join(
+groups_dir = os.path.join(
     res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '02_group_TLS_high',
     f'threshold_{TLS_threshold_adj}', 'csv_files',
-))
+)
 print(f"Per-sample TLS_groups from: {groups_dir}")
 
 
@@ -127,7 +111,7 @@ clust_df = (pd.read_csv(clustering_path) if os.path.exists(clustering_path)
 print(f"Topology rows: {len(dist_df)}   Clustering rows: {len(clust_df)}")
 
 
-# --- Colour schemes
+# --- Color schemes
 
 topo_categories = ['intratumoral', 'peritumoral', 'stromal_distant']
 topo_colors = {
@@ -135,7 +119,7 @@ topo_colors = {
     'peritumoral':     '#fc8d59',
     'stromal_distant': '#74add1',
 }
-# P08 epithelial pathology labels (invasive / in_situ = cancer)
+# Epithelial pathology labels (invasive / in_situ = cancer)
 epi_categories = ['invasive', 'in_situ', 'benign', 'normal']
 epi_colors = {
     'invasive': '#b30000',
@@ -143,12 +127,12 @@ epi_colors = {
     'benign':   '#fee090',
     'normal':   '#74add1',
 }
-# Cluster colours: tab20 hues excluding the grey pair (indices 14, 15), which is
+# Cluster colors: tab20 hues excluding the gray pair (indices 14, 15), which is
 # reserved for lone TLS so a cluster can never be confused with a lone TLS.
 _tab20 = mpl.colormaps['tab20']
 CLUSTER_COLORS = [mpl.colors.to_hex(_tab20(i)) for i in range(20) if i not in (14, 15)]
-LONE_COLOR   = '#4d4d4d'                # dark grey — lone (noise) TLS: neutral, reads on the
-                                        # H&E, lighter than black, and no cluster uses grey
+LONE_COLOR   = '#4d4d4d'                # dark gray — lone (noise) TLS: neutral, reads on the
+                                        # H&E, lighter than black, and no cluster uses gray
 
 # Pretty legend labels + font sizes
 topo_display = {'intratumoral': 'Intratumoral', 'peritumoral': 'Peritumoral',
@@ -163,8 +147,8 @@ cluster_label_col = f'dbscan_label_eps{eps}'
 
 
 def add_legend_below(ax, labels, colors, title):
-    """Add a colour-patch legend centred just below the axes (so it never
-    overlaps the neighbouring panels)."""
+    """Add a color-patch legend centered just below the axes (so it never
+    overlaps the neighboring panels)."""
     if not labels:
         return
     handles = [mpatches.Patch(facecolor=c, edgecolor='black', linewidth=0.4)
@@ -200,7 +184,7 @@ def render_sample(sample):
         index=adata.obs_names, columns=['x', 'y'],
     )
 
-    # Discrete-TLS labels per spot (Fig S3B definition)
+    # Discrete-TLS labels per spot (Extended Data Fig. 3b definition)
     groups_file = os.path.join(groups_dir, f'{sample}_TLS_groups.csv')
     if os.path.exists(groups_file):
         gdf = pd.read_csv(groups_file, index_col=0)

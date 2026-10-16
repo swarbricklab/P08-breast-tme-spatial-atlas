@@ -5,12 +5,12 @@
 # This single cohort script merges three source analyses:
 #   (a) CCL19 / CCL21 producer subsets  (miniatlas subsets with >= X% of cells expressing),
 #   (b) CXCL13 producer subsets         (same metric),
-#   (c) the S9A dot plot of the TLS-niche chemokines / receptors / HEV markers across every
+#   (c) the Extended Data Fig. 9a dot plot of the TLS-niche chemokines / receptors / HEV markers across every
 #       reference subset, with candidate producers (> 15% of cells expressing any of
 #       CCL19 / CXCL13 / CCL21) highlighted.
 # For every subset we compute the % of cells expressing (raw counts > 0) and the mean
 # log-norm expression. Producer lists are emitted at BOTH thresholds: over_10 (>= 10%, used
-# by the downstream S9I reference-producer correlation) and over_15 (>= 15%, the headline).
+# by the downstream Extended Data Fig. 9i reference-producer correlation) and over_15 (>= 15%, the headline).
 # FDC are NOT in the reference and are always added downstream as a CXCL13 producer regardless
 # of this list.
 
@@ -47,7 +47,7 @@ sc.settings.verbosity = 3
 # figure and producer lists are built purely from the miniatlas reference.
 
 parser = argparse.ArgumentParser(
-    description="Reference (miniatlas) CCL19/CCL21 & CXCL13 producers + S9A niche-gene dot plot",
+    description="Reference (miniatlas) CCL19/CCL21 & CXCL13 producers + Extended Data Fig. 9a niche-gene dot plot",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("--h5ad_dir", default=None, help="Path to anndata objects dir (holds sc_ref/)")
@@ -60,7 +60,7 @@ parser.add_argument("--min_pct_exprs", nargs="*", type=float, default=[10.0, 15.
                     help="thresholds (%%): a subset is a producer if >= this %% of its cells "
                          "express; one output subdir over_<pct> per value")
 parser.add_argument("--bold_pct", type=float, default=15.0,
-                    help="S9A: bold a subset if > this %% of its cells express any of "
+                    help="Extended Data Fig. 9a: bold a subset if > this %% of its cells express any of "
                          "CCL19/CXCL13/CCL21 (headline candidate-producer threshold)")
 
 args = vars(parser.parse_args())
@@ -77,7 +77,7 @@ if h5ad_dir is None:
 LINEAGE_ORDER = ['Epithelial', 'Immune', 'Stromal']
 SUBSET_COL    = 'celltype_subset'      # miniatlas obs column holding the subset label
 CYCLING_COL   = 'miniatlas_cycling'    # classifications column (major class w/ Cycling split out)
-BOLD_GENES    = ['CCL19', 'CXCL13', 'CCL21']   # S9A: producers of any of these get a bold label
+BOLD_GENES    = ['CCL19', 'CXCL13', 'CCL21']   # Extended Data Fig. 9a: producers of any of these get a bold label
 
 
 # --- Output directories (plots / csv_files split)
@@ -97,7 +97,7 @@ from helper_functions import save_multi_image
 
 
 # --- Load & prepare the miniatlas reference
-# The P08 miniatlas_GEO.h5ad already stores raw counts in layers['counts'] and log-norm
+# miniatlas_GEO.h5ad already stores raw counts in layers['counts'] and log-norm
 # (normalize_total 1e4 + log1p) in .X, with ensembl-id var_names + var['original_name'] gene
 # symbols. % expressing needs raw counts -> we use layers['counts'].
 
@@ -110,13 +110,13 @@ adata.var_names_make_unique()
 if 'counts' not in adata.layers:
     raise KeyError("miniatlas_GEO.h5ad has no layers['counts'] (raw counts) — % expressing "
                    "needs raw counts; regenerate the reference with raw counts stored.")
-adata.layers['log_norm'] = adata.X.copy()   # .X is already log-norm in the P08 object
+adata.layers['log_norm'] = adata.X.copy()   # .X is already log-norm
 
 if SUBSET_COL not in adata.obs:
     raise KeyError(f"{SUBSET_COL} not in obs; available: {list(adata.obs.columns)}")
 
 
-# --- Classifications: subset ordering (lineage -> major -> subset) + colour luts
+# --- Classifications: subset ordering (lineage -> major -> subset) + color luts
 
 color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
 
@@ -220,7 +220,7 @@ def emit_producers(genes, name, expr_csv, prod_csv, pdf_name, legend_anchor):
         for sp_ in ax.spines.values():
             sp_.set_visible(False)
         ax.set_axisbelow(True)
-        for s in subset_order:   # lineage colour strip left of the labels
+        for s in subset_order:   # lineage color strip left of the labels
             ax.scatter(-0.45, ypos[s], marker='s', s=14,
                        color=lineage_lut.get(subset_lineage.get(s), '#cccccc'),
                        transform=ax.transData, clip_on=False, zorder=4)
@@ -249,10 +249,10 @@ emit_producers(['CXCL13'], 'cxcl13_producers',
 
 
 # ===========================================================================================
-# --- S9A: TLS-niche chemokines / receptors / HEV markers across the reference
+# --- Extended Data Fig. 9a: TLS-niche chemokines / receptors / HEV markers across the reference
 # Faithful port of the reference per-niche split dotplots. Per-gene min-max-scaled mean
-# expression (colour), fraction of cells expressing (dot size), swap_axes so genes are rows
-# and cell types are columns, a lineage / major-class row-colour matrix, and L-R brackets.
+# expression (color), fraction of cells expressing (dot size), swap_axes so genes are rows
+# and cell types are columns, a lineage / major-class row-color matrix, and L-R brackets.
 # Subset labels are bold if > BOLD_PCT% of cells express ANY of CCL19 / CXCL13 / CCL21.
 # ===========================================================================================
 
@@ -266,7 +266,7 @@ if 'Cycling' in major_present:
     major_present.remove('Cycling')
     major_present.append('Cycling')
 
-# Row-colour matrix (row 0 = lineage, row 1 = major class), aligned to sorted_cell_types
+# Row-color matrix (row 0 = lineage, row 1 = major class), aligned to sorted_cell_types
 row_colors_df = pd.DataFrame(
     {
         'lineage': classif_dedup['lineage'].map(lineage_lut),
@@ -315,8 +315,8 @@ PLOT4_GENES = present_only(PLOT4_GENES)
 
 
 # --- Per-cell-type expression tables (all niche genes): % expressing, mean log-norm, scaled mean
-# scaled_df reproduces scanpy's standard_scale='var'; we recolour the dots with it because this
-# repo's scanpy mis-renders that scaling under swap_axes (colours per column instead of per gene).
+# scaled_df reproduces scanpy's standard_scale='var'; we recolor the dots with it because this
+# repo's scanpy mis-renders that scaling under swap_axes (colors per column instead of per gene).
 
 all_niche_genes = list(dict.fromkeys(
     g for d in (PLOT3_GENES, PLOT4_GENES) for gs in d.values() for g in gs))
@@ -344,7 +344,7 @@ if missing_bold:
     print(f'WARNING: bold genes absent from reference (ignored for bolding): {missing_bold}')
 bold_mask = (pct_df[bold_genes_present] > BOLD_PCT).any(axis=1)
 bold_set = set(bold_mask[bold_mask].index)
-print(f'S9A: cell types bolded (> {BOLD_PCT:.0f}% expressing any of {bold_genes_present}, '
+print(f'Extended Data Fig. 9a: cell types bolded (> {BOLD_PCT:.0f}% expressing any of {bold_genes_present}, '
       f'n={len(bold_set)}):')
 for s in sorted_cell_types:
     if s in bold_set:
@@ -359,8 +359,8 @@ def lighten_color(color, amount=0.5):
 
 
 def fix_dot_colors(main_ax, genes):
-    """Recolour a scanpy dotplot's dots per gene (min-max scaled mean), overwriting the
-    per-column colouring that this repo's scanpy applies under swap_axes. Dot positions and
+    """Recolor a scanpy dotplot's dots per gene (min-max scaled mean), overwriting the
+    per-column coloring that this repo's scanpy applies under swap_axes. Dot positions and
     sizes are left untouched; each dot is matched to its (cell type, gene) by nearest tick."""
     xticks = np.asarray(main_ax.get_xticks())
     yticks = np.asarray(main_ax.get_yticks())
@@ -463,7 +463,7 @@ def bold_producer_labels(heatmap_ax):
             tick.set_fontweight('bold')
 
 
-# --- Shared niche colours (rectangles on the left of the dot grids)
+# --- Shared niche colors (rectangles on the left of the dot grids)
 
 color_dict_score = {
     'B cell zone': mpl.colors.cnames["cornflowerblue"],
@@ -475,7 +475,7 @@ for key in color_dict_score:
 color_dict_score['Chemokines'] = lighten_color(mpl.colors.cnames["cornflowerblue"], amount=0.3)
 
 
-# --- Shared dot size / colour scale
+# --- Shared dot size / color scale
 
 dot_max, vmin, vmax, cmap = 1, 0, 1, 'Reds'
 space_per_dot = 0.04
@@ -485,7 +485,7 @@ plt.rcParams['axes.grid'] = False
 
 def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
     """Reproduce the per-niche split dotplot: one swap_axes dotplot per niche, stacked, with
-    the row-colour matrix, ligand-receptor brackets, niche rectangles, legends and bold
+    the row-color matrix, ligand-receptor brackets, niche rectangles, legends and bold
     producer labels. Returns x_left_global for reuse (Plot 4 reuses Plot 3's)."""
     n_keys = len(top_genes_dict)
     fig, axs = plt.subplots(ncols=1, nrows=n_keys, figsize=(5, 5))
@@ -499,7 +499,7 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
             dot_max=dot_max, cmap=cmap, vmin=vmin, vmax=vmax, show=False,
             swap_axes=True, standard_scale='var',
         )
-        fix_dot_colors(dp['mainplot_ax'], genes)   # correct the per-column mis-colouring
+        fix_dot_colors(dp['mainplot_ax'], genes)   # correct the per-column mis-coloring
         auto_resize_dotplot(dp['mainplot_ax'], space_per_dot=space_per_dot)
         heatmap_axs.append(dp['mainplot_ax'])
         buffer = 0.25
@@ -514,7 +514,7 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
 
     reposition_dotplot_axs(heatmap_axs, y_offset=0.01)
 
-    # Colourbar + size legend to the right of the last dot grid
+    # Colorbar + size legend to the right of the last dot grid
     ax_pos = heatmap_axs[-1].get_position()
     cbar_height = space_per_dot * 0.8
     cbar_width = space_per_dot * 5
@@ -528,7 +528,7 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
     if lr_use:
         x_left_global = join_lr_multi(heatmap_axs, lr_use, offset=0.25)
 
-    # Row-colour matrix above the first dot grid
+    # Row-color matrix above the first dot grid
     row_colors_ax = plt.axes([0.1, 0.1, 0.2, 0.2])
     new_heatmap_pos = heatmap_axs[0].get_position()
     presence_ax_height = space_per_dot * len(row_colors_df_T.index)
@@ -573,23 +573,23 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
                      title='Major class', x=right_edge, y=legend_bbox_fig[1][1], offset=0.02,
                      spacing_per_label=0.05, loc='upper left', fontsize=9)
 
-    # Short + bold cell-type labels on the last (only labelled) dot grid
+    # Short + bold cell-type labels on the last (only labeled) dot grid
     bold_producer_labels(heatmap_axs[-1])
 
     row_colors_ax_pos = row_colors_ax.get_position()
-    plt.suptitle(f'S9A — miniatlas {level} cell types (use_data={use_data})\n'
+    plt.suptitle(f'Extended Data Fig. 9a — miniatlas {level} cell types (use_data={use_data})\n'
                  f'bold = > {BOLD_PCT:.0f}% expressing any of ' + '/'.join(bold_genes_present),
                  x=(row_colors_ax_pos.x0 + row_colors_ax_pos.x1) / 2,
                  y=row_colors_ax_pos.y1 + 0.1, fontweight='bold')
     return x_left_global
 
 
-# --- Build the S9A niche dotplot
+# --- Build the Extended Data Fig. 9a niche dotplot
 
 make_niche_dotplot(PLOT3_GENES, [('CCL19', 'CCR7'), ('CXCL13', 'CXCR5')])
 
 
-# --- Save S9A outputs
+# --- Save Extended Data Fig. 9a outputs
 
 niche_csv_dir  = os.path.join(csv_root,  'niche_genes')
 niche_plot_dir = os.path.join(plot_root, 'niche_genes')
@@ -604,8 +604,8 @@ for fnum in plt.get_fignums():
     for ax in plt.figure(fnum).axes:
         ax.grid(False)
 
-save_multi_image(os.path.join(niche_plot_dir, 'S9A_miniatlas_niche_genes_dotplots.pdf'))
+save_multi_image(os.path.join(niche_plot_dir, 'ED9A_miniatlas_niche_genes_dotplots.pdf'))
 plt.close('all')
 
-print(f'Saved S9A: {niche_plot_dir}')
+print(f'Saved Extended Data Fig. 9a: {niche_plot_dir}')
 print("Script successfully completed")

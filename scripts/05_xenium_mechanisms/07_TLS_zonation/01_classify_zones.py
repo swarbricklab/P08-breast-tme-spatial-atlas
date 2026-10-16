@@ -2,7 +2,7 @@
 
 # --- Aim
 # Classify 50 um bins inside previously-identified TLS regions into B-cell / T-cell
-# zones AND germinal-centre (GC) zones in a single pass (Figures S9C/S9D and S10G/S10H
+# zones AND germinal-center (GC) zones in a single pass (Extended Data Figs. 9c,d and 10g,h
 # support). Approach (per-bin / pseudobulk):
 #   1. Bin cells into a 50 um square grid (micron coordinates)
 #   2. Pseudo-bulk raw counts per bin, then normalize_total + log1p
@@ -122,14 +122,14 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
-# Raw counts live in layers['filtered_counts'] for Xenium Prime 5K (.X is log-norm)
+# layers['filtered_counts'] holds counts scaled to 10,000 per cell
 raw_counts = adata.layers['filtered_counts']
 if not sp.issparse(raw_counts):
     raw_counts = sp.csr_matrix(raw_counts)
 else:
     raw_counts = raw_counts.tocsr()
 
-# Micron coordinates (x_centroid/y_centroid); obsm['spatial'] is image/pixel space in P08
+# Micron coordinates (x_centroid/y_centroid); obsm['spatial'] is image/pixel space
 xy = adata.obs[['x_centroid', 'y_centroid']].values.astype(float)
 
 

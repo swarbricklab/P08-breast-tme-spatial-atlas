@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S9B: inside TLS there are multiple CCL19+ stromal populations that are distinct lineages —
+# Extended Data Fig. 9b: inside TLS there are multiple CCL19+ stromal populations that are distinct lineages —
 # iCAF s2 (CAFs MSC iCAF-like s2) carries fibroblast markers, imPVL s1 (PVL Immature s1)
 # carries mural/perivascular markers. Pooling cells across all samples, draw the per-gene-max
 # scaled dot plot contrasting TLS-resident imPVL s1 vs iCAF s2:
 #   Chemokine       CCL19, CCL21
 #   Fibroblast/CAF  FAP, LUM, PDGFRA, PDPN
 #   Mural/PVL       KCNJ8, MCAM, NOTCH3, RGS5
-# Colour = mean expression scaled to per-gene max; dot size = fraction of per-gene max; a
-# per-group cell-count bar, colourbar and size legend are rendered to the right. A per-sample
+# Color = mean expression scaled to per-gene max; dot size = fraction of per-gene max; a
+# per-group cell-count bar, colorbar and size legend are rendered to the right. A per-sample
 # cell-count table (focus subset x TLS/non-TLS x sample) is written alongside.
 
 # --- Define environment
@@ -39,7 +39,7 @@ sc.set_figure_params(facecolor='white', fontsize=10)
 # passes --h5ad_dir --project_dir --res_dir --sample_sheet --samples.
 
 parser = argparse.ArgumentParser(
-    description="S9B imPVL s1 vs iCAF s2 per-gene-max dot plot inside TLS (cohort)",
+    description="Extended Data Fig. 9b imPVL s1 vs iCAF s2 per-gene-max dot plot inside TLS (cohort)",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("--h5ad_dir", required=True, help="Path to anndata objects dir")
@@ -138,7 +138,7 @@ def label_color(label):
 # --- Cell-type annotation loader (label transfer)
 
 def load_subset_labels(sample):
-    path = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
+    path = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer',
                         'xenium', 'subset_level', f'{sample}_subset_pred_cell_types.csv')
     df = pd.read_csv(path, index_col=0)
     df.index = df.index.astype(str)
@@ -156,8 +156,8 @@ os.makedirs(plot_dir, exist_ok=True)
 
 
 # --- Per-gene-max multi-axis dotplot
-# Colour = mean expr scaled to per-gene max; dot size = fraction of per-gene max. Count bars
-# (horizontal), a vertical colourbar and a size legend are rendered to the right.
+# Color = mean expr scaled to per-gene max; dot size = fraction of per-gene max. Count bars
+# (horizontal), a vertical colorbar and a size legend are rendered to the right.
 def fancy_dotplot(adata_sub, gene_categories, groupby, title,
                   cbar_title='Mean expression\n(scaled to max)', size_normalize='max',
                   sort_genes=True):
@@ -171,7 +171,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
     n_cats  = len(gene_categories)
     n_grp   = len(group_order)
 
-    # Fit the dot grid + count bars + colourbar + size legend inside x in [0.06, 0.97]
+    # Fit the dot grid + count bars + colorbar + size legend inside x in [0.06, 0.97]
     # and y in [0.10, ~0.90]. The legend block to the right consumes a fixed budget.
     legend_budget = 0.012 + 0.05 + 0.012 + 0.05 + 0.07          # bar gap+cbar gap/w+size gap/w
     spx = min(SPACE_PER_DOT_X,
@@ -242,7 +242,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
     bar_ax.set_title('n cells', fontsize=LABEL_FS, pad=6)
     bar_ax.grid(False)
 
-    # Vertical colourbar spanning the full dot-grid height, right of the count bars
+    # Vertical colorbar spanning the full dot-grid height, right of the count bars
     fig.canvas.draw()
     inv = fig.transFigure.inverted()
     bar_right = inv.transform(bar_ax.get_tightbbox(fig.canvas.get_renderer()))[1][0]
@@ -263,7 +263,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
     cax.set_yticks([0, 0.5, 1.0])
     cax.grid(False)
 
-    # Vertical size legend, right of the colourbar
+    # Vertical size legend, right of the colorbar
     cbar_pos = cax.get_position()
     size_h = cbar_h * 0.85
     size_y = cbar_y0 + (cbar_h - size_h) / 2
@@ -304,7 +304,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
 
 
 # --- Load samples: keep only CAF + PVL cells (all genes), tag subset + TLS membership
-# in-TLS is a point-in-polygon against the P08 TLS region polygons, which are built in
+# in-TLS is a point-in-polygon against the TLS region polygons, which are built in
 # x_centroid/y_centroid (micron) space by 05/01_identify_TLS_regions.
 
 focus_subsets = list(FOCUS.keys())
@@ -316,7 +316,7 @@ for sample in samples:
     adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample}.h5ad'))
     adata.obs_names = adata.obs_names.astype(str)
 
-    # subset label from the P08 label-transfer
+    # subset label from the label transfer
     adata.obs['subset'] = load_subset_labels(sample).reindex(adata.obs_names).values
 
     # keep only the stromal context (CAF + PVL) to bound memory
@@ -397,7 +397,7 @@ if missing:
     print(f'\nMarkers absent from panel (dropped): {missing}')
 
 
-# --- S9B: main comparison, imPVL s1 vs iCAF s2 inside TLS (per-gene max)
+# --- Extended Data Fig. 9b: main comparison, imPVL s1 vs iCAF s2 inside TLS (per-gene max)
 
 tls_pool = pool[pool.obs['group'].isin(TLS_COMPARISON)].copy()
 tls_pool.obs['group'] = tls_pool.obs['group'].cat.remove_unused_categories()
@@ -412,7 +412,7 @@ for fnum in plt.get_fignums():
     for ax in plt.figure(fnum).axes:
         ax.grid(False)
 
-pdf_path = os.path.join(plot_dir, 'S9B_impvl_s1_vs_icaf_s2_TLS.pdf')
+pdf_path = os.path.join(plot_dir, 'ED9B_impvl_s1_vs_icaf_s2_TLS.pdf')
 save_multi_image(pdf_path)
 plt.close('all')
 

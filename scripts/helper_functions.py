@@ -275,3 +275,61 @@ def save_multi_image(filename):
     for fig in figs:
         fig.savefig(pp, format='pdf', bbox_inches='tight')
     pp.close()
+
+
+# --- Region reads from the aligned H&E OME-TIFFs
+# The aligned images are whole slides (~10-13 GB in RAM at full resolution), so the zoom scripts
+# read only the 1024 px tiles that overlap a crop, and overviews from a low-resolution pyramid
+# level. Tiled reads via tifffile.aszarr need zarr>=3, which the spatdat env does not have, so
+# DEFLATE tiles are decoded directly (anything else falls back to a full read).
+
+def tiff_shape(path):
+    """(height, width) of the full-resolution level."""
+    import tifffile
+    with tifffile.TiffFile(path) as tf:
+        page = tf.pages[0]
+        return int(page.imagelength), int(page.imagewidth)
+
+
+def read_tiff_region(path, x0, x1, y0, y1):
+    """Full-resolution RGB crop [y0:y1, x0:x1], clipped to the image like numpy slicing would be.
+    Returns the crop and the clipped (x0, x1, y0, y1)."""
+    import zlib
+    import tifffile
+    with tifffile.TiffFile(path) as tf:
+        page = tf.pages[0]
+        width, height, n_ch = int(page.imagewidth), int(page.imagelength), int(page.samplesperpixel)
+        x0, x1 = max(int(x0), 0), min(int(x1), width)
+        y0, y1 = max(int(y0), 0), min(int(y1), height)
+        if x1 <= x0 or y1 <= y0:
+            return np.zeros((max(y1 - y0, 0), max(x1 - x0, 0), 3), np.uint8), (x0, x1, y0, y1)
+        fast =(page.is_tiled and int(page.predictor) == 1 and int(page.planarconfig or 1) == 1
+                and int(page.compression) in (8, 32946) and page.dtype == np.uint8)
+        if not fast:
+            return page.asarray()[y0:y1, x0:x1, :3], (x0, x1, y0, y1)
+        tw, tl = int(page.tilewidth), int(page.tilelength)
+        tiles_across = (width + tw - 1) // tw
+        tx0, tx1 = x0 // tw, (x1 - 1) // tw
+        ty0, ty1 = y0 // tl, (y1 - 1) // tl
+        canvas = np.zeros(((ty1 - ty0 + 1) * tl, (tx1 - tx0 + 1) * tw, n_ch), np.uint8)
+        fh, offsets, counts = tf.filehandle, page.dataoffsets, page.databytecounts
+        for ty in range(ty0, ty1 + 1):
+            for tx in range(tx0, tx1 + 1):
+                idx = ty * tiles_across + tx
+                if counts[idx] == 0:
+                    continue
+                fh.seek(offsets[idx])
+                tile = np.frombuffer(zlib.decompress(fh.read(counts[idx])), np.uint8).reshape(tl, tw, n_ch)
+                canvas[(ty - ty0) * tl:(ty - ty0 + 1) * tl, (tx - tx0) * tw:(tx - tx0 + 1) * tw] = tile
+        crop = canvas[y0 - ty0 * tl:y1 - ty0 * tl, x0 - tx0 * tw:x1 - tx0 * tw, :3]
+    return crop, (x0, x1, y0, y1)
+
+
+def read_tiff_overview(path, min_side=4000):
+    """The coarsest pyramid level whose longer side is >= min_side px (RGB). Draw it with
+    imshow(..., extent=(0, width, height, 0)) to keep full-resolution pixel coordinates."""
+    import tifffile
+    with tifffile.TiffFile(path) as tf:
+        levels = tf.series[0].levels
+        level = next((lv for lv in reversed(levels) if max(lv.shape[:2]) >= min_side), levels[0])
+        return level.asarray()[..., :3]

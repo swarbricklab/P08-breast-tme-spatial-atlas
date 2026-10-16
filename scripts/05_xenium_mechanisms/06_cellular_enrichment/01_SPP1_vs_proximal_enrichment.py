@@ -11,7 +11,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 import sys
 
 import anndata as ad
@@ -37,7 +36,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Cell type abundance near HEV niches and its correlation with endothelial SPP1",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -103,30 +102,8 @@ crop_coord = auto_crop_xenium(adata)
 
 # --- Load the HEV niches
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 hev_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions',)
-most_recent = find_most_recent(hev_dir)
+most_recent = hev_dir
 
 hev_file = f'{sample_id}_HEV_niches_cell_to_niche.csv'
 tmp_df = pd.read_csv(os.path.join(most_recent, 'csv_files', hev_file), index_col=0)
@@ -159,7 +136,7 @@ adata.obs['in_TLS'] = tmp_df['in_TLS']
 # Decide which annotation levels to use
 level = 'subset'
 
-annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
@@ -550,7 +527,8 @@ for max_dist in max_dists:
 
     # Reshape the padded list
     axs_grid = np.array(padded_axs).reshape(nrows, ncols)
-    axs_grid_cleaned = np.array([[ax for ax in row if ax is not None] for row in axs_grid if any(ax is not None for ax in row)])
+    # list of rows (the last row can be shorter, so not a 2-D array)
+    axs_grid_cleaned = [[ax for ax in row if ax is not None] for row in axs_grid if any(ax is not None for ax in row)]
 
     plotting_functions.move_plots_x_y(axs_grid_cleaned, x_offset=0.2, y_offset=0.2, remove_ylabels=False, remove_xlabels=False, remove_title=False)
 
@@ -565,11 +543,10 @@ for max_dist in max_dists:
     out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '06_cellular_enrichment', f'{gene_of_interest}_vs_cell_abundance')
     out_dir = os.path.join(out_dir, f'maxdist_{max_dist}um')
 
-    today = datetime.now().strftime('%Y%m%d')
-    out_dir_plots = os.path.join(out_dir, today, 'plots')
+    out_dir_plots = os.path.join(out_dir, 'plots')
     os.makedirs(out_dir_plots, exist_ok=True)
 
-    out_dir_csv = os.path.join(out_dir, today, 'csv_files')
+    out_dir_csv = os.path.join(out_dir, 'csv_files')
     os.makedirs(out_dir_csv, exist_ok=True)
 
     # Save plots

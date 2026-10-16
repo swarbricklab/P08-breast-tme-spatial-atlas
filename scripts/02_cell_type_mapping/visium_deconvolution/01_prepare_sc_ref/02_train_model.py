@@ -34,10 +34,9 @@ from scipy.sparse import issparse
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Train the cell2location reference model on the scRNA-seq reference",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
@@ -50,6 +49,7 @@ args = vars(parser.parse_args())
 # --- Arguments
 sample_id=args["sample_id"]
 project_dir=args["project_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 h5ad_dir=args["h5ad_dir"]
 
 
@@ -58,7 +58,7 @@ h5ad_dir=args["h5ad_dir"]
 # Decide which level to run
 level = 'major'
 
-out_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
+out_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 os.makedirs(out_dir, exist_ok=True)
 
 # Also make an output directory for the plots

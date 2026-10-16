@@ -12,7 +12,6 @@ import argparse
 import os
 import sys
 from collections import defaultdict
-from datetime import date, datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -33,7 +32,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 # --- Argparse arguments
 
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Associations between vessel types, PVL subtypes and HEV overlap",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
@@ -97,7 +96,7 @@ coords = auto_crop_scanpy(adata, border_size=0.1)
 
 decon_level = 'minor'
 
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', resolution,)
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium_hd', f'{decon_level}_level', resolution,)
 
 decon_file = f'{sample_id}_{decon_level}_{resolution}_q05_cell_abundance_w_sf.csv'
 
@@ -126,32 +125,10 @@ PVL_classes = sorted(PVL_classes)
 
 # --- Load the vessel classifications
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
 # Specify path
-TLS_group_dir = os.path.join(project_dir, 'results', '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
+TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '01_classify_vessels', 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 filename = f'{sample_id}_vessel_classification.csv'
 vessel_classes = pd.read_csv(os.path.join(most_recent_dir_path, filename), index_col=0)
@@ -175,7 +152,7 @@ threshold_hev_adj = str(threshold_hev).split('.')[-1]
 TLS_group_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '02b_expand_HEV_groups', 'square_016um', f'threshold_{threshold_hev_adj}')
 TLS_group_dir = os.path.join(TLS_group_dir, 'csv_files')
 
-most_recent_dir_path = find_most_recent(TLS_group_dir)
+most_recent_dir_path = TLS_group_dir
 
 # Read in the results & add to anndata
 score_of_i = 'HEVs'
@@ -427,8 +404,6 @@ plt.subplots_adjust(wspace=0.6, hspace=0.3)
 
 plt.suptitle(f'{sample_id} ({subtype}) - HEVs + other vessels overlap (min_overlap={min_overlap})', y=1.2, x=0.5, fontweight='bold')
 
-plt.savefig('test2.pdf', bbox_inches='tight')
-
 
 
 
@@ -547,19 +522,16 @@ plt.suptitle(f'{sample_id} ({subtype}) - Overlap vessel groups with HEVs',
 
 qc_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature', '02_investigate_vessels')
 
-today = date.today()
-today = today.strftime("%Y%m%d")
-
 out_dir = os.path.join(qc_dir)
 
 os.makedirs(out_dir, exist_ok=True)
 
 # Save plots
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Also save the groupings as a .csv
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 # Save plots

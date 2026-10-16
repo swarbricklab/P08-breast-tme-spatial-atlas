@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot endothelial deconvolution and pathology annotations in zoomed areas (Figure 3B)
+# Plot endothelial deconvolution and pathology annotations in zoomed areas (Fig. 3b)
 # Shows H&E, deconvolution results, and pathology annotations for different tissue regions
 # This script is set up for P29_HD
 
@@ -12,7 +12,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -35,13 +34,13 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot vessel classification with pathology annotations for Figure 3B",
+parser = argparse.ArgumentParser(description="Plot vessel classification with pathology annotations for Fig. 3b",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P29_HD", help="Sample shown in the figure")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
@@ -51,9 +50,6 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_id = args["sample_id"]
-
-# Overwrite sample_id
-sample_id = 'P29_HD'
 
 print(f'Sample: {sample_id}')
 
@@ -121,30 +117,6 @@ color_dict = colors_df.set_index('endothelial_type')['color'].to_dict()
 
 # --- Load normalized endothelial numbers
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-        return None
-
-# Find most recent results
 resolution = 'square_016um'
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
@@ -153,7 +125,7 @@ threshold_adj = str(threshold).split('.')[-1]
 vessel_dir = os.path.join(res_dir, '04_vascular_microenvironment', '02_identify_all_vasculature',
                           '01_classify_vessels', 'csv_files')
 
-most_recent_dir_path = find_most_recent(vessel_dir)
+most_recent_dir_path = vessel_dir
 
 # And also load the normalized endothelial cell numbers
 filename = f'{sample_id}_endothelial_numbers_normalized.csv'
@@ -565,7 +537,7 @@ target_ax.legend(handles=handles, loc='center left', bbox_to_anchor=(1.01, 0.5),
 
 # --- Save the output
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_3B.pdf'

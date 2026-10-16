@@ -367,4 +367,3 @@ dependencies:
   - pip:
       - mycolorpy==1.5.1
       - numpy==1.26.4
-      - sophiesfunctions==0.0.5

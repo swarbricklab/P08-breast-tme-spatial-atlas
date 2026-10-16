@@ -33,18 +33,14 @@ sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=20)
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Identify TLS regions in Xenium data from the local density of T and B cells",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
-parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--res_dir", help="Path to results directory")
-parser.add_argument("--seed", help="Seed for reproducibility", type=int)
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 
@@ -102,7 +98,7 @@ crop_coord = auto_crop_xenium(adata)
 # Decide which annotation level to use
 level = 'major'
 
-annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
+annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium', f'{level}_level')
 annotation_file = f'{sample_id}_{level}_pred_cell_types.csv'
 
 annotations = pd.read_csv(os.path.join(annotation_dir, annotation_file), index_col=0)
@@ -321,7 +317,7 @@ if plot_tls_polygons:
 # Add another ax next to it
 ax = axs[n+1]
 
-# Plot all cells in light grey
+# Plot all cells in light gray
 sc.pl.spatial(adata, color=[annotation_key], title=f'{sample_id} ({subtype})', size=0.5,
             crop_coord=crop_coord, ax=ax, palette=['lightgray'], na_in_legend=False, legend_loc=None, alpha_img=0.3)
 

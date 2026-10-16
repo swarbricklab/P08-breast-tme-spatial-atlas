@@ -16,8 +16,6 @@ import os
 import sys
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import date
-from datetime import datetime
 import numpy as np
 
 sc.set_figure_params(facecolor="white", figsize=(8, 8), fontsize=10)
@@ -25,7 +23,7 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Filter the HEV signature against expression in endothelial-high spots",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 
@@ -43,7 +41,7 @@ args = vars(parser.parse_args())
 # Arguments
 project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
-res_dir = args["res_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
@@ -88,31 +86,9 @@ for sample in sample_list:
 
 harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'create_endothelial_object')
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
 filename = 'All_samples_endothelial_object.h5ad'
 
-most_recent = find_most_recent(harmony_dir)
+most_recent = harmony_dir
 
 # Load the adata containing results
 adata = ad.read_h5ad(os.path.join(most_recent, 'csv_files', filename))
@@ -174,9 +150,8 @@ final_df_sub = final_df_sub[final_df_sub['pct_expressing_rest'] < max_expressed_
 
 # --- Plot 1: Dot plots for top 30 genes per cluster - separated by cluster
 
-base_results = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'filter_HEV_signature',)
-today = date.today().strftime("%Y%m%d")
-out_dir_plots = os.path.join(base_results, today, 'plots')
+base_results = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '03_filter_HEV_signature', 'filter_HEV_signature',)
+out_dir_plots = os.path.join(base_results, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 # Slash to be only the top x per cluster
@@ -208,7 +183,7 @@ for num_top in num_tops:
 
 # --- Save some csv files
 
-out_dir_csv = os.path.join(base_results, today, 'csv_files')
+out_dir_csv = os.path.join(base_results, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 filename = 'hevs_filtering_documentation.csv'

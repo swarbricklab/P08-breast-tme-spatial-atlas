@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot members of the lymphotoxin system in TLS HEVs vs stromal HEVs (Figure 4I)
+# Plot members of the lymphotoxin system in TLS HEVs vs stromal HEVs (Fig. 4i)
 # Shows expression of lymphotoxin signaling components in perivascular bins
 
 # --- Define environment
@@ -11,7 +11,6 @@
 import argparse
 import os
 import re
-from datetime import datetime
 
 import seaborn as sns
 
@@ -29,7 +28,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot lymphotoxin system expression for Figure 4I",
+parser = argparse.ArgumentParser(description="Plot lymphotoxin system expression for Fig. 4i",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -70,31 +69,6 @@ resolution = 'square_016um'
 use_data = 'log_norm'
 
 
-# --- Function to find most recent results
-
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-        return None
-
-
 # --- Load the adata objects
 
 adata_dict = {}
@@ -110,7 +84,7 @@ for sample in sample_list:
 lr_label_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
                              '03_plot_LR_per_sample', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_label_path = find_most_recent(lr_label_dir)
+most_recent_label_path = lr_label_dir
 
 for sample in sample_list:
     spot_label_file = f'{sample}_HEV_spot_grouping.csv'
@@ -334,21 +308,9 @@ genes_dict = {
     'Lymphotoxin': ['TNFSF14', 'LTB', 'LTBR', 'TNFRSF14', 'LTA', 'TNFRSF1A', 'TNFRSF1B'],
 }
 
-# Rename some of the genes to make it easier to interpret
-gene_rename_dict = {
-    'TNFSF14': 'LIGHT',
-    'TNFRSF14': 'HVEM',
-    'TNFRSF1A': 'TNFR1',
-    'TNFRSF1B': 'TNFR2',
-    'LTB': 'LTβ',
-    'LTA': 'LTα',
-    'LTBR': 'LTβR',
-}
 
 lr_pairs = [('LTB', 'LTBR'), ('TNFSF14', 'LTBR'), ('TNFSF14', 'TNFRSF14'), ('LTA', 'TNFRSF1A'), ('LTA', 'TNFRSF1B')]
 
-# Rename the genes in lr_pairs
-lr_pairs = [(gene_rename_dict.get(lig, lig), gene_rename_dict.get(rec, rec)) for lig, rec in lr_pairs]
 
 top_genes = genes_dict['Lymphotoxin']
 vmin = 0
@@ -433,10 +395,6 @@ size_ax.set_position([cbar_pos.x0, cbar_pos.y1 + 0.12, cbar_width, cbar_height*3
 # Join the ligand-receptor pairs
 main_ax = heatmap_axs[0]
 
-# Rename the labels
-main_yticklabels = [label.get_text() for label in main_ax.get_yticklabels()]
-main_yticklabels_renamed = [gene_rename_dict.get(label, label) for label in main_yticklabels]
-main_ax.set_yticklabels(main_yticklabels_renamed)
 
 x_left_global = join_lr_multi([main_ax], lr_pairs, offset=0.25)
 
@@ -544,7 +502,7 @@ plt.suptitle(f'All samples - Lymphotoxin system members in TLS HEVs vs stromal H
 
 # --- Save the figure
 
-out_file = os.path.join(project_dir, 'results', 'figures', 'Fig_4I.pdf')
+out_file = os.path.join(res_dir, 'figures', 'Fig_4I.pdf')
 os.makedirs(os.path.dirname(out_file), exist_ok=True)
 plt.savefig(out_file, bbox_inches='tight', dpi=300)
 

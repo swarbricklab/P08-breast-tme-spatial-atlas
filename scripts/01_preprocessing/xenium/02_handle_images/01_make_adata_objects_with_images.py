@@ -22,7 +22,7 @@ import tifffile
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Transform Xenium coordinates to H&E image space and add the downsampled H&E image to the AnnData object",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -31,7 +31,6 @@ parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
 parser.add_argument("--res_dir", help="Path to results directory")
 
@@ -68,7 +67,7 @@ adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
 # --- Load the transformation matrix
 
-alignment_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'alignment_matrix')
+alignment_dir = os.path.join(project_dir, 'data', 'images', 'he', 'alignment_files', 'xenium')
 transform_matrix = pd.read_csv(os.path.join(alignment_dir, f'{sample_id}_matrix.csv'), header=None).to_numpy()
 
 
@@ -164,7 +163,7 @@ adata.uns['spatial'] = {sample_id: {
 out_dir = os.path.join(h5ad_dir, 'xenium')
 os.makedirs(out_dir, exist_ok=True)
 
-adata.write_h5ad(os.path.join(out_dir, f'{sample_id}.h5ad'))
+adata.write_h5ad(os.path.join(out_dir, f'{sample_id}.h5ad'), compression='gzip')
 
 
 # --- Finish

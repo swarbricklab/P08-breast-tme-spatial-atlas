@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make spatial overviews of 5 selected samples for Figure 1D
+# Make spatial overviews of 5 selected samples for Fig. 1d
 # Shows H&E images and pathology annotations for one sample per clinical subtype
-# This creates Figure 1D
+# This creates Fig. 1d
 
 # --- Define environment
 # env: spatial-pilot
@@ -38,7 +38,7 @@ from helper_functions import auto_crop_scanpy, generate_color_variations
 # --- Arguments
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 1d: spatial overviews of five selected samples",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

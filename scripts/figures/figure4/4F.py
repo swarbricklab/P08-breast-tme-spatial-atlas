@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4F: zoomed view showing TLS-HEVs vs stromal HEV-like vessels
+# Plot Fig. 4f: zoomed view showing TLS-HEVs vs stromal HEV-like vessels
 # Shows spatial context for HEV classification used in ligand-receptor analysis
 # This script is set up for sample P29_HD
 
@@ -11,7 +11,6 @@
 # --- Load packages
 
 import argparse
-from datetime import datetime
 import os
 
 import scanpy as sc
@@ -35,14 +34,14 @@ mpl.rcParams['pdf.fonttype'] = 42  # To get editable text in Illustrator
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Plot HEV grouping overview for figure 4F",
+parser = argparse.ArgumentParser(description="Plot HEV grouping overview for Fig. 4f",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P29_HD", help="Sample shown in the figure")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
@@ -54,9 +53,6 @@ res_dir = args["res_dir"]
 h5ad_dir = args["h5ad_dir"]
 sample_id = args["sample_id"]
 project_dir = args["project_dir"]
-
-# Override sample_id
-sample_id = 'P29_HD'
 
 # --- Extract some info from the sample sheet
 
@@ -81,34 +77,12 @@ subtype = tissue_metadata[tissue_metadata['tissue_id'].astype(str) == str(tissue
 
 # --- Load the LR adata object
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
 bin_size = 25  # in um
 
 lr_res_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
                           '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_dir_path = find_most_recent(lr_res_dir)
+most_recent_dir_path = lr_res_dir
 
 adata_name = f'{sample_id}_HEV_LR_analysis_stlearn.h5ad'
 adata = ad.read_h5ad(os.path.join(most_recent_dir_path, adata_name))

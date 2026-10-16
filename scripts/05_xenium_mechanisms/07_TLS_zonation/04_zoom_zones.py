@@ -2,10 +2,10 @@
 
 # --- Aim
 # Representative single-transcript zoom of adjacent B cell zone and T cell zone fields in one
-# sample (Figure S9F-G). Produces one page:
-#   - Overview (S9F): aligned H&E cropped around the two fields, with the 50 um zone bins
+# sample (Extended Data Fig. 9f,g). Produces one page:
+#   - Overview (Extended Data Fig. 9f): aligned H&E cropped around the two fields, with the 50 um zone bins
 #     (B cell zone / T cell zone / mixed) overlaid and the two zoom fields boxed.
-#   - Grid (S9G): rows = B cell zone (top) and T cell zone (bottom); columns = H&E, B/T cell
+#   - Grid (Extended Data Fig. 9g): rows = B cell zone (top) and T cell zone (bottom); columns = H&E, B/T cell
 #     markers (MS4A1, CD3E), CXCL13, CCL19, CCL21, FDC markers (CR1, CR2) and HEV markers
 #     (TSPAN7, MEOX2), each an H&E crop with the transcripts of that group overlaid.
 #
@@ -16,7 +16,7 @@
 #
 # Inputs : areas-of-interest geojson ({sample_id}_zone_zoom.geojson, micron polygons named
 #          'B cell zone' / 'T cell zone'); BT zone bin CSV from 01_classify_zones.py; spatialdata
-#          zarr; aligned full-res H&E (.ome.tif); Xenium h5ad (scalefactors); transcript colours.
+#          zarr; aligned full-res H&E (.ome.tif); Xenium h5ad (scalefactors); transcript colors.
 # Output : {res_dir}/05_xenium_mechanisms/07_TLS_zonation/04_zoom_zones/plots/{sample_id}_zone_zoom.pdf
 
 
@@ -29,6 +29,7 @@ import argparse
 import json
 import os
 import shutil
+import sys
 
 import anndata as ad
 import pandas as pd
@@ -42,8 +43,6 @@ from matplotlib.lines import Line2D
 from matplotlib.collections import PatchCollection, LineCollection
 from matplotlib_scalebar.scalebar import ScaleBar
 
-import PIL
-import tifffile
 import spatialdata as sd
 from spatialdata.transformations import get_transformation
 
@@ -51,10 +50,10 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-# Single representative sample (Fig S9F-G uses P22_Xe5k, the sample whose B/T fields were
+# Single representative sample (Extended Data Fig. 9f,g uses P22_Xe5k, the sample whose B/T fields were
 # annotated). Dispatches through submit_array_jobs_nci.sh -> run_single_sample_job.sh.
 
-parser = argparse.ArgumentParser(description="Zone zoom (B vs T cell zone fields), Figure S9F-G",
+parser = argparse.ArgumentParser(description="Zone zoom (B vs T cell zone fields), Extended Data Fig. 9f,g",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad input files")
 parser.add_argument("--sample_id", default='P22_Xe5k',
@@ -78,13 +77,16 @@ overview_margin_um = args["overview_margin_um"]
 scalebar_val_overview = args["scalebar_overview_um"]
 scalebar_val_zoom     = args["scalebar_zoom_um"]
 
+sys.path.append(os.path.join(project_dir, 'scripts'))
+from helper_functions import read_tiff_region
+
 if args.get("sample_sheet"):
     sample_sheet_path = args["sample_sheet"]
 else:
     sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_xenium.csv')
 
 
-# --- Figure spec (Fig S9G column layout: H&E, B/T cell, CXCL13, CCL19, CCL21, FDC, HEV)
+# --- Figure spec (Extended Data Fig. 9g column layout: H&E, B/T cell, CXCL13, CCL19, CCL21, FDC, HEV)
 
 area_names_zoom = ['B cell zone', 'T cell zone']   # zoom rows, top -> bottom
 
@@ -130,7 +132,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
                                 'clinical_subtype'].values[0]
 
 
-# --- Transcript colours
+# --- Transcript colors
 
 tx_color_csv  = os.path.join(project_dir, 'resources', 'plotting_colors', 'transcript_colors.csv')
 tx_color_dict = pd.read_csv(tx_color_csv, index_col=0)['color'].to_dict()
@@ -146,12 +148,8 @@ microns_per_pixel = adata.uns['spatial'][sample_id]['scalefactors']['microns_per
 
 image_path = os.path.join(project_dir, 'data', 'images', 'he', 'aligned_images', 'xenium',
                           f'{sample_id}.ome.tif')
-PIL.Image.MAX_IMAGE_PIXELS = 24078974976
-# The aligned H&E is a large whole-slide image; only small crops are displayed but the whole
-# image is read (lazy tiled reads via tifffile.aszarr need zarr>=3, and spatdat ships zarr 2.x).
-# The job is submitted to a high-memory node (see the mem request for this script).
-img = tifffile.imread(image_path)
-print(f'Loaded aligned H&E: {img.shape}')
+# The aligned H&E is a large whole-slide image; only the zoom and overview crops are read,
+# tile by tile at full resolution (read_tiff_region in crop_image below).
 
 
 # --- Load spatialdata + filter transcripts to the plotted genes (image_space)
@@ -167,9 +165,10 @@ sdata = sd.read_zarr(zarr_path)
 sdata.points['transcripts'] = sdata.points['transcripts'][
     sdata.points['transcripts']['feature_name'].isin(transcripts_to_plot)
 ]
-transformed_sdata = sd.transform(sdata, to_coordinate_system='image_space')
-tx_df = transformed_sdata.points['transcripts'].compute()
-print(f'Loaded {len(tx_df)} transcripts across {len(transcripts_to_plot)} genes')
+# Transform only the transcripts: sd.transform(sdata, ...) would also resample the
+# full-resolution label rasters into image_space
+tx_df = sd.transform(sdata.points['transcripts'], to_coordinate_system='image_space').compute()
+print(f'Loaded {len(tx_df)} transcripts across {len(transcripts_to_plot)} genes', flush=True)
 
 
 # --- Xenium micron -> aligned-image (image_space) pixel transform (as in 03_zoom_GCs.py)
@@ -233,12 +232,8 @@ zone_bins = zone_bins[zone_bins['TLS_zone'].isin(zone_color_dict)].copy()
 
 # --- Helpers
 
-def crop_image(img, coords):
-    x_min = max(coords[0], 0)
-    x_max = min(coords[1], img.shape[1])
-    y_min = max(coords[2], 0)
-    y_max = min(coords[3], img.shape[0])
-    return img[y_min:y_max, x_min:x_max], (x_min, x_max, y_min, y_max)
+def crop_image(coords):
+    return read_tiff_region(image_path, *coords)
 
 
 def move_plots_x_y(axs, x_offset=0.02, y_offset=0.02, remove_title=True):
@@ -267,7 +262,7 @@ fig, axs = plt.subplots(nrows, ncols, figsize=(5, 5))
 he_zoom_axes = []
 for i, area in enumerate(area_names_zoom):
     coords = zoom_coords[area]
-    crop_img, adjusted_coords = crop_image(img, coords)
+    crop_img, adjusted_coords = crop_image(coords)
     width_crop = coords[1] - coords[0]
 
     for j, (_col_title, gene_list) in enumerate(zoom_col_specs):
@@ -314,7 +309,7 @@ for ax, (title, _) in zip(axs[0, :], zoom_col_specs):
     ax.set_title(title, fontweight='bold', fontsize=25)
 
 
-# --- Overview ax on the left, spanning both zoom rows (S9F)
+# --- Overview ax on the left, spanning both zoom rows (Extended Data Fig. 9f)
 
 ax_top_y    = axs[0, 0].get_position().y1
 ax_bottom_y = axs[-1, 0].get_position().y0
@@ -322,13 +317,13 @@ ax_height   = ax_top_y - ax_bottom_y
 ax_x        = axs[0, 0].get_position().x0 - overview_gap - ax_height
 new_ax = fig.add_axes([ax_x, ax_bottom_y, ax_height, ax_height])
 
-ov_crop_img, ov_adjusted = crop_image(img, overview_coords)
+ov_crop_img, ov_adjusted = crop_image(overview_coords)
 new_ax.imshow(ov_crop_img)
 width_ov = overview_coords[1] - overview_coords[0]
 new_ax.set_xlim(0, width_ov); new_ax.set_ylim(width_ov, 0)
 new_ax.grid(False); new_ax.set_xticks([]); new_ax.set_yticks([])
 
-# 50 um zone bins overlaid. Transform bin centres + two opposite corners per bin (microns ->
+# 50 um zone bins overlaid. Transform bin centers + two opposite corners per bin (microns ->
 # pixels) so a rotated alignment still gives the right per-bin pixel size.
 bin_cx_px, bin_cy_px = micron_to_he_pixel(zone_bins['bin_x'].values, zone_bins['bin_y'].values)
 bin_x0_px, bin_y0_px = micron_to_he_pixel(zone_bins['bin_x'].values - grid_um / 2,
@@ -438,7 +433,7 @@ fig.text((trans_x_start + trans_x_end) / 2, bracket_y + 0.005, 'Transcripts',
 
 title_y = top_y1 + 0.30
 title_x = (new_ax.get_position().x0 + axs[0, -1].get_position().x1) / 2
-fig.suptitle(f'S9F–G — {sample_id} ({subtype}): B cell zone vs T cell zone '
+fig.suptitle(f'Extended Data Fig. 9f,g — {sample_id} ({subtype}): B cell zone vs T cell zone '
              f'(scalebar: {scalebar_val_overview:g} {scalebar_units} overview, '
              f'{scalebar_val_zoom:g} {scalebar_units} insets)',
              x=title_x, y=title_y, ha='center', fontweight='bold', fontsize=30)

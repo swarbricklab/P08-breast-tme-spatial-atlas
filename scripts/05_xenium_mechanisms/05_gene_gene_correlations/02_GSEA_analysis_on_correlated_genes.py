@@ -13,9 +13,6 @@ import pandas as pd
 import os
 import gseapy as gp
 
-from datetime import date
-from datetime import datetime
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -27,7 +24,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="GSEA on the genes correlated with TMEM173 (STING) or SPP1 in HEV niches",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -38,6 +35,9 @@ parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
+parser.add_argument("--gene_of_interest", help="Gene whose correlation table (from 01) is ranked (TMEM173 = STING)", default='TMEM173')
+parser.add_argument("--gene_set", help="Enrichr gene set library (.gmt in resources/gene_lists/enrichment_analysis)",
+                    default='GO_Molecular_Function_2025')
 
 args = vars(parser.parse_args())
 
@@ -50,32 +50,10 @@ sample_list = args["samples"]
 
 # --- Load the correlation results
 
-gene_of_i = 'TMEM173'  # STING gene symbol
-
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
+gene_of_i = args["gene_of_interest"]  # e.g. TMEM173 (STING gene symbol) or SPP1
 
 correlation_dir = os.path.join(res_dir, '05_xenium_mechanisms', '05_gene_gene_correlations', '01_investigate_gene_correlations', f'{gene_of_i}_correlations')
-most_recent = find_most_recent(correlation_dir)
+most_recent = correlation_dir
 
 correlation_file = f'All_samples_HEV_{gene_of_i}_gene_correlations.csv'
 correlation_df = pd.read_csv(os.path.join(most_recent, 'csv_files', correlation_file), index_col=0)
@@ -84,18 +62,15 @@ correlation_df = pd.read_csv(os.path.join(most_recent, 'csv_files', correlation_
 # --- Prepare for saving
 
 # Decide which gene set to use
-gene_set = 'GO_Molecular_Function_2025' # Options: 'GO_Biological_Process_2025', 'GO_Molecular_Function_2025'
+gene_set = args["gene_set"] # Options: 'GO_Biological_Process_2025', 'GO_Molecular_Function_2025'
 out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '05_gene_gene_correlations', '02_GSEA_analysis', f'{gene_of_i}_correlations')
 
 out_dir = os.path.join(out_dir, gene_set)
 
-today = date.today()
-today = today.strftime("%Y%m%d")
-
-out_dir_plots = os.path.join(out_dir, 'plots', today)
+out_dir_plots = os.path.join(out_dir, 'plots')
 os.makedirs(out_dir_plots, exist_ok=True)
 
-out_dir_csv = os.path.join(out_dir, 'csv_files', today)
+out_dir_csv = os.path.join(out_dir, 'csv_files')
 os.makedirs(out_dir_csv, exist_ok=True)
 
 

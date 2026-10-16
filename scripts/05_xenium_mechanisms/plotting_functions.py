@@ -25,12 +25,13 @@ import scipy.cluster.hierarchy as sch
 
 def transform_geojson_to_image_space(gdf, adata, sample_id, project_dir):
     """
-    Transform GeoJSON geometries from Xenium micron space to image pixel space.
+    Transform GeoJSON geometries from Xenium micron space to the pixel space of the hires
+    H&E image stored in the AnnData object (same transform as the cell coordinates in
+    scripts/01_preprocessing/xenium/02_handle_images/01_make_adata_objects_with_images.py).
     Steps:
     1. Convert from microns to pixels
     2. Apply inverse transformation matrix
     3. Scale by hires scalefactor
-    4. Shift by crop coordinates
     """
     # Imported lazily so scripts that only use the plotting helpers can import this
     # module in environments without shapely.
@@ -38,22 +39,16 @@ def transform_geojson_to_image_space(gdf, adata, sample_id, project_dir):
     hires_factor = adata.uns['spatial'][sample_id]['scalefactors']['tissue_hires_scalef']
     microns_per_pixel = 0.2125  # From experiment.xenium file
     # Load transformation matrix
-    path_to_transform_file = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'alignment_matrix', f'{sample_id}_matrix.csv')
+    path_to_transform_file = os.path.join(project_dir, 'data', 'images', 'he', 'alignment_files', 'xenium', f'{sample_id}_matrix.csv')
     transform_matrix = pd.read_csv(path_to_transform_file, header=None).to_numpy()
     inverse_transform = np.linalg.inv(transform_matrix)
-    # Load crop coordinates
-    crop_coords_file = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'crop_coords', f'{sample_id}_crop_coordinates.csv')
-    crop_coords = pd.read_csv(crop_coords_file)
-    x_start = crop_coords['x_start'].values[0]
-    y_start = crop_coords['y_start'].values[0]
     def transform_func(x, y, z=None):
         coords = np.column_stack([x, y])
         coords_pixels = coords / microns_per_pixel
         hom_coords = np.hstack([coords_pixels, np.ones((coords_pixels.shape[0], 1))])
         transformed = (inverse_transform @ hom_coords.T).T[:, :2]
         scaled = transformed * hires_factor
-        shifted = scaled - np.array([x_start * hires_factor, y_start * hires_factor])
-        return shifted[:, 0], shifted[:, 1]
+        return scaled[:, 0], scaled[:, 1]
     gdf['geometry'] = gdf['geometry'].apply(lambda geom: shapely_transform(transform_func, geom))
     return gdf
 
@@ -460,8 +455,8 @@ def add_color_legend(fig, labels, color_dict, title='', x=0, y=0, offset=0.01, s
 
 # ---------------------------------------------------------------------------
 # Per-gene-normalized dot plot: each gene is independently rescaled so dot size
-# and colour span that gene's min->max across the groupby categories. Used for
-# the S10C and S10J dot plots.
+# and color span that gene's min->max across the groupby categories. Used for
+# the Extended Data Fig. 10c,j dot plots.
 # ---------------------------------------------------------------------------
 # Dotplot where each gene is independently rescaled — dot size and color span
 # min→max for that gene across the groupby categories. Useful for genes with
@@ -469,7 +464,7 @@ def add_color_legend(fig, labels, color_dict, title='', x=0, y=0, offset=0.01, s
 def _compute_dotplot_df(adata, var_names, groupby, vmin=0, vmax=1,
                          standard_scale='var', size_normalize=True,
                          color_mode='standard_scale'):
-    """Compute the per-(gene, category) dataframe of scaled colour and dot-size
+    """Compute the per-(gene, category) dataframe of scaled color and dot-size
     values. Same scaling math as the original dotplot, but separated so the
     categorical-sub-axes path can share scaling across all genes."""
     categories = adata.obs[groupby].cat.categories.tolist()
@@ -508,7 +503,7 @@ def _compute_dotplot_df(adata, var_names, groupby, vmin=0, vmax=1,
         # Per-gene max-norm: val / max. Unlike 'var', the smallest non-zero
         # value is preserved as a ratio rather than forced to 0. Cbar vmin is
         # set to the smallest non-zero scaled value so the colormap range is
-        # fully utilised across all dots.
+        # fully utilized across all dots.
         for gene in var_names:
             gene_mask = df['gene'] == gene
             gene_vals = df.loc[gene_mask, 'mean_expr']
@@ -683,8 +678,8 @@ def per_gene_norm_dotplot_with_legends(
                            color_vmin=color_vmin, color_vmax=color_vmax, color_mode=color_mode)
                 # Category title above the sub-ax. Default 45° rotation
                 # anchors the text at the sub-ax left edge so it doesn't crowd
-                # narrow neighbours; rotation=0 falls back to a regular
-                # set_title (centred horizontally above each sub-ax).
+                # narrow neighbors; rotation=0 falls back to a regular
+                # set_title (centered horizontally above each sub-ax).
                 if category_title_rotation == 0:
                     sub_ax.set_title(
                         cat_name, fontweight='bold',

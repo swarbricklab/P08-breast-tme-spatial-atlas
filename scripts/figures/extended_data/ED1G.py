@@ -5,14 +5,14 @@
 # For each pathologist-defined region (across all four annotation layers), find the
 # differentially expressed genes (one region vs. the rest), run GO Biological Process 2025
 # term enrichment on the up-regulated genes, and draw the enrichment dot plot
-# (top terms per region; dot size = combined enrichment score, colour = -log10 adjusted P)
+# (top terms per region; dot size = combined enrichment score, color = -log10 adjusted P)
 # together with a bar of the total spot count per annotation.
-# This creates Figure S1G
+# This creates Extended Data Fig. 1g
 
 # --- Define environment
 # env: gseapy
-# Note: memory-heavy — concatenates all 33 Visium sections for the cohort-wide
-# differential expression, so run on a large-memory node (~190 GB); it OOMs on smaller allocations.
+# Note: concatenates all 33 Visium sections for the cohort-wide differential expression
+# (peak ~33 GB).
 
 # --- Load packages
 
@@ -113,22 +113,25 @@ print(f'Samples with annotations and AnnData: {annotated_samples}')
 
 
 # --- Load the AnnData objects and attach the annotations
+# Only the log-normalized expression and the annotations are needed, so each object is reduced to
+# those (log_norm as .X) as it is read; keeping the 33 full objects needed ~190 GB.
 
-adata_dict = {}
+adata_list = []
 
 for sample in annotated_samples:
     adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium', f'{sample}.h5ad'))
+    obs = pd.DataFrame(index=adata.obs_names)
     # Record the sample of origin
-    adata.obs['sample_id'] = sample
+    obs['sample_id'] = sample
     # Attach the per-layer annotations (index aligned on spot barcodes)
     for layer in annotation_layers:
-        adata.obs[layer] = annotation_dict[sample][layer]
-    adata_dict[sample] = adata
+        obs[layer] = annotation_dict[sample][layer]
+    adata_list.append(ad.AnnData(X=adata.layers[use_layer], obs=obs, var=pd.DataFrame(index=adata.var_names)))
+    del adata
 
 
 # --- Concatenate into a single object
 
-adata_list = list(adata_dict.values())
 all_adata = ad.concat(adata_list, merge='same')
 all_adata.obs_names_make_unique()
 
@@ -148,7 +151,7 @@ for layer in annotation_layers:
     # Spots without an annotation for this layer form the reference group
     all_adata.obs[f'{layer}_2'] = np.where(all_adata.obs[f'{layer}_2'].isna(), f'non_{layer}', all_adata.obs[f'{layer}_2'])
     # Rank genes (Wilcoxon, group vs. rest)
-    sc.tl.rank_genes_groups(all_adata, f'{layer}_2', use_raw=False, layer=use_layer, method='wilcoxon',
+    sc.tl.rank_genes_groups(all_adata, f'{layer}_2', use_raw=False, method='wilcoxon',   # .X = use_layer
                             key_added=rank_genes_key, pts=True)
 
 
@@ -179,7 +182,7 @@ for layer in annotation_layers:
 
 # --- Prepare for saving
 
-out_dir = os.path.join(res_dir, 'figures', 'supplementary_overviews')
+out_dir = os.path.join(res_dir, 'figures', 'extended_data')
 os.makedirs(out_dir, exist_ok=True)
 
 csv_dir = os.path.join(out_dir, 'csv_files')
@@ -187,10 +190,10 @@ os.makedirs(csv_dir, exist_ok=True)
 
 # Save the marker genes of all layers in one table
 marker_genes_df = pd.concat(deg_dict, names=['annotation_layer']).reset_index(level=0)
-marker_genes_df.to_csv(os.path.join(csv_dir, 'S1G_pathology_marker_genes.csv'), index=False)
+marker_genes_df.to_csv(os.path.join(csv_dir, 'ED1G_pathology_marker_genes.csv'), index=False)
 
 # Keep a record of which samples were used
-pd.DataFrame({'sample_id': annotated_samples}).to_csv(os.path.join(csv_dir, 'S1G_samples_included.csv'), index=False)
+pd.DataFrame({'sample_id': annotated_samples}).to_csv(os.path.join(csv_dir, 'ED1G_samples_included.csv'), index=False)
 
 
 # --- Load the desired category order per layer
@@ -243,7 +246,7 @@ enr_df = pd.concat(
     {(layer, group): enr_dict_full[layer][group] for layer in enr_dict_full for group in enr_dict_full[layer]},
     names=['annotation_layer', 'group'],
 ).reset_index(level=[0, 1])
-enr_df.to_csv(os.path.join(csv_dir, 'S1G_pathology_GO_enrichment.csv'), index=False)
+enr_df.to_csv(os.path.join(csv_dir, 'ED1G_pathology_GO_enrichment.csv'), index=False)
 
 
 # --- Identify the top terms per category and filter
@@ -284,7 +287,7 @@ for layer in annotation_layers:
             ordered_major_cat_dict[layer] = categories_with_data
 
 
-# --- Colours per annotation layer
+# --- Colors per annotation layer
 
 color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
 path_color_lut = pd.read_csv(os.path.join(color_dir, 'path_colors.csv'), index_col=0)
@@ -374,7 +377,7 @@ space_per_dot = 0.04
 hue = 'neg_log10_pval'
 size = 'combined_score'
 
-# Keep the colour scale and size scale consistent across all layers
+# Keep the color scale and size scale consistent across all layers
 vmin = 0
 vmax = max([df['neg_log10_pval'].max() for df in dot_plot_df_dict.values()])
 size_min = 0
@@ -493,7 +496,7 @@ for ax in axs:
     ax.grid(True, which='both', axis='both', linestyle='-', linewidth=0.5, alpha=0.5)
     ax.set_axisbelow(True)
 
-# Colour bar and size legend on the last plot
+# Color bar and size legend on the last plot
 if len(available_layers_with_data) > 0:
     last_ax = axs[-1]
     norm = plt.Normalize(vmin, vmax)
@@ -529,7 +532,7 @@ plt.suptitle(f'Gene enrichment analysis - top {top_n} terms per annotation categ
 
 # --- Save the plots
 
-filename = 'Fig_S1G.pdf'
+filename = 'Fig_ED1G.pdf'
 save_multi_image(os.path.join(out_dir, filename))
 plt.close('all')
 

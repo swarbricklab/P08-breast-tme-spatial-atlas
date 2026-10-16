@@ -345,5 +345,4 @@ dependencies:
   - pip:
       - harmonypy==0.0.10
       - mycolorpy==1.5.1
-      - sophiesfunctions==0.0.5
       - upsetplot==0.9.0

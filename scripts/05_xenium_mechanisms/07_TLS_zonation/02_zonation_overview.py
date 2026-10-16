@@ -3,12 +3,10 @@
 # --- Aim
 # Cohort-level summary of the TLS zonation classifications from 01_classify_zones.py.
 # Produces (one multi-page PDF):
-#   * Figure S9C  - spatial map of B/T cell zone bins per sample
-#   * Figure S9D  - per-bin T:B cell-ratio distribution, split by zone
-#   * Figure S10G (support) - spatial overview of GC bins per sample
-#   * Figure S10H - number of discrete GCs per sample, coloured by clinical subtype
-#
-#       because P08 sample IDs are already publication-safe.
+#   * Extended Data Fig. 9c  - spatial map of B/T cell zone bins per sample
+#   * Extended Data Fig. 9d  - per-bin T:B cell-ratio distribution, split by zone
+#   * Extended Data Fig. 10g (support) - spatial overview of GC bins per sample
+#   * Extended Data Fig. 10h - number of discrete GCs per sample, colored by clinical subtype
 
 
 # --- Define environment
@@ -93,7 +91,7 @@ samples_by_subtype = {st: sorted([s for s in sample_list if subtype_dict.get(s) 
 sorted_samples = [s for st in present_subtypes for s in samples_by_subtype[st]]
 
 
-# --- Subtype colours (from SCSubtype_colors.csv)
+# --- Subtype colors (from SCSubtype_colors.csv)
 
 SUBTYPE_COLOR_SYNONYMS = {
     'LumA':         'Luminal A',
@@ -132,7 +130,7 @@ def pretty_zone(z):
 
 def load_major_labels(sample):
     """Return a Series (index = cell_id) of major-level cell types."""
-    path = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer',
+    path = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer',
                         'xenium', f'{annotation_level}_level',
                         f'{sample}_{annotation_level}_pred_cell_types.csv')
     df = pd.read_csv(path, index_col=0)
@@ -169,7 +167,7 @@ for sample in sorted_samples:
 print(f'Loaded zonation outputs for {len(sorted_samples)} samples')
 
 
-# --- Micron crop + grey backdrop helpers (P08 x_centroid/y_centroid frame)
+# --- Micron crop + gray backdrop helpers (x_centroid/y_centroid frame)
 
 def square_crop(x, y, border=0.1):
     x0, x1 = float(x.min()), float(x.max())
@@ -182,7 +180,7 @@ def square_crop(x, y, border=0.1):
 
 
 def spatial_grid(zone_col, palette, title, legend_handles, suptitle):
-    """3-column per-sample spatial grid: grey cells + classified bins + TLS outlines."""
+    """3-column per-sample spatial grid: gray cells + classified bins + TLS outlines."""
     ncols = 3
     nrows = math.ceil(len(sorted_samples) / ncols)
     panel = 4.5
@@ -224,7 +222,7 @@ def spatial_grid(zone_col, palette, title, legend_handles, suptitle):
     plt.subplots_adjust(wspace=0.05, hspace=0.25, bottom=0.08)
 
 
-# --- Figure S9C: spatial map of B/T cell zone bins
+# --- Extended Data Fig. 9c: spatial map of B/T cell zone bins
 
 bt_handles = [mlines.Line2D([], [], color=bt_color_dict[z], marker='s', lw=0, markersize=12,
                             label=pretty_zone(z)) for z in classified_zones]
@@ -232,7 +230,7 @@ spatial_grid('TLS_zone', bt_color_dict, 'B/T zones', bt_handles,
              f'B/T cell zone classification across cohort (grid={int(grid_um)}um)')
 
 
-# --- Figure S9D: per-bin T:B cell-ratio distribution, split by zone
+# --- Extended Data Fig. 9d: per-bin T:B cell-ratio distribution, split by zone
 # Cells in the same bin share (T_score, B_score), so that pair identifies a bin.
 
 zones_for_ratio = ['B_cell_zone', 'T_cell_zone']
@@ -283,21 +281,21 @@ ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=False, fontsize
 ax.set_title('Per-bin T:B cell ratio distribution by zone', fontsize=SUP_FS, fontweight='bold', pad=6)
 
 
-# --- Figure S10G (support): spatial overview of GC bins
+# --- Extended Data Fig. 10g (support): spatial overview of GC bins
 
 gc_handles = [mlines.Line2D([], [], color=gc_color, marker='s', lw=0, markersize=12, label='GC')]
 spatial_grid('GC_zone', gc_color, 'GC zones', gc_handles,
              f'GC zone classification across cohort (grid={int(grid_um)}um)')
 
 
-# --- Figure S10H: number of discrete GCs per sample, coloured by clinical subtype
+# --- Extended Data Fig. 10h: number of discrete GCs per sample, colored by clinical subtype
 
 display_name_dict = {s: s for s in sample_list}
 
 
 def make_barplot_figure_transposed(n_samples):
     """The discrete-GC barplot rotated 90°: horizontal bars, samples on the y-axis, a
-    thin subtype-colour strip on the RIGHT, legend further right. The bar AXES are an
+    thin subtype-color strip on the RIGHT, legend further right. The bar AXES are an
     exact rotation of the original ax: new ax width = original ax height, new ax height
     = original ax width."""
     # Original bar-ax dimensions (from make_barplot_figure), in inches
@@ -332,7 +330,7 @@ def make_barplot_figure_transposed(n_samples):
 def subtype_ordered_barplot_transposed(values_by_sample, bar_ax, strip_ax, title,
                                        annotate=True, value_fmt=None):
     """Original barplot rotated 90°: samples on the y-axis (kept), horizontal bars,
-    count axis on the bottom, subtype-colour rectangles as a vertical strip on the
+    count axis on the bottom, subtype-color rectangles as a vertical strip on the
     RIGHT, subtype legend to the right of that."""
     values = np.array([values_by_sample[s] for s in sorted_samples], dtype=float)
     colors = [subtype_color(subtype_dict.get(s, '?')) for s in sorted_samples]
@@ -356,7 +354,7 @@ def subtype_ordered_barplot_transposed(values_by_sample, bar_ax, strip_ax, title
         bar_ax.spines[sp_].set_visible(False)
     bar_ax.set_title(title, fontweight='bold', fontsize=TITLE_FS, pad=6)
 
-    # Subtype-colour strip on the RIGHT (one stacked rectangle per sample)
+    # Subtype-color strip on the RIGHT (one stacked rectangle per sample)
     for yi, col in enumerate(colors):
         strip_ax.add_patch(mpatches.Rectangle((0, yi - 0.4), 1, 0.8,
                                               facecolor=col, edgecolor='black',

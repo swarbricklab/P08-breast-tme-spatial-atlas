@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2D: heatmap of top marker genes per TLS cluster
+# Plot Fig. 2d: heatmap of top marker genes per TLS cluster
 
 # --- Define environment
 # env: spatial-pilot
 
 # --- Load packages
 import argparse
-from datetime import datetime
 import os
 
 import scanpy as sc
@@ -26,7 +25,7 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 2d: top marker genes per TLS cluster",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -43,7 +42,7 @@ args = vars(parser.parse_args())
 # Arguments
 project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
-res_dir = args["res_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, 'results')  # default: <project_dir>/results
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
@@ -85,31 +84,9 @@ for sample in sample_list:
 
 # --- Load the clustering results
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
 # Load harmony clustering results
-harmony_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
-most_recent = find_most_recent(harmony_dir)
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
+most_recent = harmony_dir
 
 # Load the adata containing results
 all_adata = ad.read_h5ad(os.path.join(most_recent, 'csv_files', 'All_samples_TLS_umap.h5ad'))
@@ -234,7 +211,7 @@ plt.suptitle(f'All samples - Top {top} (use_data={use_data})', x=title_x, y=titl
 # --- Save the output
 
 # Prepare for saving
-out_dir_plots = os.path.join(project_dir, 'results', 'figures')
+out_dir_plots = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir_plots, exist_ok=True)
 
 #  Save plots

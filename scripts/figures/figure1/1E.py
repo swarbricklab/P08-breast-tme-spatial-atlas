@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 1E: barplot of sample composition by pathology annotations & deconvolution results
+# Plot Fig. 1e: barplot of sample composition by pathology annotations & deconvolution results
 # Shows stacked bars for each sample with proportions of pathology categories and cell types
-# This creates Figure 1E
+# This creates Fig. 1e
 
 # --- Define environment
 # env: spatial-pilot
@@ -30,7 +30,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 # --- Arguments
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 1e: sample composition by pathology annotation and deconvolution",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -41,7 +41,6 @@ parser.add_argument("-r", "--res_dir",
                     help="Path to results directory (optional)")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files") # Not necessary for this script
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--path_combo_of_interest", help="Pathology layer combinations to be plotted (e.g. epithelial_immune)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 
 args = vars(parser.parse_args())
@@ -340,7 +339,7 @@ plt.rcParams.update({'font.size': 12})
 # --- Also make the same plots for decon results
 
 level = 'major'
-decon_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
+decon_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level')
 
 
 # --- Read in colors for the barplot

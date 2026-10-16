@@ -1,0 +1,10 @@
+name: snakemake
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.12
+  - snakemake=7.32.4
+  - pulp<2.8          # Snakemake 7 fails at startup with pulp >= 2.8
+  - pandas
+  - pyyaml

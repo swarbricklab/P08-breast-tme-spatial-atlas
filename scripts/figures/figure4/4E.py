@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4E: adhesion-receptor expression across cell types near HEVs
+# Plot Fig. 4e: adhesion-receptor expression across cell types near HEVs
 # Shows the scaled expression of the integrin / SPN / CD38 receptors that bind the
 # HEV-expressed adhesion ligands, across HEV-enriched cell types within <50um of HEVs
 
@@ -12,7 +12,6 @@
 
 import argparse
 import os
-from datetime import datetime
 
 import anndata as ad
 import scanpy as sc
@@ -33,7 +32,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 4e: adhesion receptor expression across cell types near HEVs",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -74,7 +73,7 @@ anno_df = pd.DataFrame()
 for sample in sample_list:
     tmp_df = pd.DataFrame()
     annotation_file = f'{sample}_{level}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium')
+    annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium')
     annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
     # Add to adata
     adata_dict[sample].obs[level] = annotations['pred_cell_type']
@@ -132,28 +131,6 @@ miniatlas_sub_dict = miniatlas_df.set_index('miniatlas_subset')[['miniatlas_subs
 
 # --- Load the HEV distances and bin
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 def bin_distances(df, column_name, bin_size, max_distance):
     # Define the bin edges
     bins = np.arange(0, max_distance + bin_size, bin_size)
@@ -170,7 +147,7 @@ max_distance = 200  # in microns
 file_extension = 'closest_HEV_distances' # for all HEVs
 
 distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '03_HEV_microenvironment', '01_calculate_distance')
-most_recent = find_most_recent(distance_dir)
+most_recent = distance_dir
 
 # Load closest distance to any HEV (TLS-associated or not)
 for sample in sample_list:
@@ -463,7 +440,7 @@ sum_df_rec = pd.DataFrame(sum_df_rec, columns=['sum'])
 plt.close()
 
 
-# --- Receptors-only heatmap (Figure 4E)
+# --- Receptors-only heatmap (Fig. 4e)
 # The published panel shows only the receptors (integrins / SPN / CD38) that bind the
 # HEV-expressed adhesion ligands, not the ligands themselves. Receptor rows are
 # hierarchically clustered; cell-type columns are kept in cumulative-receptor-expression
@@ -494,7 +471,7 @@ heatmap_height = n_genes * space_per_dot
 hev_x = 0.32
 hev_y = 0.15
 
-# Major-lineage colours restricted to the lineages present among the plotted cell types
+# Major-lineage colors restricted to the lineages present among the plotted cell types
 major_cell_types_sorted_neg = [ct for ct in major_cell_types_sorted
                                if ct in [get_major(cell, level=level) for cell in negative_slope_cell_types]]
 
@@ -642,7 +619,7 @@ if level_clean in ['subset', 'minor']:
 bar_axs[0].spines['top'].set_visible(True)
 bar_axs[0].set_ylabel('# cells\n(x10³)', fontsize=8)
 
-# Major-type colour legend
+# Major-type color legend
 fig.canvas.draw()
 right_edges = [position_legend(cb_ax)[3] for cb_ax in [cbar_ax, cbar_ax_slope, cbar_ax_sum]]
 x_legend = max(right_edges)

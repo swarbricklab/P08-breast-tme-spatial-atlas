@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Cohort-level overview of the FDC-vs-Tfh recovery across all samples (figure S9J). Reads the
+# Cohort-level overview of the FDC-vs-Tfh recovery across all samples (Extended Data Fig. 9j). Reads the
 # per-sample FDC/Tfh barcode CSVs written by 01_identify_FDC.py and produces a multi-page PDF:
-#   1. 6-panel spatial figure of FDC (amber) and Tfh (blue) cells, background cells in grey.
+#   1. 6-panel spatial figure of FDC (amber) and Tfh (blue) cells, background cells in gray.
 #   2. Bar plots of FDC count and pct-of-original-Tfh reannotated per sample.
 #   3. Pooled FDC vs Tfh violin and standard dotplot for the marker panel.
-#   4. S9J: the per-gene-normalised FDC-vs-Tfh subcluster marker dot plot (FDC CR1/CR2/FCER2,
+#   4. Extended Data Fig. 9j: the per-gene-normalized FDC-vs-Tfh subcluster marker dot plot (FDC CR1/CR2/FCER2,
 #      the CXCL13-CXCR5 axis, pan-T CD3E/CD3G/CD4 and Tfh PDCD1/ICOS/BCL6/IL21/TIGIT), dot size
 #      scaled to the per-gene max so lowly-detected genes stay visually comparable.
 # Samples with no recovered FDC subcluster are handled gracefully (shown as absent / skipped).
@@ -37,7 +37,7 @@ sc.set_figure_params(facecolor='white', fontsize=10)
 # --- Argparse arguments
 
 parser = argparse.ArgumentParser(
-    description="Cohort overview of FDC vs Tfh recovery (S9J)",
+    description="Cohort overview of FDC vs Tfh recovery (Extended Data Fig. 9j)",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("--h5ad_dir",    help="Path to anndata directory")
@@ -124,7 +124,7 @@ counts_df.to_csv(os.path.join(csv_dir, 'FDC_reannotation_counts.csv'), index=Fal
 print('\n' + counts_df.to_string(index=False))
 
 
-# --- Markers grouped by functional category (S9J panel)
+# --- Markers grouped by functional category (Extended Data Fig. 9j panel)
 GENE_GROUPS = {
     'FDC':    ['CR1', 'CR2', 'FCER2'],
     'CXCL13': ['CXCL13', 'CXCR5'],
@@ -138,7 +138,7 @@ all_markers = [g for gs in GENE_GROUPS.values() for g in gs if g in panel_var_na
 # --- Plot 1: Cohort spatial (3 cols x 2 rows, shared legend)
 
 FDC_COLOR = '#f5a623'   # warm amber-orange
-TFH_COLOR = '#888EC6'   # T-cells major colour
+TFH_COLOR = '#888EC6'   # T-cells major color
 BG_COLOR  = 'lightgrey'
 
 S_BG  = 0.15
@@ -259,7 +259,7 @@ sc.pl.dotplot(pool, var_names=all_markers, groupby='Tfh_group',
 plt.suptitle('Cohort: FDC vs Tfh (standard dotplot)', y=1.1, fontweight='bold')
 
 
-# Plot 5 (S9J): per-gene-scaled dotplot — gene groups split into horizontally-titled
+# Plot 5 (Extended Data Fig. 9j): per-gene-scaled dotplot — gene groups split into horizontally-titled
 # sub-axes, horizontal n-cells bars, and a vertical cbar + size legend stacked to the right.
 gene_categories_dict = {name: [g for g in gs if g in pool.var_names]
                          for name, gs in GENE_GROUPS.items()}
@@ -291,7 +291,7 @@ for sub_ax in pgn['dotplot_axes']:
     for t in sub_ax.get_xticklabels():
         t.set_fontsize(LABEL_FS - 1)
         t.set_rotation(90)
-    # CXCL13 title runs into its neighbours' top tick labels — drop it.
+    # CXCL13 title runs into its neighbors' top tick labels — drop it.
     if sub_ax.get_title() == 'CXCL13':
         sub_ax.set_title('')
 for t in pgn['dotplot_ax'].get_yticklabels():
@@ -382,7 +382,7 @@ for frac, y in zip(frac_examples, y_positions):
     size_ax.text(0.45, y, f'{int(frac * 100)}%', fontsize=LABEL_FS,
                  va='center', ha='left', transform=size_ax.transAxes)
 
-# Suptitle centred on the dot grid; fontsize matches the sub-ax category
+# Suptitle centered on the dot grid; fontsize matches the sub-ax category
 # titles (label_fontsize + 2 inside the helper = LABEL_FS + 1).
 title_x = (dotplot_bbox.x0 + dotplot_bbox.x1) / 2
 plt.suptitle('Marker expression\nFDC vs Tfh', fontweight='bold',

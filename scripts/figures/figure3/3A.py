@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot HEV signature at varying resolutions (Figure 3A)
+# Plot HEV signature at varying resolutions (Fig. 3a)
 # Shows HEV signature scores across different bin sizes with zoomed-in panels
 # This script is set up for P29_HD
 
@@ -11,7 +11,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 import sys
 
 import matplotlib as mpl
@@ -32,13 +31,13 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot HEV signature at varying resolutions for Figure 3A",
+parser = argparse.ArgumentParser(description="Plot HEV signature at varying resolutions for Fig. 3a",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P29_HD", help="Sample shown in the figure")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
@@ -50,9 +49,6 @@ sample_id = args["sample_id"]
 project_dir = args["project_dir"]
 
 print(f'Sample: {sample_id}')
-
-# Overwrite sample_id
-sample_id = 'P29_HD'
 
 sys.path.append(os.path.join(project_dir, 'scripts'))
 from helper_functions import auto_crop_scanpy
@@ -87,31 +83,6 @@ for resolution in resolutions:
     coords[resolution] = auto_crop_scanpy(adata_dict[resolution], border_size=0.1)
 
 
-# --- Function to find most recent results
-
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-        return None
-
-
 # --- Load HEV scoring results
 
 HEV_score_name = 'HEVs'
@@ -120,7 +91,7 @@ top_genes = 20
 
 for resolution in resolutions:
     HEV_res_dir = os.path.join(res_dir, '04_vascular_microenvironment', '01_identify_HEV_niches', '01_score_signature', out_name, resolution)
-    most_recent_dir_path = find_most_recent(HEV_res_dir)
+    most_recent_dir_path = HEV_res_dir
     
     # Read results and add to adata
     HEV_file_name = f'{sample_id}_{out_name}.csv'
@@ -593,7 +564,7 @@ plt.suptitle(f'{sample_id} - HEV signature at various resolutions (scalebar={sca
 
 # --- Save plot
 
-out_dir = os.path.join(project_dir, 'results', 'figures')
+out_dir = os.path.join(res_dir, 'figures')
 os.makedirs(out_dir, exist_ok=True)
 
 filename = 'Fig_3A.pdf'

@@ -14,7 +14,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import scanpy as sc
 import anndata as ad
@@ -27,7 +26,7 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Extract marker gene signatures for the TLS niche clusters",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -44,7 +43,7 @@ args = vars(parser.parse_args())
 # Arguments
 project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
-res_dir = args["res_dir"]
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 sample_list = args["samples"]
 
 print(f'Samples in python: {sample_list}')
@@ -62,30 +61,8 @@ else:
 
 sample_sheet = pd.read_csv(sample_sheet_path)
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-harmony_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
-most_recent = find_most_recent(harmony_dir)
+harmony_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '02_identify_TLS_niches', '01_cluster_TLS_high')
+most_recent = harmony_dir
 
 # Load the adata containing results
 use_layer = 'log_norm'
@@ -226,7 +203,7 @@ for region, cluster in clusters_of_interest.items():
     print(f"{region}: Cluster {cluster}")
 
 # Save the filtered gene lists for the clusters of interest in a separate directory for downstream analysis
-signature_dir = os.path.join(project_dir, 'results', '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
+signature_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '03_extract_niche_signatures', '01_extract_niche_signatures')
 os.makedirs(signature_dir, exist_ok=True)
 
 for region, cluster in clusters_of_interest.items():

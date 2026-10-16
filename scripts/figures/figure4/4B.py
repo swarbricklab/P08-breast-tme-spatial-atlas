@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4B: HEV gene expression correlation with distance to TLS
+# Plot Fig. 4b: HEV gene expression correlation with distance to TLS
 # Shows how TMEM173 expression in HEV ECs changes as a function of distance to TLS
 
 # --- Define environment
@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 import sys
 import anndata as ad
 
@@ -30,7 +29,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 4b: HEV gene expression vs distance to TLS",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -91,30 +90,8 @@ for sample in sample_list:
 
 # --- Load the HEV distance to TLS calculations
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 distance_dir = os.path.join(res_dir, '05_xenium_mechanisms', '02_identify_HEV_regions')
-most_recent_distance = find_most_recent(distance_dir)
+most_recent_distance = distance_dir
 
 distance_dict = {}
 
@@ -146,7 +123,7 @@ level = 'subset'
 
 for sample in sample_list:
     annotation_file = f'{sample}_{level}_pred_cell_types.csv'
-    annotation_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'label_transfer', 'xenium')
+    annotation_dir = os.path.join(res_dir, '02_cell_type_mapping', 'label_transfer', 'xenium')
     annotations = pd.read_csv(os.path.join(annotation_dir, f'{level}_level', annotation_file), index_col=0)
     # Add to adata
     adata_dict[sample].obs[level] = annotations['pred_cell_type']
@@ -211,6 +188,10 @@ spp1_avg['TLS_distance_bin'] = pd.cut(
 
 # Count how many hevs per bin
 hev_counts = spp1_avg['TLS_distance_bin'].value_counts().sort_index()
+
+# Count bars: only HEVs with ACKR1+ endothelial cells have a value in the plot (matches the number of points)
+hev_counts_plot = (spp1_avg.loc[spp1_avg[f'avg_{gene_of_interest}_expression_ACKR1'].notna(), 'TLS_distance_bin']
+                   .value_counts().reindex(hev_counts.index, fill_value=0))
 
 
 # --- Load the HEV colors
@@ -390,7 +371,7 @@ for ax in axs:
 # Add ax with count bars on top of each ax
 for ax in axs:
     count_ax = plt.gcf().add_axes([ax.get_position().x0, ax.get_position().y1 + 0.02, ax.get_position().width, ax.get_position().height * 0.3])
-    sns.barplot(x=hev_counts.index, y=hev_counts.values, color='lightgrey', edgecolor='black', ax=count_ax, hue=hev_counts.index, palette=color_dict_bins,
+    sns.barplot(x=hev_counts_plot.index, y=hev_counts_plot.values, color='lightgrey', edgecolor='black', ax=count_ax, hue=hev_counts_plot.index, palette=color_dict_bins,
                    saturation=1)
     # Annotate counts
     for n, p in enumerate(count_ax.patches):

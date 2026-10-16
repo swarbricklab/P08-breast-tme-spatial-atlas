@@ -17,8 +17,6 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import date
-from datetime import datetime
 import squidpy as sq
 
 from matplotlib.colors import LinearSegmentedColormap
@@ -32,7 +30,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Group spatially contiguous spots with high niche scores (e.g. germinal centers)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -118,35 +116,12 @@ else:
 
 # --- Load TLS results
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-# Find most recent results
 TLS_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '01_identify_TLS', '01_run_TLS_model')
 
 if run_lymph_node:
     TLS_res_dir = os.path.join(TLS_res_dir, 'lymph_nodes')
 
-most_recent_dir_path = find_most_recent(TLS_res_dir)
+most_recent_dir_path = TLS_res_dir
 
 TLS_file_name = f'{sample_id}_TLS_model.csv'
 TLS_results = pd.read_csv(os.path.join(most_recent_dir_path, TLS_file_name), index_col=0)
@@ -175,7 +150,7 @@ for score_name, filename in clusters_of_i.items():
 
     score_res_dir = os.path.join(score_res_dir, out_name)
 
-    most_recent_dir_path = find_most_recent(score_res_dir)
+    most_recent_dir_path = score_res_dir
 
     # Read results and add to adata
     score_file_name = f'{sample_id}_{out_name}.csv'
@@ -190,16 +165,12 @@ for score_name, filename in clusters_of_i.items():
 
     # --- Prepare for saving the plots
 
-    # Put in a timestamped folder to avoid overwriting older plots
     qc_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '02_group_high_score_areas')
 
     if run_lymph_node:
         qc_dir = os.path.join(qc_dir, 'lymph_nodes')
 
     os.makedirs(qc_dir, exist_ok=True)
-
-    today = date.today()
-    today = today.strftime("%Y%m%d")
 
 
     # --- Plot 1: Plot the TLS model score + spots above a certain threshold
@@ -255,7 +226,7 @@ for score_name, filename in clusters_of_i.items():
     threshold_adj = str(threshold).split('.')[-1]
 
     # Prepare for saving
-    out_dir = os.path.join(qc_dir, out_name, today)
+    out_dir = os.path.join(qc_dir, out_name)
     os.makedirs(out_dir, exist_ok=True)
 
     # Save plots
@@ -298,6 +269,7 @@ for score_name, filename in clusters_of_i.items():
         with open(os.path.join(out_dir_csv, f'{sample_id}_grouping_settings.json'), 'w') as json_file:
             json.dump(settings, json_file, indent=4)  # indent=4 makes the JSON file more readable
         print('Script succesfully completed')
+        continue  # nothing to group for this score: go to the next one
 
 
     # --- Define groups of neighboring spots
@@ -401,6 +373,7 @@ for score_name, filename in clusters_of_i.items():
             filename = f'{sample_id}_{score_name}_groups.csv'
             to_save_df.to_csv(os.path.join(out_dir_csv, filename))
             print('Script succesfully completed')
+            continue  # only single-spot groups for this score: go to the next one
 
 
     # --- Plot 2b: plot the neighborhood graph again after grouping
@@ -521,7 +494,7 @@ for score_name, filename in clusters_of_i.items():
             else:
                 GC_res_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', '01_score_signatures', bcell_out_name)
 
-            most_recent_dir_path = find_most_recent(GC_res_dir)
+            most_recent_dir_path = GC_res_dir
 
             # Read results and add to adata
             GC_file_name = f'{sample_id}_{bcell_out_name}.csv'

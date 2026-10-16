@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S9I: within-TLS spatial correlation of reference-producer cell abundance vs CCL19 / CCL21
+# Extended Data Fig. 9i: within-TLS spatial correlation of reference-producer cell abundance vs CCL19 / CCL21
 # transcript density, per 50 um bin. The candidate cell types are the scRNA-seq reference
 # CCL19 / CCL21 producers (subsets with >= 10 % of cells expressing, the `over_10` list from
 # 01_reference_producers). For every 50 um bin we count each producer subset's cells and sum
@@ -10,7 +10,7 @@
 # partial Spearman that controls for the total number of cells per bin (so a subset must track
 # a chemokine beyond the generic "dense bins have more of everything" effect). Per-sample
 # coefficients are tested against 0 with a two-sided Wilcoxon signed-rank (n = 6). The headline
-# panel (S9I) is the T-cell-zone partial Spearman; the all-TLS and B-cell-zone strata are shown
+# panel (Extended Data Fig. 9i) is the T-cell-zone partial Spearman; the all-TLS and B-cell-zone strata are shown
 # alongside. Reference producers of a given gene get a bold red x-tick label and a red outline
 # on that gene's % expressing annotation cell. Read-only: per-cell transcript counts, cell
 # centroids, TLS zone bins, cell-type labels and the reference producer list.
@@ -37,7 +37,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 plt.rcParams['axes.grid'] = False
 
 TICK_FS, SUP_FS, ANNO_FS = 8, 12, 7
-PRODUCER_C = '#d1352b'   # highlight colour for reference producers (matches 01_reference_producers dot plot)
+PRODUCER_C = '#d1352b'   # highlight color for reference producers (matches 01_reference_producers dot plot)
 
 
 # --- Argparse arguments
@@ -46,7 +46,7 @@ PRODUCER_C = '#d1352b'   # highlight colour for reference producers (matches 01_
 # (50 um grid, over_10 producer set, min 10 bins per stratum) are hard-coded defaults.
 
 parser = argparse.ArgumentParser(
-    description="S9I: reference-producer abundance vs CCL19/CCL21 density correlation per 50um bin (cohort)",
+    description="Extended Data Fig. 9i: reference-producer abundance vs CCL19/CCL21 density correlation per 50um bin (cohort)",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-s", "--samples", nargs='+', required=True)
 parser.add_argument("--h5ad_dir", default=None, help="defaults to <project_dir>/data/anndata_objects")
@@ -128,7 +128,7 @@ SHORT_TO_FULL = {short: full for full, short in SUBSETS.items()}
 PRODUCER_FLAG = {(disp(full), g): (full in PRODUCER_SETS[g]) for full in _cells_full for g in GENES}
 PROD_LABEL = f"≥{producer_tag.replace('over_', '')}%"
 
-# per-cell lineage / major-type colours (for the annotation strips + legends)
+# per-cell lineage / major-type colors (for the annotation strips + legends)
 CELL_LINEAGE = {ct: _sub2lin.get(SHORT_TO_FULL[ct], 'NA') for ct in CELL_ORDER}
 CELL_MAJOR   = {ct: _sub2maj.get(SHORT_TO_FULL[ct], 'NA') for ct in CELL_ORDER}
 LINEAGE_C    = {ct: _lin_lut.get(CELL_LINEAGE[ct], '#cccccc') for ct in CELL_ORDER}
@@ -145,7 +145,7 @@ for g in GENES:
     print(f"  {g}: {[disp(s) for s in PRODUCER_SETS[g]]}")
 print(f'Cell types (x-axis, lineage-ordered): {CELL_ORDER}')
 
-# standard transcript colours from the project palette
+# standard transcript colors from the project palette
 _tx_lut = dict(pd.read_csv(os.path.join(project_dir, 'resources', 'plotting_colors',
                                         'transcript_colors.csv'))[['transcript', 'color']].values)
 GENE_C = {g: _tx_lut.get(g, '#888888') for g in GENES}
@@ -166,7 +166,7 @@ def star(p):
 
 
 def boxplot_panel(ax, values_per_x, colors, samples_per_x, box_w):
-    """Colour-by-x boxes at integer positions (width box_w) + per-sample jittered dots and
+    """Color-by-x boxes at integer positions (width box_w) + per-sample jittered dots and
     connecting lines. Caller owns xlim / xticks / strips (positions are 0..n-1)."""
     n = len(values_per_x)
     bp = ax.boxplot([np.asarray(v) for v in values_per_x],
@@ -235,7 +235,7 @@ for s in samples:
     if len(binf) == 0:
         print(f'{s}: no TLS zone bins — skipping')
         continue
-    # recover the 50um grid origin from the bin-centre coords (bin_x = xmin + (bin_ix+0.5)*grid)
+    # recover the 50um grid origin from the bin-center coords (bin_x = xmin + (bin_ix+0.5)*grid)
     xmin = float(binf['bin_x'].iloc[0] - (binf['bin_ix'].iloc[0] + 0.5) * grid_um)
     ymin = float(binf['bin_y'].iloc[0] - (binf['bin_iy'].iloc[0] + 0.5) * grid_um)
     bin_zone = binf.set_index(['bin_ix', 'bin_iy'])['TLS_zone']
@@ -296,8 +296,8 @@ cdf = pd.DataFrame(corr_rows)
 
 
 # --- Correlation boxplots: one panel per gene (shared y), x = candidate producers ordered by
-# lineage then major type. Boxes in the gene's transcript colour, per-sample dots + lines,
-# one-sample Wilcoxon (r != 0) star per box. Above each panel a 3-row colour grid annotates each
+# lineage then major type. Boxes in the gene's transcript color, per-sample dots + lines,
+# one-sample Wilcoxon (r != 0) star per box. Above each panel a 3-row color grid annotates each
 # producer — Lineage (top), Major type, then % of cells expressing that chemokine in the reference
 # (bottom, shared vmin/vmax across genes, own colorbar). Reference producers of the panel's gene
 # get a bold-red x-tick label. All text one size (BODY_FS) except gene + main titles.
@@ -402,7 +402,7 @@ def corr_boxplot_figure(stratum, metric, title):
                 ax_strip.text(-0.02, y_c, lab, transform=ax_strip.get_yaxis_transform(),
                               ha='right', va='center', fontsize=BODY_FS)
 
-    # --- right column: legends (Lineage, Major type, x-tick colour key) stacked flush, then cbar
+    # --- right column: legends (Lineage, Major type, x-tick color key) stacked flush, then cbar
     rx = (ML + panels_w + 0.12) / fig_w
     lin_present = [l for l in LINEAGE_ORDER if l in set(CELL_LINEAGE.values())]
     maj_present = list(dict.fromkeys(CELL_MAJOR[ct] for ct in CELL_ORDER))
@@ -442,7 +442,7 @@ def corr_boxplot_figure(stratum, metric, title):
     cbar.set_label('% expressing (ref)', fontsize=BODY_FS)
     cbar.ax.tick_params(labelsize=BODY_FS)
 
-    # shared x-axis label centred under the panels
+    # shared x-axis label centered under the panels
     center_x = (ML + panels_w / 2) / fig_w
     fig.text(center_x, 0.12 / fig_h, 'Candidate producers', ha='center', va='bottom',
              fontsize=BODY_FS, fontweight='bold')
@@ -455,9 +455,9 @@ def corr_boxplot_figure(stratum, metric, title):
     fig.text(center_x, (fig_h - 0.34) / fig_h, note, ha='center', va='top', fontsize=BODY_FS)
 
 
-# S9I: reference-producer vs chemokine correlation in the T cell zone
+# Extended Data Fig. 9i: reference-producer vs chemokine correlation in the T cell zone
 corr_boxplot_figure('T cell zone', 'partial_spearman',
-                    'S9I — reference-producer vs chemokine correlation (density-controlled)')
+                    'Extended Data Fig. 9i — reference-producer vs chemokine correlation (density-controlled)')
 
 
 # --- Report + save
@@ -474,7 +474,7 @@ out_base = os.path.join(res_dir, '05_xenium_mechanisms', '09_chemokine_sources',
 os.makedirs(os.path.join(out_base, 'plots'), exist_ok=True)
 os.makedirs(os.path.join(out_base, 'csv_files'), exist_ok=True)
 cdf.to_csv(os.path.join(out_base, 'csv_files', f'reference_producer_corr{genes_tag}.csv'), index=False)
-pdf_path = os.path.join(out_base, 'plots', f'S9I_reference_producer_corr{genes_tag}.pdf')
+pdf_path = os.path.join(out_base, 'plots', f'ED9I_reference_producer_corr{genes_tag}.pdf')
 save_multi_image(pdf_path)
 print(f'\nSaved: {pdf_path}')
 print('Script successfully completed')

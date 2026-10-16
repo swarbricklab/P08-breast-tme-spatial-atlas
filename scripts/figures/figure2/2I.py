@@ -4,7 +4,7 @@
 # Plot the TLS niche signatures on lymph node sample P12_LN_Vis
 # Shows H&E, GC annotations (from pathology), and niche signatures
 # With overview + 2 zoomed areas (Primary follicle, Secondary follicle)
-# This creates Figure 2I
+# This creates Fig. 2i
 
 # --- Define environment
 # env: shapely
@@ -12,7 +12,6 @@
 # --- Load packages
 
 import os
-from datetime import datetime
 import ast
 import argparse
 import sys
@@ -35,13 +34,13 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot TLS model overview for Figure 2I",
+parser = argparse.ArgumentParser(description="Plot TLS model overview for Fig. 2i",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P12_LN_Vis", help="Sample shown in the figure")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
@@ -51,9 +50,6 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_id = args["sample_id"]
-
-# Override sample_id
-sample_id = "P12_LN_Vis"
 
 print(f'Sample: {sample_id}')
 
@@ -109,29 +105,6 @@ spot_size = 1.8
 
 # --- Load the TLS niche scores
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-        most_recent_dir_path = None
-    return most_recent_dir_path
-
 # Signature names mapping (variable name -> directory name)
 signature_mapping = {
     'T_cell_zone': 'T_cell_zone_score',
@@ -152,9 +125,8 @@ for score_name in score_names:
     # Path to signature scores
     score_base_dir = os.path.join(res_dir, '03_TLS_niche_discovery', '04_map_niche_signatures', 
                                    '01_score_signatures', 'lymph_nodes', score_dir_name)
-    
-    # Find the most recent results
-    most_recent_dir = find_most_recent(score_base_dir)
+
+    most_recent_dir = score_base_dir
     
     if most_recent_dir is not None:
         csv_dir = os.path.join(most_recent_dir, 'csv_files')
@@ -187,8 +159,6 @@ if os.path.exists(geojson_file):
     print(f"Found geojson file: {geojson_file}")
     
     # Load the GeoJSON
-    # This needs to be set so geopandas can read the file
-    os.environ['PROJ_LIB'] = '/g/data/a56/conda/envs/usr/sl6147/share/proj'
     gdf = gpd.read_file(geojson_file)
     
     # Filter for GC annotations

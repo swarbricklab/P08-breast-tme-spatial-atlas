@@ -5,11 +5,11 @@ Recover **follicular dendritic cells (FDCs)** — absent from the single-cell re
 | Script | Env | Mode | Figure |
 |---|---|---|---|
 | `01_identify_FDC.py` | spatial-pilot | `--sample_id` | — (upstream) |
-| `02_FDC_overview.py` | spatial-pilot | `--samples` | S9J |
+| `02_FDC_overview.py` | spatial-pilot | `--samples` | Extended Data Fig. 9j |
 
 **`01_identify_FDC.py`** — subclusters the Tfh pool (scale clip 10 → PCA 30 → kNN k=15 → Leiden res 1.0, seed 0) and calls a cluster FDC if CD3E & CD3G are both below the top-1000 markers, CR1+CR2 combined rank ≤ 250, and ≥ 5 % of cells express CR2. Writes `{s}_FDC_Tfh_barcodes.csv` (cols `cell_id, group ∈ {FDC, Tfh}`) + the subcluster DEG table + a per-sample diagnostic PDF.
 
-**`02_FDC_overview.py`** — cohort FDC-vs-Tfh subcluster marker dot plot (S9J): FDC markers CR1/CR2/FCER2, the CXCL13–CXCR5 axis, pan-T CD3E/CD3G/CD4, and Tfh PDCD1/ICOS/BCL6/IL21/TIGIT. Samples with no recovered FDC are handled gracefully.
+**`02_FDC_overview.py`** — cohort FDC-vs-Tfh subcluster marker dot plot (Extended Data Fig. 9j): FDC markers CR1/CR2/FCER2, the CXCL13–CXCR5 axis, pan-T CD3E/CD3G/CD4, and Tfh PDCD1/ICOS/BCL6/IL21/TIGIT. Samples with no recovered FDC are handled gracefully.
 
 Note: Leiden clustering needs the `spatial-pilot` environment (it ships igraph/leidenalg), not `xen-hev`.
 

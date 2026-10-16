@@ -2,7 +2,7 @@
 
 # --- Aim
 # Extract raw per-cell transcript counts for a list of genes (CXCL13, CCL19, CCL21, TSPAN7)
-# from the Xenium SpatialData object. The AnnData `filtered_counts` layer is library-normalised
+# from the Xenium SpatialData object. The AnnData `filtered_counts` layer is library-normalized
 # to 10000 / cell (CP10K), NOT raw integer counts, so real integer counts come from the
 # SpatialData transcripts table. Outputs one CSV per (sample, gene) with the per-cell integer
 # transcript count. These CSVs feed the downstream source-attribution scripts (04-07).
@@ -70,8 +70,7 @@ try:
         zarr_path = zarr_persist
         print(f'  Reading existing zarr ({zarr_persist})')
     else:
-        tmp_root = tempfile.mkdtemp(prefix=f'tx_extract_{sample_id}_',
-                                    dir='/scratch/a56/sl6147/tmp')
+        tmp_root = tempfile.mkdtemp(prefix=f'tx_extract_{sample_id}_')
         zarr_path = os.path.join(tmp_root, f'{sample_id}.zarr')
         print(f'  Unzipping {zip_path} -> {zarr_path}')
         shutil.unpack_archive(zip_path, zarr_path)

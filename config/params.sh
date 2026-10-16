@@ -1,4 +1,4 @@
-# Parameters for submission scripts (submit_wolfpack.sh)
+# Parameters for the job submission scripts (scripts/submit_*.sh)
 
 # --- Directories
 
@@ -19,6 +19,6 @@ mkdir -p $log_dir
 # Environment to use
 environment="spatial-pilot"
 
-# Visium sample sheet: contains the names of the visium samples
+# Sample sheet: the samples to process (one sheet per platform in config/; switch as needed)
 config_dir="$project_dir/config"
-visium_sample_sheet="$config_dir/sample_sheet_visium.csv"
+sample_sheet="$config_dir/sample_sheet_visium.csv"

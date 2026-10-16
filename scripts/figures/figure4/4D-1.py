@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4D (part 1): ranked correlation plot of genes with STING expression in HEVs
+# Plot Fig. 4d (part 1): ranked correlation plot of genes with STING expression in HEVs
 # Shows genes that correlate positively or negatively with STING pathway activation
 
 # --- Define environment
@@ -11,7 +11,6 @@
 
 import argparse
 import os
-from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -29,7 +28,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 4d (part 1): genes ranked by correlation with STING expression in HEVs",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -54,30 +53,8 @@ sample_list = args["samples"]
 
 gene_of_i = 'TMEM173'  # STING gene symbol
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 correlation_dir = os.path.join(res_dir, '05_xenium_mechanisms', '05_gene_gene_correlations', '01_investigate_gene_correlations', f'{gene_of_i}_correlations')
-most_recent = find_most_recent(correlation_dir)
+most_recent = correlation_dir
 
 correlation_file = f'All_samples_HEV_{gene_of_i}_gene_correlations.csv'
 correlation_df = pd.read_csv(os.path.join(most_recent, 'csv_files', correlation_file), index_col=0)

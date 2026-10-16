@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5H: Pearson correlations of HEV SPP1 expression with cell types across samples
+# Plot Fig. 5h: Pearson correlations of HEV SPP1 expression with cell types across samples
 # Accounts for variation in cell composition and HEV SPP1 expression levels
 
 # --- Define environment
@@ -10,7 +10,6 @@
 # --- Load packages
 import argparse
 import os
-from datetime import datetime
 import sys
 
 import matplotlib as mpl
@@ -26,7 +25,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 5h: correlation of HEV SPP1 expression with cell type abundance",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -115,28 +114,6 @@ major_cell_types_sorted = sorted(major_cell_types, key=lambda x: (lineage_order.
 
 # --- Load SPP1 correlations calculated per sample
 
-# Find most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-
 # Position legend function
 def position_legend(axs):
     """
@@ -205,7 +182,7 @@ gene_of_interest = 'SPP1'
 hev_dir = os.path.join(res_dir, '05_xenium_mechanisms', '06_cellular_enrichment', f'{gene_of_interest}_vs_cell_abundance')
 hev_dir = os.path.join(hev_dir, f'maxdist_{max_dist}um')
 
-most_recent = find_most_recent(hev_dir)
+most_recent = hev_dir
 
 # Load all samples & merge
 sample_res = {}

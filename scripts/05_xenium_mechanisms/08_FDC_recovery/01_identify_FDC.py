@@ -6,7 +6,7 @@
 # run DEG, and auto-flag any leiden cluster whose top DEGs include CR1/CR2 (the most specific FDC
 # markers on the panel) as FDC. Saves the per-sample FDC/Tfh barcode CSV (the sole FDC input
 # consumed downstream), the full DEG table, and a multi-page diagnostic PDF of UMAPs, dotplots,
-# violins and a spatial plot. Supports figure S9J (FDC recovery).
+# violins and a spatial plot. Supports Extended Data Fig. 9j (FDC recovery).
 
 # --- Define environment
 # env: spatial-pilot
@@ -44,7 +44,7 @@ parser.add_argument("--sample_sheet", default=None, help="Path to sample sheet C
 # Methods parameters (hard-coded defaults; exposed for discoverability, never required)
 parser.add_argument("--leiden_res",   type=float, default=1.0,  help="Leiden clustering resolution")
 parser.add_argument("--n_pcs",        type=int,   default=30,   help="Number of PCA components")
-parser.add_argument("--n_neighbors",  type=int,   default=15,   help="kNN neighbours for the graph")
+parser.add_argument("--n_neighbors",  type=int,   default=15,   help="kNN neighbors for the graph")
 parser.add_argument("--scale_max",    type=float, default=10.0, help="Clip value for sc.pp.scale")
 parser.add_argument("--cd3_min_rank", type=int,   default=1000, help="Candidate FDC cluster must have CD3E and CD3G ranked > this (depleted)")
 parser.add_argument("--max_cr_sum",   type=int,   default=250,  help="Max combined CR1+CR2 rank for FDC call")
@@ -89,7 +89,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
 
 
 # --- Load data
-# adata.X is log-normalised in the P08 Xenium objects.
+# adata.X holds log1p-transformed counts in the Xenium objects.
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 
@@ -149,7 +149,7 @@ tfh = adata[tfh_mask, :].copy()
 
 # --- Re-process the Tfh subset
 
-# adata.X is already log-normalised — scale + PCA on the full panel (no HVG: targeted panel is small).
+# adata.X is already log1p-transformed — scale + PCA on the full panel (no HVG: targeted panel is small).
 n_comps = min(n_pcs, tfh.n_obs - 1, tfh.n_vars - 1)
 sc.pp.scale(tfh, max_value=scale_max)
 sc.pp.pca(tfh, n_comps=n_comps, random_state=seed)
@@ -185,7 +185,7 @@ deg_df = pd.concat(deg_records, ignore_index=True)
 def _rank(df_c, gene):
     return int(df_c.loc[gene, 'rank']) if gene in df_c.index else 10**9
 
-# Compute pct expressing per cluster from the unscaled log-norm matrix (adata.X)
+# Compute pct expressing per cluster from the unscaled log1p matrix (adata.X)
 cr2_pct = {}
 cr1_pct = {}
 if 'CR2' in adata.var_names:
@@ -218,7 +218,7 @@ fdc_clusters = []
 if candidate_scores:
     # Pick ALL CD3-depleted clusters that pass the CR1+CR2 rank-sum and CR2-pct
     # thresholds. Selecting all passing clusters (rather than only the single best)
-    # keeps samples that harbour multiple discrete FDC clusters correctly counted.
+    # keeps samples that harbor multiple discrete FDC clusters correctly counted.
     sorted_clusters = sorted(candidate_scores.items(), key=lambda kv: kv[1][0])
     rejected = []
     for cluster, scores in sorted_clusters:
@@ -266,7 +266,7 @@ deg_df.to_csv(os.path.join(csv_dir, f'{sample_id}_Tfh_subcluster_DEGs.csv'), ind
 
 ctx = f'{sample_id} ({subtype}) - {n_tfh} Tfh cells, leiden res={leiden_res}, FDC clusters={fdc_clusters or "none"}'
 
-# Plot 1: UMAP coloured by leiden
+# Plot 1: UMAP colored by leiden
 sc.pl.umap(tfh, color='leiden', legend_loc='on data', show=False, title=f'{sample_id} ({subtype})\nTfh leiden')
 plt.suptitle(ctx, y=1.05, fontweight='bold')
 

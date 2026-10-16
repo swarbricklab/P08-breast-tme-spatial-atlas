@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5D: ligand-receptor interactions for HEV-upregulated genes
+# Plot Fig. 5d: ligand-receptor interactions for HEV-upregulated genes
 # Shows dotplot of LR pairs enriched in HEVs compared to ACKR1+ ECs across HEV compartments
 # Uses bin_size=0 (HEV bins only)
 
@@ -13,7 +13,6 @@
 import argparse
 import os
 import sys
-from datetime import datetime
 
 import anndata as ad
 import matplotlib as mpl
@@ -63,38 +62,13 @@ bin_size = 0  # um - perivascular bins
 resolution = 'square_016um'
 
 
-# --- Function to find most recent results
-
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-        return most_recent_dir_path
-    else:
-        print("No valid directories found.")
-        return None
-
-
 # --- Load the adata objects with LR results
 
 # Find the directory with individual sample results
 lr_sample_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis',
                               '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_sample_path = find_most_recent(lr_sample_dir)
+most_recent_sample_path = lr_sample_dir
 
 # Load adata objects for each sample
 adata_dict = {}
@@ -109,7 +83,7 @@ for sample in sample_list:
 lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', 
                         '02_analyze_LR_all', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_path = find_most_recent(lr_dir)
+most_recent_path = lr_dir
 
 # Load LR summary
 lr_summary_file = 'All_samples_LR_summary.csv'
@@ -196,7 +170,7 @@ rename_dict = {
 de_dir = os.path.join(res_dir, '04_vascular_microenvironment', '03_compare_HEV_to_other_venous', 
                       '02_compare_gene_expression', 'csv_files')
 
-most_recent_de_path = find_most_recent(de_dir)
+most_recent_de_path = de_dir
 
 de_filename = 'All_samples_rank_genes_HEV_overlap.csv'
 de_df = pd.read_csv(os.path.join(most_recent_de_path, de_filename))

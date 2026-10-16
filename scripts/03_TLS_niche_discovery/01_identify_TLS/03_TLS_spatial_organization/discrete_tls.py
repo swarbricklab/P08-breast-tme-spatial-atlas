@@ -1,11 +1,11 @@
-# --- Discrete-TLS definition (Figure S3B)
+# --- Discrete-TLS definition (Extended Data Fig. 3b)
 # Derives "discrete TLS" from the permissive per-spot TLS grouping produced by
 # 02_group_TLS_high (contiguous groups of >=2 directly adjacent TLS-high spots,
 # score > 0.01, in the 'group_singleton_removed' column).
 #
-# Stringent Figure S3B definition (per-sample quantification + spatial analysis):
+# Stringent Extended Data Fig. 3b definition (per-sample quantification + spatial analysis):
 #   1. Keep only groups of >= min_spots directly adjacent TLS-high spots.
-#   2. Merge surviving groups separated by a single spot (nearest centre-to-centre
+#   2. Merge surviving groups separated by a single spot (nearest center-to-center
 #      spot distance <= ~2 spot pitches).
 
 import numpy as np
@@ -15,7 +15,7 @@ from scipy.spatial.distance import cdist
 
 
 def _estimate_pitch_um(coords_arr):
-    """Median nearest-neighbour spot spacing (~100 µm for Visium)."""
+    """Median nearest-neighbor spot spacing (~100 µm for Visium)."""
     if len(coords_arr) < 2:
         return 100.0
     tree = cKDTree(coords_arr)
@@ -30,11 +30,11 @@ def define_discrete_tls(groups_df, coords_um, group_col='group_singleton_removed
 
     - groups_df: per-spot table with `group_col` (permissive grouping; NaN where
       the spot is not in a >=2-spot group).
-    - coords_um: per-spot centre coordinates in µm (index = barcode), covering at
+    - coords_um: per-spot center coordinates in µm (index = barcode), covering at
       least all TLS-high spots; used to estimate the spot pitch and to measure
       inter-group distances.
     - min_spots: minimum directly-adjacent spots for a group to survive.
-    - merge_gap_pitches: merge two surviving groups if their nearest centre-to-centre
+    - merge_gap_pitches: merge two surviving groups if their nearest center-to-center
       spot distance is <= merge_gap_pitches * pitch (a single intervening spot is
       ~2 pitches; 2.2 admits both the colinear (2 pitch) and diagonal (sqrt(3) pitch)
       one-spot gaps while excluding a two-spot gap).

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot the top 10 cell types enriched in spots sending LTB signals to HEVs (Figure 4J)
+# Plot the top 10 cell types enriched in spots sending LTB signals to HEVs (Fig. 4j)
 
 # --- Define environment
 # env: vis-hd
@@ -10,7 +10,6 @@
 import argparse
 import os
 import re
-from datetime import datetime
 from collections.abc import Iterable
 
 from scipy import stats
@@ -32,7 +31,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot cellular enrichment in LTB-sending bins for Figure 4J",
+parser = argparse.ArgumentParser(description="Plot cellular enrichment in LTB-sending bins for Fig. 4j",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -81,29 +80,6 @@ subtype_dict = dict(zip(merged_df['section_id'], merged_df['clinical_subtype']))
 
 # --- Load the stlearn adata objects
 
-# Function to find the most recent results
-def find_most_recent(dir):
-    # Find most recent results
-    subdirs = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
-    # Filter subdirectories to keep only those with date format YYYYmmdd
-    date_format = '%Y%m%d'
-    valid_subdirs = []
-    for subdir in subdirs:
-        try:
-            datetime.strptime(subdir, date_format)
-            valid_subdirs.append(subdir)
-        except ValueError:
-            pass
-    # Sort the valid subdirectories by date and get the most recent one
-    if valid_subdirs:
-        most_recent_dir = max(valid_subdirs, key=lambda x: datetime.strptime(x, date_format))
-        most_recent_dir_path = os.path.join(dir, most_recent_dir)
-        print("Most recent results:", most_recent_dir_path)
-    else:
-        print("No valid directories found.")
-    return most_recent_dir_path
-
-# Find most recent results
 resolution = 'square_016um'
 threshold = 0.5
 threshold_adj = str(threshold).split('.')[-1]
@@ -111,7 +87,7 @@ bin_size = 25  # um
 
 lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '01_run_LR_analysis_stlearn', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_dir_path = find_most_recent(lr_dir)
+most_recent_dir_path = lr_dir
 
 adata_dict_stlearn = {}
 
@@ -145,7 +121,7 @@ for sample in sample_list:
 
 lr_dir = os.path.join(res_dir, '04_vascular_microenvironment', '04_ligand_receptor_analysis', '03_plot_LR_per_sample', f'{bin_size}um_bin', 'csv_files')
 
-most_recent_dir_path = find_most_recent(lr_dir)
+most_recent_dir_path = lr_dir
 
 for sample in sample_list:
     spot_label_file = f'{sample}_HEV_spot_grouping.csv'
@@ -324,7 +300,7 @@ all_avg_comp_df_top10['cell_type'] = pd.Categorical(all_avg_comp_df_top10['cell_
                                                 ordered=True)
 
 
-# --- Plot: Top 10 enriched cell types (Figure 4J)
+# --- Plot: Top 10 enriched cell types (Fig. 4j)
 
 sc.set_figure_params(fontsize=10)
 
@@ -437,7 +413,7 @@ for legpatch in legend.get_patches():
         legpatch.set_edgecolor(tuple(darkened_color))
         legpatch.set_linewidth(1)
 
-lr_adj = lr.replace('_', '→').replace('LTB', 'LTβ').replace('LTBR', 'LTβR')
+lr_adj = lr.replace('_', '→')   # gene names as recorded in the object
 ax.set_title(f'Cellular enrichment\nBins sending {lr_adj} signals to HEVs', fontweight='bold')
 
 # Set labels

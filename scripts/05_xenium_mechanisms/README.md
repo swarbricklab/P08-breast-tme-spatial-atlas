@@ -1,87 +1,19 @@
-# Xenium Mechanisms Analysis Workflow
+# 05_xenium_mechanisms
 
-This directory contains scripts for the high-resolution, single-cell spatial analysis of tertiary lymphoid structures (TLS), vascular niches, and microenvironmental signaling mechanisms using Xenium in situ profiling data.
+Single-cell analysis of TLS, HEVs and their signaling in the Xenium Prime 5K data. Each folder has a README with its scripts, conda environments, run mode (`--sample_id` per sample or `--samples` for the cohort), inputs and outputs. Run folders 01 and 02 first: most later folders use the TLS regions and HEV niches they define. Besides the inputs listed per folder, all scripts read the sample sheet (`config/sample_sheet_xenium.csv`), `resources/tissue_metadata.csv` and the color and cell type files in `resources/`.
 
-## Directory Structure
+| Folder | What it does | Manuscript |
+|---|---|---|
+| [01_identify_TLS_regions](01_identify_TLS_regions/README.md) | TLS regions from the local density of T and B cells; their composition and CD40/CD40LG expression | Extended Data Fig. 7b–d |
+| [02_identify_HEV_regions](02_identify_HEV_regions/README.md) | HEV niches from a 5-gene HEV signature score | |
+| [03_HEV_microenvironment](03_HEV_microenvironment/README.md) | Distance from each cell to the nearest HEV niche | |
+| [04_score_signatures](04_score_signatures/README.md) | STING and type I interferon signature scores per cell type | Supplementary Table 9 |
+| [05_gene_gene_correlations](05_gene_gene_correlations/README.md) | Genes correlated with endothelial TMEM173 (STING) or SPP1 across HEV niches, and GSEA | Supplementary Table 10 |
+| [06_cellular_enrichment](06_cellular_enrichment/README.md) | Cell types within 200 µm of HEV niches and their correlation with endothelial SPP1 | Supplementary Table 12 |
+| [07_TLS_zonation](07_TLS_zonation/README.md) | B cell zones, T cell zones and germinal centers within TLS | Extended Data Figs. 9c,d,f,g and 10g,h |
+| [08_FDC_recovery](08_FDC_recovery/README.md) | Follicular dendritic cells recovered from the label-transferred Tfh cells | Extended Data Fig. 9j |
+| [09_chemokine_sources](09_chemokine_sources/README.md) | Cellular sources and spatial gradients of CXCL13, CCL19 and CCL21 | Extended Data Fig. 9a,b,e,h,i,k,l |
+| [10_HEV_GC_proximity](10_HEV_GC_proximity/README.md) | HEV gene expression close to vs far from germinal centers | Extended Data Fig. 10i,j |
+| [11_SPP1_venous_specificity](11_SPP1_venous_specificity/README.md) | SPP1 in venous endothelial cells and macrophages, inside and outside TLS | Extended Data Fig. 10c,e |
 
-- **01_identify_TLS_regions/** 
-  Single-cell spatial identification of TLS architectures, plus their cellular composition and gene expression. *(Figures S7B–D)*
-  - `01_identify_TLS.py`: Automatically segment TLS regions based on the density and spatial co-localization of T cells and B cells.
-  - `02_composition_TLS.py`: Cohort cellular composition of TLS regions — cell-type proportions inside vs outside TLS (S7B) and average relative abundance within TLS (S7C).
-  - `03_gene_expression_TLS.py`: Cohort CD40 / CD40LG expression across the subset-level cell types within TLS regions (S7D).
-
-- **02_identify_HEV_regions/** 
-  Single-cell identification of high endothelial venules.
-  - `01_identify_HEV.py`: Score and segment HEV structures at single-cell resolution using a targeted 5-gene endothelial signature.
-
-- **03_HEV_microenvironment/** 
-  Spatial profiling of the HEV microenvironment.
-  - `01_calculate_distance_HEV.py`: Calculate radial distances from every cell to the nearest segmented HEV for downstream proximity-based enrichment analyses.
-
-- **04_score_signatures/** 
-  Scoring of immune signaling pathways. *(Relates to Table S9)*
-  - `01_score_STING_signatures.py`: Score STING-pathway and Type I Interferon (IFN) gene signatures across specific cell types and map their spatial activity in the vascular niche.
-
-- **05_gene_gene_correlations/** 
-  Gene correlation and pathway enrichment analysis. *(Generates data for Table S10)*
-  - `01_investigate_gene_correlations.py`: Calculate pseudobulk expression profiles per HEV structure to investigate transcriptomic correlations with endothelial `TMEM173` (STING) and `SPP1` expression.
-  - `02_GSEA_analysis_on_correlated_genes.py`: Perform Gene Set Enrichment Analysis (GSEA) on the correlated gene lists to identify functional pathways (e.g., Cell Adhesion vs. Chemokine Activity).
-
-- **06_cellular_enrichment/** 
-  Spatial recruitment and signaling analysis. *(Generates data for Table S12)*
-  - `01_SPP1_vs_proximal_enrichment.py`: Quantify the spatial enrichment of specific cell types (e.g., Tfh cells, LAMP3+ DCs) within a 200 µm radius of HEVs, and correlate their abundance with endothelial `SPP1` expression.
-
-- **07_TLS_zonation/** 
-  Resolve TLS into B cell / T cell zones and germinal centres (GCs) on a 50 µm grid. *(Figures S9C–D, S9F–G, S10G–H)*
-  - `01_classify_zones.py`: Score per-bin pseudobulk profiles against B/T-cell-zone and GC niche signatures; classify bins and label discrete GCs.
-  - `02_zonation_overview.py`: Cohort B/T-zone map (S9C), per-bin T:B ratio distribution (S9D), GC overview (S10G) and discrete-GCs-per-sample bar (S10H).
-  - `03_zoom_GCs.py`: Per-discrete-GC aligned-H&E zoom with the top GC-signature transcripts (S10G).
-  - `04_zoom_zones.py`: Representative adjacent B/T-cell-zone single-transcript zoom + zone-annotation overview (S9F–G).
-
-- **08_FDC_recovery/** 
-  Recover follicular dendritic cells (FDCs) and Tfh from the B-cell / germinal-centre compartment. *(Figure S9J)*
-  - `01_identify_FDC.py`: Per-sample subclustering to recover the FDC and Tfh populations.
-  - `02_FDC_overview.py`: Cohort FDC / Tfh subcluster marker dot plot (S9J).
-
-- **09_chemokine_sources/** 
-  Cellular and spatial sources of the TLS-organising chemokines (CXCL13, CCL19, CCL21). *(Figures S9A–B, S9E, S9H, S9I, S9K–L)*
-  - `01_reference_producers.py`: Reference (scRNA-seq) chemokine-producer subsets and niche-gene dot plot (S9A).
-  - `02_extract_transcripts.py`: Per-cell chemokine transcript extraction from SpatialData (upstream input).
-  - `03_impvl_vs_icaf.py`: imPVL s1 vs iCAF s2 discrimination dot plot (S9B).
-  - `04_zone_expression_density.py`: CXCL13 / CCL19 expression density per zone (S9E).
-  - `05_chemokine_gradients.py`: CCL19/CCL21 transcript and imPVL/iCAF cell density vs distance from HEV (S9H).
-  - `06_reference_producer_corr.py`: Reference-producer abundance vs chemokine density correlation per 50 µm bin (S9I).
-  - `07_cxcl13_proximity_attribution.py`: Tfh/FDC density per zone (S9K) and CXCL13 reference-producer source attribution (S9L).
-
-- **10_HEV_GC_proximity/** 
-  Stratify HEV endothelial cells by proximity to a germinal centre and test GC-proximal genes (notably `SPP1`). *(Figures S10I–J)*
-  - `01_classify_HEV_by_GC_dist.py`: Label intra-TLS HEV niches close / far from the nearest GC.
-  - `02_DEG_close_vs_far.py`: Cell-level close-vs-far Mann-Whitney DEG table for ACKR1+ HEV endothelial cells.
-  - `03_volcano_dotplot.py`: Close-vs-far DEG volcano (S10I) and transposed dot plot of the significant genes (S10J).
-
-- **11_SPP1_venous_specificity/** 
-  Endothelial and macrophage `SPP1` in the TLS / HEV context. *(Figures S10C, S10E)*
-  - `01_SPP1_across_venous_groups.py`: `SPP1` dot plot across four ACKR1+ venous EC groups (HEV / non-HEV × TLS / stroma) (S10C).
-  - `02_SPP1_macrophage_regions.py`: Representative-sample region zoom of macrophage `SPP1` outside TLS (S10E).
-
-Each workflow subdirectory has its own README with the per-script conda environment, run mode (`--sample_id` per-sample vs `--samples` cohort), inputs, and the exact supplementary figure panel(s) it produces.
-
-## Workflow Overview
-
-1. **TLS & HEV Segmentation:** 
-  Identify and map the boundaries of TLS and HEV regions based on single-cell coordinates, cellular density, and transcriptomic signatures.
-
-2. **Microenvironment Profiling:** 
-  Calculate continuous spatial distances to HEVs to analyze cellular recruitment gradients and proximity effects.
-
-3. **Signature Scoring & Correlation:** 
-  Score functional pathways (STING/IFN) within specific cellular compartments and extract gene-gene correlation networks operating within the HEV niche.
-
-4. **Pathway Enrichment:** 
-  Perform GSEA on genes co-varying with key vascular drivers (`TMEM173` and `SPP1`) to reveal their distinct biological roles.
-
-5. **Spatial Signaling Analysis:** 
-  Statistically link endothelial signaling states (e.g., SPP1 production) to the local recruitment and enrichment of target immune populations.
-
-6. **TLS Zonation & Source Attribution:** 
-  Resolve TLS into B/T cell zones and germinal centres (07), recover FDC and Tfh populations (08), attribute the TLS-organising chemokines to their cellular sources and map their spatial gradients out from the HEVs (09), stratify HEV endothelial cells by germinal-centre proximity (10), and dissect endothelial versus macrophage `SPP1` across the HEV / TLS compartments (11).
+`plotting_functions.py` holds plotting functions shared by these scripts.

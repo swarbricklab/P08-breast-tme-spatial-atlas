@@ -36,7 +36,7 @@ import anndata as ad
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Cell type deconvolution of Visium spots with cell2location",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 
@@ -53,6 +53,7 @@ args = vars(parser.parse_args())
 # --- Arguments
 sample_id = args['sample_id']
 project_dir = args['project_dir']
+res_dir = args["res_dir"] or os.path.join(project_dir, "results")
 h5ad_dir = args['h5ad_dir']
 
 
@@ -76,7 +77,7 @@ sc_ref = 'miniatlas_GEO'
 level = 'major'
 
 # Apply the function
-model_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
+model_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'model', f'{level}_level')
 
 adata_file = f"reference_signatures/sc.h5ad"
 adata_ref = sc.read_h5ad(os.path.join(model_dir, adata_file))
@@ -120,7 +121,7 @@ adata_vis = adata_vis[:, ~adata_vis.var['MT_gene'].values]
 
 # --- Prepare for saving
 
-qc_dir = os.path.join(project_dir, 'results', '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level', sample_id)
+qc_dir = os.path.join(res_dir, '02_cell_type_mapping', 'deconvolution', 'visium', f'{level}_level', sample_id)
 os.makedirs(qc_dir, exist_ok=True)
 
 out_dir = os.path.join(qc_dir)
@@ -164,7 +165,7 @@ mod = cell2location.models.Cell2location(
     # the expected average cell abundance: tissue-dependent
     # hyper-prior which can be estimated from paired histology:
     N_cells_per_location=N_cells_per_location,
-    # hyperparameter controlling normalisation of
+    # hyperparameter controlling normalization of
     # within-experiment variation in RNA detection:
     detection_alpha=detection_alpha
 )
