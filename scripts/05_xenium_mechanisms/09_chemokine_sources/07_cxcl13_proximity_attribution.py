@@ -350,7 +350,7 @@ def load_sample(sample):
             zarr_path = zarr_persist
             print(f'  Reading existing zarr ({zarr_persist})')
         else:
-            tmp_root = tempfile.mkdtemp(prefix=f'cxcl13_prox_{sample}_', dir='/scratch/a56/sl6147/tmp')
+            tmp_root = tempfile.mkdtemp(prefix=f'cxcl13_prox_{sample}_')
             zarr_path = os.path.join(tmp_root, f'{sample}.zarr')
             print(f'  Unzipping {zip_path} -> {zarr_path}')
             shutil.unpack_archive(zip_path, zarr_path)

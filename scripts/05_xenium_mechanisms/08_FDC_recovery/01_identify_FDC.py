@@ -89,7 +89,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
 
 
 # --- Load data
-# adata.X holds log1p-transformed counts in the P08 Xenium objects.
+# adata.X holds log1p-transformed counts in the Xenium objects.
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample_id}.h5ad'))
 

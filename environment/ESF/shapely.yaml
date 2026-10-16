@@ -378,6 +378,5 @@ dependencies:
   - zstd=1.5.6
   - pip:
       - mycolorpy==1.5.1
-      - sophiesfunctions==0.0.5
       - upsetplot==0.9.0
 

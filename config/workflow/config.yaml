@@ -5,7 +5,7 @@
 # mapping) are not part of the workflow.
 
 res_dir: "results"
-h5ad_dir: "data/anndata_objects"        # override e.g. with --config h5ad_dir=data/anndata_objects_normfix
+h5ad_dir: "data/anndata_objects"
 
 sample_sheets:
   visium: "config/sample_sheet_visium.csv"

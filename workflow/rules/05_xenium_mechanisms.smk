@@ -25,7 +25,7 @@
 #   shutil.unpack_archive(zip, zarr)); every rule whose script reads the .zarr (07/03, 07/04, 09/02,
 #   09/05, 09/07, 11/02, fig_5B, fig_5E) takes it as input, so the scripts always find a complete
 #   .zarr and never unpack it themselves (07/03, 07/04, 11/02, 5B, 5E would unpack next to the .zip;
-#   09/02, 09/05, 09/07 into a hard-coded tmp dir, /scratch/a56/sl6147/tmp).
+#   09/02, 09/05, 09/07 into a temporary directory).
 
 X05_SCRIPTS = "scripts/05_xenium_mechanisms"
 X05 = RES + "/05_xenium_mechanisms"

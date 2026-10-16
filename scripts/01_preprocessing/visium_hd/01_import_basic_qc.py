@@ -6,7 +6,7 @@
 
 
 # --- Define environment
-# env: preprocessing
+# env: vis-hd
 
 # --- Load packages
 import argparse

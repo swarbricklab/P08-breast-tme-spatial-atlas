@@ -119,7 +119,7 @@ topo_colors = {
     'peritumoral':     '#fc8d59',
     'stromal_distant': '#74add1',
 }
-# P08 epithelial pathology labels (invasive / in_situ = cancer)
+# Epithelial pathology labels (invasive / in_situ = cancer)
 epi_categories = ['invasive', 'in_situ', 'benign', 'normal']
 epi_colors = {
     'invasive': '#b30000',

@@ -80,7 +80,7 @@ miniatlas.var_names = miniatlas.var[gene_symbol_name].astype(str)
 
 if miniatlas.raw is not None:
     miniatlas_renorm = miniatlas.raw.to_adata().copy()
-else:   # the P08 miniatlas_GEO.h5ad keeps the raw counts in layers['counts'] instead of .raw
+else:   # miniatlas_GEO.h5ad keeps the raw counts in layers['counts'] instead of .raw
     miniatlas_renorm = sc.AnnData(X=miniatlas.layers['counts'].copy(), obs=miniatlas.obs.copy(), var=miniatlas.var.copy())
 miniatlas_renorm.var_names = miniatlas_renorm.var[gene_symbol_name].astype(str)
 

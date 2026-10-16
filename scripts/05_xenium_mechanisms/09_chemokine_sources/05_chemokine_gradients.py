@@ -401,8 +401,7 @@ def extract_one_sample(sample):
             zarr_path = zarr_persist
             print(f'Reading existing zarr {zarr_path}')
         else:
-            tmp_root = tempfile.mkdtemp(prefix=f'chemokine_grad_{sample}_',
-                                        dir='/scratch/a56/sl6147/tmp')
+            tmp_root = tempfile.mkdtemp(prefix=f'chemokine_grad_{sample}_')
             zarr_path = os.path.join(tmp_root, f'{sample}.zarr')
             print(f'Unzipping {zip_path} -> {zarr_path}')
             shutil.unpack_archive(zip_path, zarr_path)

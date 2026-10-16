@@ -40,7 +40,7 @@ parser = argparse.ArgumentParser(description="Plot TLS model overview for Figure
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P12_LN_Vis", help="Sample shown in the figure")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
@@ -50,9 +50,6 @@ project_dir = args["project_dir"]
 h5ad_dir = args["h5ad_dir"]
 res_dir = args["res_dir"]
 sample_id = args["sample_id"]
-
-# Override sample_id
-sample_id = "P12_LN_Vis"
 
 print(f'Sample: {sample_id}')
 
@@ -162,8 +159,6 @@ if os.path.exists(geojson_file):
     print(f"Found geojson file: {geojson_file}")
     
     # Load the GeoJSON
-    # This needs to be set so geopandas can read the file
-    os.environ['PROJ_LIB'] = '/g/data/a56/conda/envs/usr/sl6147/share/proj'
     gdf = gpd.read_file(geojson_file)
     
     # Filter for GC annotations

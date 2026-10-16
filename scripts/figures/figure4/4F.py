@@ -41,7 +41,7 @@ parser = argparse.ArgumentParser(description="Plot HEV grouping overview for fig
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--project_dir", help="Project directory (root)")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P29_HD", help="Sample shown in the figure")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())
@@ -53,9 +53,6 @@ res_dir = args["res_dir"]
 h5ad_dir = args["h5ad_dir"]
 sample_id = args["sample_id"]
 project_dir = args["project_dir"]
-
-# Override sample_id
-sample_id = 'P29_HD'
 
 # --- Extract some info from the sample sheet
 

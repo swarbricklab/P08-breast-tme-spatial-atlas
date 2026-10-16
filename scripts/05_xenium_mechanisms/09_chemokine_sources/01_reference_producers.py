@@ -97,7 +97,7 @@ from helper_functions import save_multi_image
 
 
 # --- Load & prepare the miniatlas reference
-# The P08 miniatlas_GEO.h5ad already stores raw counts in layers['counts'] and log-norm
+# miniatlas_GEO.h5ad already stores raw counts in layers['counts'] and log-norm
 # (normalize_total 1e4 + log1p) in .X, with ensembl-id var_names + var['original_name'] gene
 # symbols. % expressing needs raw counts -> we use layers['counts'].
 
@@ -110,7 +110,7 @@ adata.var_names_make_unique()
 if 'counts' not in adata.layers:
     raise KeyError("miniatlas_GEO.h5ad has no layers['counts'] (raw counts) — % expressing "
                    "needs raw counts; regenerate the reference with raw counts stored.")
-adata.layers['log_norm'] = adata.X.copy()   # .X is already log-norm in the P08 object
+adata.layers['log_norm'] = adata.X.copy()   # .X is already log-norm
 
 if SUBSET_COL not in adata.obs:
     raise KeyError(f"{SUBSET_COL} not in obs; available: {list(adata.obs.columns)}")

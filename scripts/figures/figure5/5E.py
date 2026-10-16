@@ -41,7 +41,7 @@ parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad
 # Required
 parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P29_Xe5k", help="Sample shown in the figure")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
 parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
@@ -59,9 +59,6 @@ sample_id=args["sample_id"]
 
 res_dir = args['res_dir']
 project_dir = args['project_dir']
-
-# Override sample_id
-sample_id = 'P29_Xe5k'
 
 # --- Extract some info from the sample sheet
 # Use sample_sheet argument if provided, else default

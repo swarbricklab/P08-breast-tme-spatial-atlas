@@ -7,8 +7,6 @@
 #   * Figure S9D  - per-bin T:B cell-ratio distribution, split by zone
 #   * Figure S10G (support) - spatial overview of GC bins per sample
 #   * Figure S10H - number of discrete GCs per sample, coloured by clinical subtype
-#
-#       because P08 sample IDs are already publication-safe.
 
 
 # --- Define environment
@@ -169,7 +167,7 @@ for sample in sorted_samples:
 print(f'Loaded zonation outputs for {len(sorted_samples)} samples')
 
 
-# --- Micron crop + grey backdrop helpers (P08 x_centroid/y_centroid frame)
+# --- Micron crop + grey backdrop helpers (x_centroid/y_centroid frame)
 
 def square_crop(x, y, border=0.1):
     x0, x1 = float(x.min()), float(x.max())

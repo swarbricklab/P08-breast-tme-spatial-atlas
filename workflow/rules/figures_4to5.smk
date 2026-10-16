@@ -462,7 +462,7 @@ rule fig_5B:
         h5ad     = H5AD + "/xenium/P29_Xe5k.h5ad",
         sdata    = "data/spatialdata_objects/xenium/P29_Xe5k.zarr",     # unpacked by x05_unzip_spatialdata
         image    = "data/images/he/aligned_images/xenium/P29_Xe5k.ome.tif",
-        areas    = "resources/areas_of_interest/xenium/P29_Xe5k_cropped_HE_TLS_HEV_new.geojson",
+        areas    = "resources/areas_of_interest/xenium/P29_Xe5k_cropped_HE_TLS_HEV.geojson",
         sheet    = SHEETS["xenium"],
         metadata = F45_METADATA,
         colors   = F45_COLORS + "/transcript_colors.csv",

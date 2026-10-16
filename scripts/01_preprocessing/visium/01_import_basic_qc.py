@@ -5,7 +5,7 @@
 # Save results as .h5ad file
 
 # --- Define environment
-# env: preprocessing
+# env: spatial-pilot
 
 # --- Load packages
 import argparse

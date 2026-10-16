@@ -5,7 +5,7 @@
 
 
 # --- Define environment
-# env: preprocessing
+# env: vis-hd
 
 # --- Load packages
 import argparse
@@ -102,32 +102,6 @@ for resolution in resolutions:
 
         # Detect highly variable genes as well
         sc.pp.highly_variable_genes(adata, layer='log_norm', flavor='seurat', n_top_genes=2000)
-
-        # Optional: PCA, UMAP + clustering
-        # if '48' in resolution:
-
-            # --- PCA, UMAP + clustering
-
-            # seed = 42
-
-            # # create a new object
-            # pca_obj = ad.AnnData(adata.layers['scaled'])
-            # pca_obj.var = adata.var
-            # sc.tl.pca(pca_obj, n_comps = 50, zero_center = True, svd_solver='arpack', random_state = seed, return_info = True, use_highly_variable = True)
-
-            # adata.uns['pca'] = pca_obj.uns['pca']
-            # adata.obsm['X_pca'] = pca_obj.obsm['X_pca']
-            # adata.varm['PCs'] = pca_obj.varm['PCs']
-
-            # # neighbourhood graph
-            # sc.pp.neighbors(adata, n_pcs=50, random_state=seed)
-
-            # # calculate umap
-            # sc.tl.umap(adata, random_state=seed)
-
-            # # Leiden clustering
-            # sc.tl.leiden(adata, key_added='leiden', resolution=1)
-
 
     # --- Save output
 

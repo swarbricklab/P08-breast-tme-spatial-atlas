@@ -43,7 +43,7 @@ parser = argparse.ArgumentParser(description="Plot transcript locations in HEV r
 
 # Required
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
-parser.add_argument("--sample_id", help="Sample ID")
+parser.add_argument("--sample_id", default="P29_Xe5k", help="Sample shown in the figure")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
@@ -58,9 +58,6 @@ sample_id=args["sample_id"]
 
 res_dir = args['res_dir']
 project_dir = args['project_dir']
-
-# Override sample id
-sample_id = 'P29_Xe5k'
 
 
 # --- Extract some info from the sample sheet
@@ -141,7 +138,7 @@ adata.uns['spatial'][sample_id]['scalefactors'][f'tissue_{original_hires_key}_sc
 
 # --- Load the areas of interest
 
-filename = f'{sample_id}_cropped_HE_TLS_HEV_new.geojson'
+filename = f'{sample_id}_cropped_HE_TLS_HEV.geojson'
 
 resources_dir = os.path.join(project_dir, 'resources', 'areas_of_interest', 'xenium')
 areas = gpd.read_file(os.path.join(resources_dir, filename))

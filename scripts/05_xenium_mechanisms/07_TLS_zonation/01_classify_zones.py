@@ -129,7 +129,7 @@ if not sp.issparse(raw_counts):
 else:
     raw_counts = raw_counts.tocsr()
 
-# Micron coordinates (x_centroid/y_centroid); obsm['spatial'] is image/pixel space in P08
+# Micron coordinates (x_centroid/y_centroid); obsm['spatial'] is image/pixel space
 xy = adata.obs[['x_centroid', 'y_centroid']].values.astype(float)
 
 

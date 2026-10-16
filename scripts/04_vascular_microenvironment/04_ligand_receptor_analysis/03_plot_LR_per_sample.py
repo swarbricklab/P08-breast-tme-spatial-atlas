@@ -84,7 +84,7 @@ resolution = 'square_016um'
 
 adata = ad.read_h5ad(os.path.join(h5ad_dir, 'visium_hd', resolution, f'{sample_id}.h5ad'))
 
-# The P08 adata files have log-normalized data in the X layer (no separate layer)
+# The adata files have log-normalized data in the X layer (no separate layer)
 use_data = None
 
 

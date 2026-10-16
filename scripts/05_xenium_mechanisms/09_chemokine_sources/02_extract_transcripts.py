@@ -70,8 +70,7 @@ try:
         zarr_path = zarr_persist
         print(f'  Reading existing zarr ({zarr_persist})')
     else:
-        tmp_root = tempfile.mkdtemp(prefix=f'tx_extract_{sample_id}_',
-                                    dir='/scratch/a56/sl6147/tmp')
+        tmp_root = tempfile.mkdtemp(prefix=f'tx_extract_{sample_id}_')
         zarr_path = os.path.join(tmp_root, f'{sample_id}.zarr')
         print(f'  Unzipping {zip_path} -> {zarr_path}')
         shutil.unpack_archive(zip_path, zarr_path)

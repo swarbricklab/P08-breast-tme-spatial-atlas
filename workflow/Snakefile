@@ -1,4 +1,4 @@
-# P08 analysis workflow: runs the analysis scripts (03-05) and figure scripts in dependency order,
+# Analysis workflow: runs the analysis scripts (03-05) and figure scripts in dependency order,
 # starting from the published inputs (see config/workflow/config.yaml).
 #
 #   snakemake --profile config/profiles/nci_a56 -n            # dry run
@@ -7,7 +7,7 @@
 #   snakemake --profile config/profiles/nci_a56 all_xenium    # Xenium analyses and figures only
 #   snakemake --profile config/profiles/nci_a56 all_visium    # Visium / Visium HD analyses and figures (all_visium_long: + ligand-receptor)
 #
-# Run from the repository root with the snakemake env: /g/data/a56/conda/envs/snakemake_7.32.4
+# Run from the repository root with Snakemake 7.32.4.
 
 configfile: "config/workflow/config.yaml"
 

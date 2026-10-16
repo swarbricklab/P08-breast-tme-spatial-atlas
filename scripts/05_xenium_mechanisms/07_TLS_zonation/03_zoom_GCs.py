@@ -210,7 +210,7 @@ print(f'Loaded {len(tx_df)} transcripts for the top {len(top_genes)} GC genes', 
 
 # --- Xenium micron -> aligned-image (image_space) pixel transform
 #
-# In P08 the aligned .ome.tif and the image_space-transformed transcripts share the same
+# The aligned .ome.tif and the image_space-transformed transcripts share the same
 # pixel coordinate system (see scripts/figures/figure5/5B.py, 5E.py). GC bins come from
 # step 01 in Xenium micron coordinates (x_centroid/y_centroid frame). We map micron -> px
 # with the same affine spatialdata applies to the transcripts (native -> image_space), so

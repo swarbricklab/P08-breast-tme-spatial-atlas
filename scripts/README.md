@@ -28,8 +28,6 @@ Each subdirectory contains its own detailed README documenting the specific work
 
 - **`helper_functions.py`** - Shared utility functions used across multiple analysis scripts.
 
-- **`paths_for_testing.py`** - File path configurations for testing and development.
-
 ## Job Submission Scripts
 
 The repository includes bash scripts for running analyses on NCI Gadi HPC using the PBS job scheduler:

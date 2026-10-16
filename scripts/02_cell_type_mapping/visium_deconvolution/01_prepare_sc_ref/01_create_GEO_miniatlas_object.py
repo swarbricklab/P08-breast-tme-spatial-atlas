@@ -62,7 +62,7 @@ adata.obs = metadata.set_index(adata.obs_names)
 
 
 # --- Load mapping file
-# John's mapping file for mapping gene symbol to ensembl ids
+# Mapping file from gene symbols to Ensembl IDs
 subdir = 'ensembl_mapping'
 mapping_file = 'map.csv'
 mapping = pd.read_csv(os.path.join(miniatlas_path, subdir, mapping_file))

@@ -1,4 +1,4 @@
-# Parameters for submission scripts (submit_wolfpack.sh)
+# Parameters for the job submission scripts (scripts/submit_*.sh)
 
 # --- Directories
 

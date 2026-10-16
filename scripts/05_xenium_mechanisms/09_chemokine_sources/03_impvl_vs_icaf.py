@@ -304,7 +304,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
 
 
 # --- Load samples: keep only CAF + PVL cells (all genes), tag subset + TLS membership
-# in-TLS is a point-in-polygon against the P08 TLS region polygons, which are built in
+# in-TLS is a point-in-polygon against the TLS region polygons, which are built in
 # x_centroid/y_centroid (micron) space by 05/01_identify_TLS_regions.
 
 focus_subsets = list(FOCUS.keys())
@@ -316,7 +316,7 @@ for sample in samples:
     adata = ad.read_h5ad(os.path.join(h5ad_dir, 'xenium', f'{sample}.h5ad'))
     adata.obs_names = adata.obs_names.astype(str)
 
-    # subset label from the P08 label-transfer
+    # subset label from the label transfer
     adata.obs['subset'] = load_subset_labels(sample).reindex(adata.obs_names).values
 
     # keep only the stromal context (CAF + PVL) to bound memory
