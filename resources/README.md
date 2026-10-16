@@ -26,15 +26,13 @@ Cell type reference information:
 Single-cell reference data for cell type deconvolution:
 
 **Data retrieval:**
-The single-cell reference data is a compressed archive from GEO ([GSE176078](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176078)), tracked with DVC (see [Getting the data](../README.md#getting-the-data)). Pull and extract it:
+The single-cell reference data is a compressed archive from GEO ([GSE176078](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176078)), tracked with DVC (see [Getting the data](../README.md#getting-the-data)). The workflow (rule `s02_build_sc_ref`, see [../workflow/README.md](../workflow/README.md)) extracts it and builds the reference object, so only the pull is needed:
 
 ```bash
 dvc pull resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc
-cd resources/sc_ref
-tar -xzf GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz    # creates Wu_etal_2021_BRCA_scRNASeq/
 ```
 
-Without DVC, the same file can be downloaded directly from GEO (then extract as above):
+Without DVC, the same file can be downloaded directly from GEO:
 
 ```bash
 cd resources/sc_ref
@@ -53,7 +51,7 @@ wget "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE176078&format=file&file=
   - `genes.tsv` - Gene mapping from the original GEO dataset
 
 **Usage:**
-The raw count matrices are processed into an AnnData object using [01_create_GEO_miniatlas_object.py](../scripts/02_cell_type_mapping/visium_deconvolution/01_prepare_sc_ref/01_create_GEO_miniatlas_object.py), which creates `h5ad_dir/sc_ref/miniatlas_GEO.h5ad` for downstream cell type deconvolution and label transfer.
+The workflow (rule `s02_build_sc_ref`) extracts the archive into `Wu_etal_2021_BRCA_scRNASeq/` and processes the raw count matrices into an AnnData object with [01_create_GEO_miniatlas_object.py](../scripts/02_cell_type_mapping/visium_deconvolution/01_prepare_sc_ref/01_create_GEO_miniatlas_object.py), which creates `h5ad_dir/sc_ref/miniatlas_GEO.h5ad` for downstream cell type deconvolution and label transfer.
 
 ### probe_set/
 

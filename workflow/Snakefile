@@ -4,6 +4,7 @@
 #   snakemake --profile config/profiles/nci_a56 -n            # dry run
 #   snakemake --profile config/profiles/nci_a56               # everything except the long steps
 #   snakemake --profile config/profiles/nci_a56 all_long      # also the long steps
+#   snakemake --profile config/profiles/nci_a56 all_no_images # everything that does not need the H&E images (data/images)
 #   snakemake --profile config/profiles/nci_a56 all_xenium    # Xenium analyses and figures only
 #   snakemake --profile config/profiles/nci_a56 all_visium    # Visium / Visium HD analyses and figures (all_visium_long: + ligand-receptor)
 #
@@ -12,6 +13,7 @@
 configfile: "config/workflow/config.yaml"
 
 include: "rules/common.smk"
+include: "rules/02_sc_reference.smk"
 include: "rules/03_TLS_niche_discovery.smk"
 include: "rules/04_vascular_microenvironment.smk"
 include: "rules/05_xenium_mechanisms.smk"
@@ -54,3 +56,32 @@ rule all_visium:
 rule all_visium_long:
     input:
         [t for t in _flat(TARGETS) if _is_visium(t)] + list(_flat(TARGETS_LONG))
+
+# Everything in `all` that does not need the aligned H&E images (data/images, ~400 GB to pull). Rules
+# reading from data/images/, and any rule using their outputs, are found from the rule inputs; their
+# targets (figure panels and zoom plots drawn on the H&E) are left out.
+import re as _re
+
+def _pattern_re(p):
+    return _re.compile("^" + _re.sub(r"\\\{[^}]*\\\}", ".+", _re.escape(str(p))) + "$")
+
+def _image_rules():
+    rules_ = list(workflow.rules)
+    img = {r.name for r in rules_ if any("data/images/" in str(f) for f in r.input if not callable(f))}
+    changed = True
+    while changed:
+        changed = False
+        outs = [_pattern_re(o) for r in rules_ if r.name in img for o in r.output]
+        for r in rules_:
+            if r.name not in img and any(rx.match(_re.sub(r"\{[^}]*\}", "x", str(f)))
+                                         for f in r.input if not callable(f) for rx in outs):
+                img.add(r.name)
+                changed = True
+    return img
+
+_IMAGE_RULES = _image_rules()
+_IMAGE_OUT = [_pattern_re(o) for r in workflow.rules if r.name in _IMAGE_RULES for o in r.output]
+
+rule all_no_images:
+    input:
+        [t for t in _flat(TARGETS) if not any(rx.match(t) for rx in _IMAGE_OUT)]
