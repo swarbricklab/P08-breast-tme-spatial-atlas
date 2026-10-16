@@ -25,7 +25,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Identify endothelial-high spots, the background used to filter the HEV signature",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

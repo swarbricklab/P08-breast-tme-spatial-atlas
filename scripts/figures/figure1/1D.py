@@ -38,7 +38,7 @@ from helper_functions import auto_crop_scanpy, generate_color_variations
 # --- Arguments
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 1d: spatial overviews of five selected samples",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

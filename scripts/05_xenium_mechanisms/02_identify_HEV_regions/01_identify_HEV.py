@@ -33,19 +33,15 @@ sc.set_figure_params(figsize=(8, 8), fontsize=20)
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Identify HEV niches in Xenium data from an HEV gene signature score",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
 
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
-parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--res_dir", help="Path to results directory")
-parser.add_argument("--seed", help="Seed for reproducibility", type=int)
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 parser.add_argument("--hev_high_thr", help="HEV score threshold for core cells", type=float, default=0.6)
 parser.add_argument("--hev_low_thr", help="HEV score threshold for expansion candidates", type=float, default=0.2)
@@ -669,7 +665,7 @@ cell_to_niche = pd.merge(cell_to_niche, adata.obs[['HEV_score']], left_index=Tru
 hev_niches = hev_niches.drop_duplicates(subset=['niche_id']).reset_index(drop=True)
 
 # Sort by numerical part of the niche id
-hev_niches['niche_id'] = hev_niches['niche_id'].str.extract('(\d+)').astype(int)
+hev_niches['niche_id'] = hev_niches['niche_id'].str.extract(r'(\d+)').astype(int)
 hev_niches = hev_niches.sort_values(by='niche_id')
 
 hev_niches['niche_id'] = 'HEV_' + hev_niches['niche_id'].astype(str)

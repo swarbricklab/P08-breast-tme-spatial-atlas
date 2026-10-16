@@ -26,7 +26,7 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Integrate endothelial-high spots across samples into one object",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 

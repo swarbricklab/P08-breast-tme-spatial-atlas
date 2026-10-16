@@ -35,18 +35,14 @@ sc.set_figure_params(figsize=(8, 8), fontsize=20)
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Fig. 5e: SPP1 transcripts in HEV regions",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
-parser.add_argument("--raw_data_dir", help="Path to raw data")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")
 parser.add_argument("--sample_id", default="P29_Xe5k", help="Sample shown in the figure")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
-parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--res_dir", help="Path to results directory")
-parser.add_argument("--seed", help="Seed for reproducibility", type=int)
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 
 args = vars(parser.parse_args())

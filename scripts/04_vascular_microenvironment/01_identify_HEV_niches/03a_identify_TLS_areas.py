@@ -33,7 +33,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Group contiguous bins with high TLS zone (T or B cell zone) scores into TLS areas",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

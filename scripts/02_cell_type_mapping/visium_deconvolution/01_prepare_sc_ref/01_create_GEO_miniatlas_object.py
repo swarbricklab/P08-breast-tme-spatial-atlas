@@ -18,7 +18,7 @@ import anndata as ad
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Build the scRNA-seq reference AnnData object (raw counts) from GEO GSE176078",
 								 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

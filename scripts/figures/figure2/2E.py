@@ -24,7 +24,7 @@ mpl.rcParams['pdf.fonttype'] = 42  # Use Type 42 (TrueType) fonts in PDF files
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Fig. 2e: deconvolution results per TLS cluster",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

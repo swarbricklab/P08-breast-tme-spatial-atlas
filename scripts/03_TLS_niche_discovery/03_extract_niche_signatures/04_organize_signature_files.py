@@ -15,7 +15,7 @@ import pandas as pd
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Collect the filtered niche signatures into one directory",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 

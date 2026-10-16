@@ -28,7 +28,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Distance from each HEV to the nearest TLS area",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

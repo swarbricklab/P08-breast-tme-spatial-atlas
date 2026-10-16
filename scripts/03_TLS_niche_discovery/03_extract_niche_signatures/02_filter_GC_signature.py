@@ -28,7 +28,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 # --- Arguments
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Filter the germinal center signature against expression in epithelial spots",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 

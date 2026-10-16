@@ -27,7 +27,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Group spatially contiguous TLS-high spots into TLS regions",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

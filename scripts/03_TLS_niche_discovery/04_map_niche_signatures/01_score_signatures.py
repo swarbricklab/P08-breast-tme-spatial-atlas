@@ -26,7 +26,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Score Visium spots for the TLS niche signatures",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

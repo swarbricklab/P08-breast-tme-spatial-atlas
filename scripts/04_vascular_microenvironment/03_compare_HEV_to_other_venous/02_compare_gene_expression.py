@@ -31,7 +31,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Differential expression between HEV and non-HEV venous vessel bins",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 

@@ -30,7 +30,7 @@ sc.settings.verbosity = 3
 mpl.rcParams['pdf.fonttype'] = 42
 
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Ligand-receptor analysis around HEVs with stLearn",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

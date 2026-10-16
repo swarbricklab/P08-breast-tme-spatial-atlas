@@ -30,7 +30,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Group spatially contiguous spots with high niche scores (e.g. germinal centers)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

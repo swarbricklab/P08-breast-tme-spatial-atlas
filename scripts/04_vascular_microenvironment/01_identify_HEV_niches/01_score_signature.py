@@ -22,7 +22,7 @@ import sys
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Score Visium HD bins for the HEV and TLS zone signatures",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

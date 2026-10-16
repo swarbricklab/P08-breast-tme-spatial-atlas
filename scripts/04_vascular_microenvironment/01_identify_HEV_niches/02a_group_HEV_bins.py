@@ -31,7 +31,7 @@ sc.settings.verbosity = 3
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Group contiguous HEV-high bins into individual HEVs",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

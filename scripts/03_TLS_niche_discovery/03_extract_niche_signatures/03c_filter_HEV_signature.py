@@ -23,7 +23,7 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Import Visium unfiltered data & plot",
+parser = argparse.ArgumentParser(description="Filter the HEV signature against expression in endothelial-high spots",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 

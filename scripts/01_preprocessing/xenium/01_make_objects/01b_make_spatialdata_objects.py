@@ -20,7 +20,7 @@ from spatialdata_io import xenium
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Create Xenium SpatialData objects with segmentation masks and transcript locations",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required
@@ -29,7 +29,6 @@ parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files
 parser.add_argument("--sample_id", help="Sample ID")
 parser.add_argument("--project_dir", help="Path to the root of the project directory")
 parser.add_argument("--outs_path", help="Path to spaceranger 'outs'")
-parser.add_argument("--use_data", help="Which data to use (log_norm or SCT)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet csv file")
 parser.add_argument("--res_dir", help="Path to results directory")
 

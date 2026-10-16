@@ -36,7 +36,7 @@ import anndata as ad
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Cell type deconvolution of Visium spots with cell2location",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 

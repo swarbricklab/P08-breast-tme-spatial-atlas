@@ -36,7 +36,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Cell type abundance near HEV niches and its correlation with endothelial SPP1",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

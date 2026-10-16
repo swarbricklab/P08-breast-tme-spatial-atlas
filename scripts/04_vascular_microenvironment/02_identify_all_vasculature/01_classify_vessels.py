@@ -35,7 +35,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 # --- Argparse arguments
 
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Segment vessels and classify them by dominant deconvolved endothelial cell type",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--res_dir", help="Path to results directory")
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad output files")

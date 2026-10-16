@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Try out label transfer from miniatlas for quick annotation of xenium data
+# Transfer cell type labels from the scRNA-seq reference (miniatlas) to Xenium cells
 # Use tangram for label transfer
 
 
@@ -23,7 +23,7 @@ import anndata as ad
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & save as .h5ad file",
+parser = argparse.ArgumentParser(description="Transfer cell type labels from the scRNA-seq reference to Xenium cells with Tangram",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

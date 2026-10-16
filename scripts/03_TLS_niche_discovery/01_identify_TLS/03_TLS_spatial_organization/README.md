@@ -17,7 +17,7 @@ This is implemented once in the shared helper `discrete_tls.py` and reused by `0
 |---|---|---|---|
 | `01_TLS_distances_topology.py` | spatial-pilot | cohort (`-s` / all) | `distances_per_TLS.csv` |
 | `02_TLS_clustering.py` | spatial-pilot | cohort (`-s` / all) | `clustering_per_TLS.csv`, `clustering_per_sample.csv` |
-| `03_TLS_number_size_overview.py` | spatial-pilot | cohort | overview PDF (**Fig S3B**) + summary CSVs |
+| `03_TLS_number_size_overview.py` | spatial-pilot | cohort (`-s` / all) | overview PDF (**Fig S3B**) + summary CSVs |
 | `04_TLS_per_sample_plots.py` | spatial-pilot | cohort (`-s` / all) | per-sample spatial PDF |
 | `discrete_tls.py` | — | helper (imported) | — |
 

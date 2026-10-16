@@ -19,7 +19,7 @@ import numpy as np
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="Score Visium spots with the TLS model of Andersson et al. (2021)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

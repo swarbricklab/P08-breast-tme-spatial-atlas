@@ -31,7 +31,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Import Visium data & do basic QC",
+parser = argparse.ArgumentParser(description="PVL composition across distance bins from each vessel type",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 

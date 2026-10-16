@@ -83,7 +83,10 @@ parser = argparse.ArgumentParser(
     description="Cohort overview of TLS number, size, clustering and topology",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
+parser.add_argument("-s", "--samples", nargs="*", type=str, default=None,
+                    help="List of section_ids (default: all in the sample sheet)")
 parser.add_argument("--project_dir", required=True, help="Project directory (root)")
+parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad files (not used; accepted like the other scripts)")
 parser.add_argument("-r", "--res_dir", help="Path to results directory")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 parser.add_argument("--TLS_threshold", type=float, default=0.01)
@@ -104,6 +107,8 @@ else:
     sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_visium.csv')
 
 sample_sheet = pd.read_csv(sample_sheet_path)
+if args["samples"]:
+    sample_sheet = sample_sheet[sample_sheet['section_id'].isin(args["samples"])]
 tissue_metadata = pd.read_csv(os.path.join(project_dir, 'resources', 'tissue_metadata.csv'))
 sample_meta = pd.merge(
     sample_sheet, tissue_metadata[['tissue_id', 'clinical_subtype']], on='tissue_id',
