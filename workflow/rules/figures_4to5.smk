@@ -1,7 +1,7 @@
 # Rules for scripts/figures/figure4-5: one rule per manuscript panel (Fig_4A ... Fig_5H).
 #   Xenium panels (4A-4E, 4K, 5A-5C, 5E-5H) read the Xenium objects + 05_xenium_mechanisms outputs.
 #   Visium HD panels (4F-4J, 5D) read 04_vascular_microenvironment outputs, incl. the Visium HD
-#   ligand-receptor analysis (up to ~4 h per sample), so their figures go into TARGETS_LONG.
+#   ligand-receptor analysis.
 #
 # Multi-sample scripts get --samples (see scripts/run_multi_sample_job.sh); 4F, 5B and 5E are set up
 # for a single sample (hard-coded in the script) and get --sample_id (see run_single_sample_job.sh).
@@ -261,7 +261,7 @@ rule fig_4F:
         > {log} 2>&1
         """
 
-TARGETS_LONG += rules.fig_4F.output
+TARGETS += rules.fig_4F.output
 
 
 # ── 4G · key LR interactions, TLS-HEVs vs stromal HEV-like (Visium HD) ──────
@@ -290,7 +290,7 @@ rule fig_4G:
         > {log} 2>&1
         """
 
-TARGETS_LONG += rules.fig_4G.output
+TARGETS += rules.fig_4G.output
 
 
 # ── 4H · top LR pairs enriched in TLS-HEVs (Visium HD) ───────────────────────
@@ -321,7 +321,7 @@ rule fig_4H:
         > {log} 2>&1
         """
 
-TARGETS_LONG += rules.fig_4H.output
+TARGETS += rules.fig_4H.output
 
 
 # ── 4I · lymphotoxin system, TLS-HEVs vs stromal HEVs (Visium HD) ───────────
@@ -352,7 +352,7 @@ rule fig_4I:
         > {log} 2>&1
         """
 
-TARGETS_LONG += rules.fig_4I.output
+TARGETS += rules.fig_4I.output
 
 
 # ── 4J · cell types in spots sending LTB signals to HEVs (Visium HD) ────────
@@ -386,7 +386,7 @@ rule fig_4J:
         > {log} 2>&1
         """
 
-TARGETS_LONG += rules.fig_4J.output
+TARGETS += rules.fig_4J.output
 
 
 # ── 4K · cell type-specific expression inside TLS (Xenium) ───────────────────
@@ -548,7 +548,7 @@ rule fig_5D:
         > {log} 2>&1
         """
 
-TARGETS_LONG += rules.fig_5D.output
+TARGETS += rules.fig_5D.output
 
 
 # ── 5E · SPP1 transcripts in HEV regions, P29_Xe5k (Xenium) ──────────────────

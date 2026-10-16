@@ -2,11 +2,10 @@
 # starting from the published inputs (see config/workflow/config.yaml).
 #
 #   snakemake --profile config/profiles/nci_a56 -n            # dry run
-#   snakemake --profile config/profiles/nci_a56               # everything except the long steps
-#   snakemake --profile config/profiles/nci_a56 all_long      # also the long steps
+#   snakemake --profile config/profiles/nci_a56               # everything
 #   snakemake --profile config/profiles/nci_a56 all_no_images # everything that does not need the H&E images (data/images)
 #   snakemake --profile config/profiles/nci_a56 all_xenium    # Xenium analyses and figures only
-#   snakemake --profile config/profiles/nci_a56 all_visium    # Visium / Visium HD analyses and figures (all_visium_long: + ligand-receptor)
+#   snakemake --profile config/profiles/nci_a56 all_visium    # Visium / Visium HD analyses and figures
 #
 # Run from the repository root with Snakemake 7.32.4.
 
@@ -24,10 +23,6 @@ rule all:
     input:
         TARGETS
 
-rule all_long:
-    input:
-        TARGETS + TARGETS_LONG
-
 # Xenium analyses and Xenium figure panels only (05_xenium_mechanisms + Figs. 4a–e,k and 5a–c,e–h)
 def _flat(x):
     for i in x:
@@ -43,19 +38,17 @@ rule all_xenium:
         [t for t in _flat(TARGETS) if "/05_xenium_mechanisms/" in t]
         + [RES + "/figures/Fig_" + f + ".pdf" for f in XEN_FIGS]
 
-# Visium and Visium HD analyses (03, 04) and their figure panels (Figs. 1–3, supplementary overviews);
-# all_visium_long adds the Visium HD ligand-receptor analysis (stLearn, up to ~4 h per sample) and the panels built on it
+# Visium and Visium HD analyses (03, 04) and their figure panels (Figs. 1, 3, 4f–j and 5d, supplementary overviews)
+VIS_HD_FIGS = ["4F", "4G", "4H", "4I", "4J", "5D"]
+
 def _is_visium(t):
     return ("/03_TLS_niche_discovery/" in t or "/04_vascular_microenvironment/" in t
-            or "/figures/Fig_1" in t or "/figures/Fig_2" in t or "/figures/Fig_3" in t or "/extended_data/" in t)
+            or "/figures/Fig_1" in t or "/figures/Fig_2" in t or "/figures/Fig_3" in t or "/extended_data/" in t
+            or any("/figures/Fig_" + f + "." in t for f in VIS_HD_FIGS))
 
 rule all_visium:
     input:
         [t for t in _flat(TARGETS) if _is_visium(t)]
-
-rule all_visium_long:
-    input:
-        [t for t in _flat(TARGETS) if _is_visium(t)] + list(_flat(TARGETS_LONG))
 
 # Everything in `all` that does not need the aligned H&E images (data/images, ~400 GB to pull). Rules
 # reading from data/images/, and any rule using their outputs, are found from the rule inputs; their

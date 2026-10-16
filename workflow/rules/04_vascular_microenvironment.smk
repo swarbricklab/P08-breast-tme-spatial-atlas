@@ -5,7 +5,7 @@
 #   03 compare HEV vs venous    - microenvironment, PVL association (per sample); DEGs (all samples)
 #   04 ligand-receptor (stLearn) - run per sample at 0 µm (HEV bins only) and 25 µm (HEV + perivascular),
 #                                  aggregate per bin size, per-sample plots and LTB composition (25 µm).
-#                                  stLearn takes up to ~4 h per sample (P29_HD, 25 µm), so step 04 is in TARGETS_LONG.
+#                                  stLearn takes up to ~4 h per sample (P29_HD, 25 µm, 16 CPUs).
 #
 # All scripts read and write results under --res_dir (config res_dir). Niche signatures come from the published
 # list in resources/gene_lists/TLS_niche_signatures/niche_signatures.csv (01_score_signature.py:
@@ -610,7 +610,7 @@ TARGETS += expand(rules.h04_compare_microenvironment.output, sample=HD_SAMPLES)
 TARGETS += rules.h04_compare_gene_expression.output
 TARGETS += expand(rules.h04_compare_PVL_association.output, sample=HD_SAMPLES)
 
-TARGETS_LONG += expand(rules.h04_run_LR_analysis_stlearn.output, sample=HD_SAMPLES, lr_bin=LR_BINS)
-TARGETS_LONG += expand(rules.h04_analyze_LR_all.output, lr_bin=LR_BINS)
-TARGETS_LONG += expand(rules.h04_plot_LR_per_sample.output, sample=HD_SAMPLES, lr_bin="25")
-TARGETS_LONG += rules.h04_check_composition_LTB_signaling_bins.output
+TARGETS += expand(rules.h04_run_LR_analysis_stlearn.output, sample=HD_SAMPLES, lr_bin=LR_BINS)
+TARGETS += expand(rules.h04_analyze_LR_all.output, lr_bin=LR_BINS)
+TARGETS += expand(rules.h04_plot_LR_per_sample.output, sample=HD_SAMPLES, lr_bin="25")
+TARGETS += rules.h04_check_composition_LTB_signaling_bins.output

@@ -18,20 +18,18 @@ A Snakemake workflow that runs the analysis scripts of steps 03–05 and the fig
 
 ```bash
 snakemake --profile config/profiles/nci_a56 -n              # dry run
-snakemake --profile config/profiles/nci_a56                 # everything except the ligand-receptor analysis
-snakemake --profile config/profiles/nci_a56 all_long        # everything
+snakemake --profile config/profiles/nci_a56                 # everything
 snakemake --profile config/profiles/nci_a56 results/figures/Fig_2I.pdf --forcerun fig_2I   # one panel, remade
 ```
 
 | Target | What it runs |
 |---|---|
-| `all` | all analyses and figures, except the Visium HD ligand-receptor analysis |
-| `all_long` | `all` plus the ligand-receptor analysis (stLearn, up to ~4 h per sample on 16 CPUs) and the panels built on it |
+| `all` | all analyses and figures |
 | `all_no_images` | `all` without the steps that need the aligned H&E images |
 | `all_xenium` | Xenium analyses and figure panels only |
-| `all_visium` / `all_visium_long` | Visium and Visium HD analyses and figures, without / with the ligand-receptor analysis |
+| `all_visium` | Visium and Visium HD analyses and figure panels only |
 
-Any single output can be a target; figure panels are `results/figures/Fig_<panel>.pdf`, made by rules named `fig_<panel>`. Outputs go to `results/`. Rule logs are `logs/workflow/<rule>/<sample>.log` (per-sample rules) or `logs/workflow/<rule>.log`, in `logs/workflow_<res_dir>/` instead when `res_dir` is changed; scheduler logs are in `logs/joblogs/`.
+The Visium HD ligand-receptor analysis (stLearn, up to ~4 h per sample on 16 CPUs) is part of `all`; to skip it and the panels built on it, add `--omit-from h04_run_LR_analysis_stlearn`. Any single output can be a target; figure panels are `results/figures/Fig_<panel>.pdf`, made by rules named `fig_<panel>`. Outputs go to `results/`. Rule logs are `logs/workflow/<rule>/<sample>.log` (per-sample rules) or `logs/workflow/<rule>.log`, in `logs/workflow_<res_dir>/` instead when `res_dir` is changed; scheduler logs are in `logs/joblogs/`.
 
 Most jobs need under 50 GB of memory and finish in minutes. The largest requests are 168 GB (`h04_calculate_vessel_distances`) and 124 GB (`v03_filter_GC_signature`), and the longest job is the stLearn analysis of P29_HD (~4 h).
 
