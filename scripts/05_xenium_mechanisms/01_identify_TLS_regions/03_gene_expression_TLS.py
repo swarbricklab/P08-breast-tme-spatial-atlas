@@ -72,7 +72,7 @@ classif_file = f'{sc_ref}_subset_classifications.csv'
 classif_df = pd.read_csv(os.path.join(classif_dir, classif_file))
 
 
-# --- Load plotting colours
+# --- Load plotting colors
 
 color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
 color_dict = pd.read_csv(os.path.join(color_dir, f'{sc_ref}_major_colors.csv'),
@@ -195,12 +195,12 @@ for level in levels:
     auto_resize_heatmap(heatmap_ax, space_per_dot=0.04, width_ratio=0.7)
     heatmap_ax.set_ylim(len(heatmap_ax.get_yticks()), 0)
 
-    # Position the colourbar to the right of the heatmap
+    # Position the colorbar to the right of the heatmap
     ax_pos = heatmap_ax.get_position()
     cbar_ax.set_position([ax_pos.x1 + 0.03, ax_pos.y0, 0.04 * 3.5, 0.04 * 0.7])
     cbar_ax.set_title(cbar_ax.get_title().replace('Mean', 'Scaled'), fontsize=8)
 
-    # Cell-count barplot on top, coloured by major class
+    # Cell-count barplot on top, colored by major class
     cell_counts = adata_sub.obs[level].value_counts().reindex(cells_sorted)
     color_list = [color_dict.get(get_major(cell, level), 'lightgrey') for cell in cells_sorted]
 
@@ -229,13 +229,13 @@ for level in levels:
                       for label in heatmap_ax.get_xticklabels()]
         heatmap_ax.set_xticklabels(new_labels)
 
-    # Colour legend for the major classes present
+    # Color legend for the major classes present
     major_present = [m for m in major_cell_types_sorted
                      if m in {get_major(c, level) for c in cells_sorted}]
     handles = [mpatches.Patch(facecolor=color_dict[m], label=m, edgecolor='black', linewidth=0.8)
                for m in major_present if m in color_dict]
-    # Place the legend above the colourbar (left edges aligned), growing upward, so it
-    # never overlaps the colourbar or its title.
+    # Place the legend above the colorbar (left edges aligned), growing upward, so it
+    # never overlaps the colorbar or its title.
     fig.canvas.draw()
     cbar_bbox = fig.transFigure.inverted().transform(
         cbar_ax.get_tightbbox(fig.canvas.get_renderer()))
@@ -246,7 +246,7 @@ for level in levels:
                      frameon=False, handlelength=0.8, fontsize=8)
 
     # Place the suptitle above the topmost element on the figure (heatmap, cell-count
-    # bar, colourbar or legend), centred over the heatmap. va='bottom' anchors the text
+    # bar, colorbar or legend), centered over the heatmap. va='bottom' anchors the text
     # bottom at that edge so the title grows upward and never overlaps the plot or legend.
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()

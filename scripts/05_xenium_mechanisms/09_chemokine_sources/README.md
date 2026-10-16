@@ -20,7 +20,7 @@ Identify the cellular **sources of the TLS-organizing chemokines** (CCL19, CCL21
 
 **`04_zone_expression_density.py`** — CP10K CXCL13 & CCL19 expression density per mm² across B cell zone / T cell zone / non-TLS; two-sided paired Wilcoxon (n=6) (Extended Data Fig. 9e).
 
-**`05_chemokine_gradients.py`** — spatial gradients of CCL19/CCL21 transcript density and imPVL s1 / iCAF s2 cell density vs distance from the HEV centre (within the T cell zone) and from the T-zone edge into non-TLS (Extended Data Fig. 9h). `--replot_only` regenerates the figure from the per-sample distance-profile CSVs written by a previous full run, skipping the slow SpatialData extraction — use it for plot-only changes once the extraction has already been done.
+**`05_chemokine_gradients.py`** — spatial gradients of CCL19/CCL21 transcript density and imPVL s1 / iCAF s2 cell density vs distance from the HEV center (within the T cell zone) and from the T-zone edge into non-TLS (Extended Data Fig. 9h). `--replot_only` regenerates the figure from the per-sample distance-profile CSVs written by a previous full run, skipping the slow SpatialData extraction — use it for plot-only changes once the extraction has already been done.
 
 **`06_reference_producer_corr.py`** — per-50 µm-bin partial Spearman correlation of candidate-producer cell density vs CCL19/CCL21 transcript density (covariate = total cells per bin), within the T cell zone; per-sample coefficients tested vs 0 by Wilcoxon (n=6) (Extended Data Fig. 9i).
 

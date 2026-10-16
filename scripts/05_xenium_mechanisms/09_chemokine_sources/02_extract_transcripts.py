@@ -2,7 +2,7 @@
 
 # --- Aim
 # Extract raw per-cell transcript counts for a list of genes (CXCL13, CCL19, CCL21, TSPAN7)
-# from the Xenium SpatialData object. The AnnData `filtered_counts` layer is library-normalised
+# from the Xenium SpatialData object. The AnnData `filtered_counts` layer is library-normalized
 # to 10000 / cell (CP10K), NOT raw integer counts, so real integer counts come from the
 # SpatialData transcripts table. Outputs one CSV per (sample, gene) with the per-cell integer
 # transcript count. These CSVs feed the downstream source-attribution scripts (04-07).

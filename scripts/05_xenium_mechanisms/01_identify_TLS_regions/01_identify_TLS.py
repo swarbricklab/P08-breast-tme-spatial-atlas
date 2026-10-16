@@ -317,7 +317,7 @@ if plot_tls_polygons:
 # Add another ax next to it
 ax = axs[n+1]
 
-# Plot all cells in light grey
+# Plot all cells in light gray
 sc.pl.spatial(adata, color=[annotation_key], title=f'{sample_id} ({subtype})', size=0.5,
             crop_coord=crop_coord, ax=ax, palette=['lightgray'], na_in_legend=False, legend_loc=None, alpha_img=0.3)
 

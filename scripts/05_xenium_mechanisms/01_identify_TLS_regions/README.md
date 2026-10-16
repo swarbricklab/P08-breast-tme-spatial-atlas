@@ -1,6 +1,6 @@
 # 01_identify_TLS_regions
 
-Segment **tertiary lymphoid structure (TLS)** regions from dense spatial co-clustering of T and B cells, then characterise their cellular composition and gene expression. `01_identify_TLS.py` is the upstream segmentation step (its TLS regions feed workflows 03, 07, 08, 09 and 11, and are read directly by 02 and 06); `02` and `03` are cohort summaries that reproduce **Extended Data Fig. 7b–d**.
+Segment **tertiary lymphoid structure (TLS)** regions from dense spatial co-clustering of T and B cells, then characterize their cellular composition and gene expression. `01_identify_TLS.py` is the upstream segmentation step (its TLS regions feed workflows 03, 07, 08, 09 and 11, and are read directly by 02 and 06); `02` and `03` are cohort summaries that reproduce **Extended Data Fig. 7b–d**.
 
 | Script | Env | Mode | Figure |
 |---|---|---|---|

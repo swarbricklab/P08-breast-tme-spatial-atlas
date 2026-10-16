@@ -44,7 +44,7 @@ parser.add_argument("--sample_sheet", default=None, help="Path to sample sheet C
 # Methods parameters (hard-coded defaults; exposed for discoverability, never required)
 parser.add_argument("--leiden_res",   type=float, default=1.0,  help="Leiden clustering resolution")
 parser.add_argument("--n_pcs",        type=int,   default=30,   help="Number of PCA components")
-parser.add_argument("--n_neighbors",  type=int,   default=15,   help="kNN neighbours for the graph")
+parser.add_argument("--n_neighbors",  type=int,   default=15,   help="kNN neighbors for the graph")
 parser.add_argument("--scale_max",    type=float, default=10.0, help="Clip value for sc.pp.scale")
 parser.add_argument("--cd3_min_rank", type=int,   default=1000, help="Candidate FDC cluster must have CD3E and CD3G ranked > this (depleted)")
 parser.add_argument("--max_cr_sum",   type=int,   default=250,  help="Max combined CR1+CR2 rank for FDC call")
@@ -218,7 +218,7 @@ fdc_clusters = []
 if candidate_scores:
     # Pick ALL CD3-depleted clusters that pass the CR1+CR2 rank-sum and CR2-pct
     # thresholds. Selecting all passing clusters (rather than only the single best)
-    # keeps samples that harbour multiple discrete FDC clusters correctly counted.
+    # keeps samples that harbor multiple discrete FDC clusters correctly counted.
     sorted_clusters = sorted(candidate_scores.items(), key=lambda kv: kv[1][0])
     rejected = []
     for cluster, scores in sorted_clusters:
@@ -266,7 +266,7 @@ deg_df.to_csv(os.path.join(csv_dir, f'{sample_id}_Tfh_subcluster_DEGs.csv'), ind
 
 ctx = f'{sample_id} ({subtype}) - {n_tfh} Tfh cells, leiden res={leiden_res}, FDC clusters={fdc_clusters or "none"}'
 
-# Plot 1: UMAP coloured by leiden
+# Plot 1: UMAP colored by leiden
 sc.pl.umap(tfh, color='leiden', legend_loc='on data', show=False, title=f'{sample_id} ({subtype})\nTfh leiden')
 plt.suptitle(ctx, y=1.05, fontweight='bold')
 

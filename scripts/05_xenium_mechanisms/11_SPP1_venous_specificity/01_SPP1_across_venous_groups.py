@@ -99,7 +99,7 @@ sys.path.append(os.path.join(project_dir, 'scripts', '05_xenium_mechanisms'))
 import plotting_functions
 
 
-# --- Group / colour conventions
+# --- Group / color conventions
 
 # Order from "no expected SPP1" → "highest expected SPP1"
 group_order = [
@@ -110,7 +110,7 @@ group_order = [
 ]
 
 # Pull HEV-related colors from existing palettes for consistency; pick distinct
-# greys / accents for the two non-HEV groups so they don't clash with the
+# grays / accents for the two non-HEV groups so they don't clash with the
 # blue/brown HEV colors.
 def _load_group_colors():
     color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')

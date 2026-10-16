@@ -5,7 +5,7 @@
 # For each pathologist-defined region (across all four annotation layers), find the
 # differentially expressed genes (one region vs. the rest), run GO Biological Process 2025
 # term enrichment on the up-regulated genes, and draw the enrichment dot plot
-# (top terms per region; dot size = combined enrichment score, colour = -log10 adjusted P)
+# (top terms per region; dot size = combined enrichment score, color = -log10 adjusted P)
 # together with a bar of the total spot count per annotation.
 # This creates Extended Data Fig. 1g
 
@@ -287,7 +287,7 @@ for layer in annotation_layers:
             ordered_major_cat_dict[layer] = categories_with_data
 
 
-# --- Colours per annotation layer
+# --- Colors per annotation layer
 
 color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
 path_color_lut = pd.read_csv(os.path.join(color_dir, 'path_colors.csv'), index_col=0)
@@ -377,7 +377,7 @@ space_per_dot = 0.04
 hue = 'neg_log10_pval'
 size = 'combined_score'
 
-# Keep the colour scale and size scale consistent across all layers
+# Keep the color scale and size scale consistent across all layers
 vmin = 0
 vmax = max([df['neg_log10_pval'].max() for df in dot_plot_df_dict.values()])
 size_min = 0
@@ -496,7 +496,7 @@ for ax in axs:
     ax.grid(True, which='both', axis='both', linestyle='-', linewidth=0.5, alpha=0.5)
     ax.set_axisbelow(True)
 
-# Colour bar and size legend on the last plot
+# Color bar and size legend on the last plot
 if len(available_layers_with_data) > 0:
     last_ax = axs[-1]
     norm = plt.Normalize(vmin, vmax)

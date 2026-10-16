@@ -8,8 +8,8 @@
 #   Chemokine       CCL19, CCL21
 #   Fibroblast/CAF  FAP, LUM, PDGFRA, PDPN
 #   Mural/PVL       KCNJ8, MCAM, NOTCH3, RGS5
-# Colour = mean expression scaled to per-gene max; dot size = fraction of per-gene max; a
-# per-group cell-count bar, colourbar and size legend are rendered to the right. A per-sample
+# Color = mean expression scaled to per-gene max; dot size = fraction of per-gene max; a
+# per-group cell-count bar, colorbar and size legend are rendered to the right. A per-sample
 # cell-count table (focus subset x TLS/non-TLS x sample) is written alongside.
 
 # --- Define environment
@@ -156,8 +156,8 @@ os.makedirs(plot_dir, exist_ok=True)
 
 
 # --- Per-gene-max multi-axis dotplot
-# Colour = mean expr scaled to per-gene max; dot size = fraction of per-gene max. Count bars
-# (horizontal), a vertical colourbar and a size legend are rendered to the right.
+# Color = mean expr scaled to per-gene max; dot size = fraction of per-gene max. Count bars
+# (horizontal), a vertical colorbar and a size legend are rendered to the right.
 def fancy_dotplot(adata_sub, gene_categories, groupby, title,
                   cbar_title='Mean expression\n(scaled to max)', size_normalize='max',
                   sort_genes=True):
@@ -171,7 +171,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
     n_cats  = len(gene_categories)
     n_grp   = len(group_order)
 
-    # Fit the dot grid + count bars + colourbar + size legend inside x in [0.06, 0.97]
+    # Fit the dot grid + count bars + colorbar + size legend inside x in [0.06, 0.97]
     # and y in [0.10, ~0.90]. The legend block to the right consumes a fixed budget.
     legend_budget = 0.012 + 0.05 + 0.012 + 0.05 + 0.07          # bar gap+cbar gap/w+size gap/w
     spx = min(SPACE_PER_DOT_X,
@@ -242,7 +242,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
     bar_ax.set_title('n cells', fontsize=LABEL_FS, pad=6)
     bar_ax.grid(False)
 
-    # Vertical colourbar spanning the full dot-grid height, right of the count bars
+    # Vertical colorbar spanning the full dot-grid height, right of the count bars
     fig.canvas.draw()
     inv = fig.transFigure.inverted()
     bar_right = inv.transform(bar_ax.get_tightbbox(fig.canvas.get_renderer()))[1][0]
@@ -263,7 +263,7 @@ def fancy_dotplot(adata_sub, gene_categories, groupby, title,
     cax.set_yticks([0, 0.5, 1.0])
     cax.grid(False)
 
-    # Vertical size legend, right of the colourbar
+    # Vertical size legend, right of the colorbar
     cbar_pos = cax.get_position()
     size_h = cbar_h * 0.85
     size_y = cbar_y0 + (cbar_h - size_h) / 2

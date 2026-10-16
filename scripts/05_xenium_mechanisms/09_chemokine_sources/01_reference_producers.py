@@ -116,7 +116,7 @@ if SUBSET_COL not in adata.obs:
     raise KeyError(f"{SUBSET_COL} not in obs; available: {list(adata.obs.columns)}")
 
 
-# --- Classifications: subset ordering (lineage -> major -> subset) + colour luts
+# --- Classifications: subset ordering (lineage -> major -> subset) + color luts
 
 color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
 
@@ -220,7 +220,7 @@ def emit_producers(genes, name, expr_csv, prod_csv, pdf_name, legend_anchor):
         for sp_ in ax.spines.values():
             sp_.set_visible(False)
         ax.set_axisbelow(True)
-        for s in subset_order:   # lineage colour strip left of the labels
+        for s in subset_order:   # lineage color strip left of the labels
             ax.scatter(-0.45, ypos[s], marker='s', s=14,
                        color=lineage_lut.get(subset_lineage.get(s), '#cccccc'),
                        transform=ax.transData, clip_on=False, zorder=4)
@@ -251,8 +251,8 @@ emit_producers(['CXCL13'], 'cxcl13_producers',
 # ===========================================================================================
 # --- Extended Data Fig. 9a: TLS-niche chemokines / receptors / HEV markers across the reference
 # Faithful port of the reference per-niche split dotplots. Per-gene min-max-scaled mean
-# expression (colour), fraction of cells expressing (dot size), swap_axes so genes are rows
-# and cell types are columns, a lineage / major-class row-colour matrix, and L-R brackets.
+# expression (color), fraction of cells expressing (dot size), swap_axes so genes are rows
+# and cell types are columns, a lineage / major-class row-color matrix, and L-R brackets.
 # Subset labels are bold if > BOLD_PCT% of cells express ANY of CCL19 / CXCL13 / CCL21.
 # ===========================================================================================
 
@@ -266,7 +266,7 @@ if 'Cycling' in major_present:
     major_present.remove('Cycling')
     major_present.append('Cycling')
 
-# Row-colour matrix (row 0 = lineage, row 1 = major class), aligned to sorted_cell_types
+# Row-color matrix (row 0 = lineage, row 1 = major class), aligned to sorted_cell_types
 row_colors_df = pd.DataFrame(
     {
         'lineage': classif_dedup['lineage'].map(lineage_lut),
@@ -315,8 +315,8 @@ PLOT4_GENES = present_only(PLOT4_GENES)
 
 
 # --- Per-cell-type expression tables (all niche genes): % expressing, mean log-norm, scaled mean
-# scaled_df reproduces scanpy's standard_scale='var'; we recolour the dots with it because this
-# repo's scanpy mis-renders that scaling under swap_axes (colours per column instead of per gene).
+# scaled_df reproduces scanpy's standard_scale='var'; we recolor the dots with it because this
+# repo's scanpy mis-renders that scaling under swap_axes (colors per column instead of per gene).
 
 all_niche_genes = list(dict.fromkeys(
     g for d in (PLOT3_GENES, PLOT4_GENES) for gs in d.values() for g in gs))
@@ -359,8 +359,8 @@ def lighten_color(color, amount=0.5):
 
 
 def fix_dot_colors(main_ax, genes):
-    """Recolour a scanpy dotplot's dots per gene (min-max scaled mean), overwriting the
-    per-column colouring that this repo's scanpy applies under swap_axes. Dot positions and
+    """Recolor a scanpy dotplot's dots per gene (min-max scaled mean), overwriting the
+    per-column coloring that this repo's scanpy applies under swap_axes. Dot positions and
     sizes are left untouched; each dot is matched to its (cell type, gene) by nearest tick."""
     xticks = np.asarray(main_ax.get_xticks())
     yticks = np.asarray(main_ax.get_yticks())
@@ -463,7 +463,7 @@ def bold_producer_labels(heatmap_ax):
             tick.set_fontweight('bold')
 
 
-# --- Shared niche colours (rectangles on the left of the dot grids)
+# --- Shared niche colors (rectangles on the left of the dot grids)
 
 color_dict_score = {
     'B cell zone': mpl.colors.cnames["cornflowerblue"],
@@ -475,7 +475,7 @@ for key in color_dict_score:
 color_dict_score['Chemokines'] = lighten_color(mpl.colors.cnames["cornflowerblue"], amount=0.3)
 
 
-# --- Shared dot size / colour scale
+# --- Shared dot size / color scale
 
 dot_max, vmin, vmax, cmap = 1, 0, 1, 'Reds'
 space_per_dot = 0.04
@@ -485,7 +485,7 @@ plt.rcParams['axes.grid'] = False
 
 def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
     """Reproduce the per-niche split dotplot: one swap_axes dotplot per niche, stacked, with
-    the row-colour matrix, ligand-receptor brackets, niche rectangles, legends and bold
+    the row-color matrix, ligand-receptor brackets, niche rectangles, legends and bold
     producer labels. Returns x_left_global for reuse (Plot 4 reuses Plot 3's)."""
     n_keys = len(top_genes_dict)
     fig, axs = plt.subplots(ncols=1, nrows=n_keys, figsize=(5, 5))
@@ -499,7 +499,7 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
             dot_max=dot_max, cmap=cmap, vmin=vmin, vmax=vmax, show=False,
             swap_axes=True, standard_scale='var',
         )
-        fix_dot_colors(dp['mainplot_ax'], genes)   # correct the per-column mis-colouring
+        fix_dot_colors(dp['mainplot_ax'], genes)   # correct the per-column mis-coloring
         auto_resize_dotplot(dp['mainplot_ax'], space_per_dot=space_per_dot)
         heatmap_axs.append(dp['mainplot_ax'])
         buffer = 0.25
@@ -514,7 +514,7 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
 
     reposition_dotplot_axs(heatmap_axs, y_offset=0.01)
 
-    # Colourbar + size legend to the right of the last dot grid
+    # Colorbar + size legend to the right of the last dot grid
     ax_pos = heatmap_axs[-1].get_position()
     cbar_height = space_per_dot * 0.8
     cbar_width = space_per_dot * 5
@@ -528,7 +528,7 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
     if lr_use:
         x_left_global = join_lr_multi(heatmap_axs, lr_use, offset=0.25)
 
-    # Row-colour matrix above the first dot grid
+    # Row-color matrix above the first dot grid
     row_colors_ax = plt.axes([0.1, 0.1, 0.2, 0.2])
     new_heatmap_pos = heatmap_axs[0].get_position()
     presence_ax_height = space_per_dot * len(row_colors_df_T.index)
@@ -573,7 +573,7 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
                      title='Major class', x=right_edge, y=legend_bbox_fig[1][1], offset=0.02,
                      spacing_per_label=0.05, loc='upper left', fontsize=9)
 
-    # Short + bold cell-type labels on the last (only labelled) dot grid
+    # Short + bold cell-type labels on the last (only labeled) dot grid
     bold_producer_labels(heatmap_axs[-1])
 
     row_colors_ax_pos = row_colors_ax.get_position()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Summarise the cellular composition of the identified Xenium TLS regions across the cohort.
+# Summarize the cellular composition of the identified Xenium TLS regions across the cohort.
 # Produces the proportion of each cell type located inside vs outside TLS regions (Extended Data Fig. 7b) and
 # the average relative abundance of each cell type among cells within TLS regions (Extended Data Fig. 7c).
 
@@ -38,7 +38,7 @@ parser.add_argument("--project_dir", help="Project directory (root)")
 parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", default=None)
 parser.add_argument("--sc_ref", help="Single-cell reference used for cell-type classifications", default='miniatlas')
 parser.add_argument("--annotation_levels", nargs="*", default=['major', 'minor', 'subset'],
-                    help="Annotation levels to summarise")
+                    help="Annotation levels to summarize")
 
 args = vars(parser.parse_args())
 
@@ -57,13 +57,13 @@ classif_file = f'{sc_ref}_subset_classifications.csv'
 classif_df = pd.read_csv(os.path.join(classif_dir, classif_file))
 
 
-# --- Load plotting colours
+# --- Load plotting colors
 
 color_dir = os.path.join(project_dir, 'resources', 'plotting_colors')
 color_dict = pd.read_csv(os.path.join(color_dir, f'{sc_ref}_major_colors.csv'),
                          index_col=0).to_dict()['color']
 
-# Propagate the major-level colour to each minor / subset cell type
+# Propagate the major-level color to each minor / subset cell type
 for level in levels:
     for cell_type in classif_df[f'{sc_ref}_{level}'].unique():
         if pd.isna(cell_type):
@@ -103,7 +103,7 @@ for sample in sample_list:
         tmp_df[level] = annotations.reindex(tmp_df.index)
     tls_df = pd.concat([tls_df, tmp_df])
 
-# Normalise the in_TLS flag to boolean (stored as text in the annotation CSV)
+# Normalize the in_TLS flag to boolean (stored as text in the annotation CSV)
 tls_df['in_TLS'] = tls_df['in_TLS'].astype(str).map({'True': True, 'False': False}).fillna(False).astype(bool)
 
 

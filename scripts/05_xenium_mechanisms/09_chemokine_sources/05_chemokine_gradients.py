@@ -6,7 +6,7 @@
 # cohort figure.
 #
 # The headline Extended Data Fig. 9h figure shows, as a broken-axis profile (mean +/- s.e.m., n=6):
-#   LEFT  = distance from the HEV centre within the T cell zone
+#   LEFT  = distance from the HEV center within the T cell zone
 #   RIGHT = distance from the T-cell-zone edge into the surrounding non-TLS tissue
 # for BOTH
 #   - CCL19 / CCL21 transcript density (transcripts / mm^2), and

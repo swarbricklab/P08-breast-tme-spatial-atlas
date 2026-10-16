@@ -362,7 +362,7 @@ rule fig_2F:
 
 
 rule fig_2G:
-    """2G: Example germinal centres (GC score > 0.7 groups) on H&E."""
+    """2G: Example germinal centers (GC score > 0.7 groups) on H&E."""
     input:
         h5ad      = expand(F13_VIS_H5AD, sample=VIS_SAMPLES),
         gc_groups = expand(F13_GC_GROUPS, sample=VIS_SAMPLES),
@@ -386,7 +386,7 @@ rule fig_2G:
 
 
 rule fig_2H:
-    """2H: Number of germinal centres per 5,000 spots per clinical subtype."""
+    """2H: Number of germinal centers per 5,000 spots per clinical subtype."""
     input:
         gc_groups = expand(F13_GC_GROUPS, sample=VIS_SAMPLES),
         tls_model = expand(F13_TLS_MODEL, sample=VIS_SAMPLES),

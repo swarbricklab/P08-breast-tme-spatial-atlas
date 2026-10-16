@@ -5,7 +5,7 @@ Find tertiary lymphoid structures (TLS) in the Visium cohort, resolve their inte
 - **01_identify_TLS/** — TLS scoring and grouping.
   - `01_run_TLS_model.py`: score each spot with the TLS model of [Andersson et al. (2021)](https://doi.org/10.1038/s41467-021-26271-2).
   - `02_group_TLS_high.py`: group spatially contiguous TLS-high spots.
-  - `03_TLS_spatial_organization/`: number, size, spatial clustering and tumour topology of discrete TLS across the cohort (Extended Data Fig. 3b); see its [README](01_identify_TLS/03_TLS_spatial_organization/README.md).
+  - `03_TLS_spatial_organization/`: number, size, spatial clustering and tumor topology of discrete TLS across the cohort (Extended Data Fig. 3b); see its [README](01_identify_TLS/03_TLS_spatial_organization/README.md).
 - **02_identify_TLS_niches/**
   - `01_cluster_TLS_high.py`: integrate and cluster TLS-high spots across samples to identify the niches (Supplementary Table 4).
 - **03_extract_niche_signatures/** — niche signatures (Supplementary Table 5).

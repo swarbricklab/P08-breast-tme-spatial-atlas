@@ -2,7 +2,7 @@
 
 # --- Aim
 # Classify each intra-TLS HEV niche by its distance to the nearest germinal
-# centre (GC) and label it close (<= 500 um) or far (> 500 um) from a GC.
+# center (GC) and label it close (<= 500 um) or far (> 500 um) from a GC.
 # Upstream for Extended Data Fig. 10i,j (HEV endothelial cells stratified by GC proximity).
 #
 # Only HEV niches that sit within a TLS are considered (close_to_TLS == True,
@@ -216,7 +216,7 @@ print(f'Niches close_to_GC (<= {near_gc_um} um): '
 
 
 # --- Diagnostic spatial plots
-#   Page 1: intra-TLS HEV niche centroids coloured by continuous min distance to GC
+#   Page 1: intra-TLS HEV niche centroids colored by continuous min distance to GC
 #   Page 2: binary close (<= near_gc_um) vs far classification
 # GC bins are drawn as dark-orchid squares; all cells in light gray.
 

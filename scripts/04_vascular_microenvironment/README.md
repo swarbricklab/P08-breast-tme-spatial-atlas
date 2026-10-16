@@ -1,10 +1,10 @@
 # 04_vascular_microenvironment
 
-Map HEVs and the wider vasculature in the Visium HD data (16 µm bins), compare HEVs with other venous vessels, and analyse ligand-receptor interactions in the HEV niche. Scripts use the `vis-hd` environment unless noted, and run in the order listed.
+Map HEVs and the wider vasculature in the Visium HD data (16 µm bins), compare HEVs with other venous vessels, and analyze ligand-receptor interactions in the HEV niche. Scripts use the `vis-hd` environment unless noted, and run in the order listed.
 
 - **01_identify_HEV_niches/** — segment HEVs and place them relative to TLS.
   - `01_score_signature.py`: score bins for the HEV and TLS zone signatures (published signatures by default; see [03_TLS_niche_discovery](../03_TLS_niche_discovery/README.md)).
-  - `02a_group_HEV_bins.py`, `02b_expand_HEV_groups.py`: group HEV-high "seed" bins, then expand each group to neighbouring bins with lower HEV scores.
+  - `02a_group_HEV_bins.py`, `02b_expand_HEV_groups.py`: group HEV-high "seed" bins, then expand each group to neighboring bins with lower HEV scores.
   - `03a_identify_TLS_areas.py` (`spatial-pilot`): group bins with high TLS zone scores into TLS areas.
   - `03b_calculate_HEV_TLS_distance.py`: distance from each HEV to the nearest TLS area, classifying HEVs as TLS-associated or stromal HEV-like.
   - `04_assess_HEV_pathology_annotations.py`: HEV locations against the pathology annotations.

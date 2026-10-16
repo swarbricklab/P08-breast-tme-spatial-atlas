@@ -1,6 +1,6 @@
 # 03_TLS_spatial_organization
 
-Per-sample and cohort characterisation of **discrete tertiary lymphoid structures (TLS)** across the Visium cohort: TLS number, TLS size, spatial clustering (DBSCAN) and topology relative to the tumour. **Reproduces Extended Data Fig. 3b** (and the reported cohort total of 433 TLS across the 33 Visium sections; median 8/section, range 0–37).
+Per-sample and cohort characterization of **discrete tertiary lymphoid structures (TLS)** across the Visium cohort: TLS number, TLS size, spatial clustering (DBSCAN) and topology relative to the tumor. **Reproduces Extended Data Fig. 3b** (and the reported cohort total of 433 TLS across the 33 Visium sections; median 8/section, range 0–37).
 
 ## Discrete-TLS definition
 
@@ -23,7 +23,7 @@ These scripts operate on the *stringent* Extended Data Fig. 3b definition of a d
 
 **`01_TLS_distances_topology.py`** — for each discrete TLS, classifies topology relative to cancer-annotated spots (intratumoral if ≥30% of TLS spots overlap cancer or >50% of the two-spot perimeter ring is cancer; peritumoral if any cancer spot lies in the one-spot ring; else stromal/distant; cancer = invasive + in situ), and records distances to the nearest other TLS and nearest cancer spot (µm + hop distance). Writes one row per TLS to `distances_per_TLS.csv` (`tls_topology_2hop`).
 
-**`02_TLS_clustering.py`** — DBSCAN (eps = 500 µm, minimum 2 members) on the pairwise edge-to-edge (minimum spot-to-spot) distances between discrete TLS, labelling each TLS `clustered` or `lone`. Writes `clustering_per_TLS.csv` (per-TLS labels) and `clustering_per_sample.csv` (per-sample summary).
+**`02_TLS_clustering.py`** — DBSCAN (eps = 500 µm, minimum 2 members) on the pairwise edge-to-edge (minimum spot-to-spot) distances between discrete TLS, labeling each TLS `clustered` or `lone`. Writes `clustering_per_TLS.csv` (per-TLS labels) and `clustering_per_sample.csv` (per-sample summary).
 
 **`03_TLS_number_size_overview.py`** — the cohort overview figure (**Extended Data Fig. 3b**): a per-sample sorted bar of TLS number with stacked panels for TLS size, clustering composition (clustered vs lone) and topology, plus subtype/capture-area strips. Writes the single-page overview PDF and `summary_per_sample.csv` / `sizes_per_aggregate.csv`.
 

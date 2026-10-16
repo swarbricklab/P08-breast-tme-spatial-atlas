@@ -118,7 +118,7 @@ zone_palette = {
     'B_cell_zone': mpl.colors.cnames['cornflowerblue'],
     'T_cell_zone': mpl.colors.cnames['crimson'],
 }
-# Reserved category colours; producer subsets get their miniatlas colour (below).
+# Reserved category colors; producer subsets get their miniatlas color (below).
 src_palette = {
     'FDC':             '#f5a623',
     'other':           '#cfcfcf',
@@ -199,7 +199,7 @@ samples_by_subtype = {st: sorted([s for s in sample_list if subtype_dict.get(s) 
 sorted_samples = [s for st in present_subtypes for s in samples_by_subtype[st]]
 
 
-# --- Reference cell-type classifications + colours (for the Extended Data Fig. 9l producer segments)
+# --- Reference cell-type classifications + colors (for the Extended Data Fig. 9l producer segments)
 
 classif = pd.read_csv(os.path.join(project_dir, 'resources', 'cell_types', 'miniatlas',
                                    'miniatlas_subset_classifications.csv'))
@@ -237,8 +237,8 @@ def _base_subset_color(cat):
     return lineage_color.get(lineage, 'lightgray')
 
 
-# Palette covering every Extended Data Fig. 9l category. Tfh + CD8 LAG3 reference colours are near-white, so we
-# assign explicit visible colours matching the reference-producer scheme.
+# Palette covering every Extended Data Fig. 9l category. Tfh + CD8 LAG3 reference colors are near-white, so we
+# assign explicit visible colors matching the reference-producer scheme.
 cat_palette = dict(src_palette)
 for p in ref_producers:
     cat_palette[p] = _base_subset_color(p)

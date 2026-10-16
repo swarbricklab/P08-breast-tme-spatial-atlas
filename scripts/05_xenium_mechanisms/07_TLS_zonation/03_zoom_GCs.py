@@ -157,7 +157,7 @@ gene_groups = [top_genes[i:i + genes_per_ax] for i in range(0, len(top_genes), g
 print(f'Top {len(top_genes)} GC genes: {top_genes}')
 
 
-# --- Transcript colours
+# --- Transcript colors
 
 tx_color_csv = os.path.join(project_dir, 'resources', 'plotting_colors', 'transcript_colors.csv')
 tx_color_lut = pd.read_csv(tx_color_csv, index_col=0)['color'].to_dict() if os.path.exists(tx_color_csv) else {}
@@ -267,7 +267,7 @@ with PdfPages(pdf_path) as pdf:
         crop_img, (cx0, cx1, cy0, cy1) = crop_image(x0_px, x1_px, y0_px, y1_px)
         crop_w, crop_h = cx1 - cx0, cy1 - cy0
 
-        # Bin centres + per-bin pixel size for the GC overlay
+        # Bin centers + per-bin pixel size for the GC overlay
         bin_cx_px, bin_cy_px = micron_to_he_pixel(comp_bins['bin_x'].values, comp_bins['bin_y'].values)
         bin_x0_p, bin_y0_p = micron_to_he_pixel(comp_bins['bin_x'].values - grid_um / 2,
                                                 comp_bins['bin_y'].values - grid_um / 2)
@@ -297,7 +297,7 @@ with PdfPages(pdf_path) as pdf:
             np.column_stack([ge_x - cx0, ge_y - cy0]),
         ], axis=1)
 
-        # Outline of the GC bin union: emit each bin edge whose neighbour is not in the component
+        # Outline of the GC bin union: emit each bin edge whose neighbor is not in the component
         comp_set = set(zip(comp_bins['bin_ix'].astype(int).values, comp_bins['bin_iy'].astype(int).values))
         half = grid_um / 2
         outline_a_um, outline_b_um = [], []

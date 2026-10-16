@@ -4,7 +4,7 @@ Reference files, metadata and settings used by the scripts. Throughout the code,
 
 ## gene_lists/
 
-- **TLS_niche_signatures/** - the TLS niche signatures (T cell zone, B cell zone, germinal centre, HEV) published with the manuscript (Supplementary Table 5). The scoring scripts use these by default; see [03_TLS_niche_discovery](../scripts/03_TLS_niche_discovery/README.md).
+- **TLS_niche_signatures/** - the TLS niche signatures (T cell zone, B cell zone, germinal center, HEV) published with the manuscript (Supplementary Table 5). The scoring scripts use these by default; see [03_TLS_niche_discovery](../scripts/03_TLS_niche_discovery/README.md).
 - **andersson_2021/** - gene coefficients of the TLS model of [Andersson et al. (2021)](https://doi.org/10.1038/s41467-021-26271-2).
 - **HEV_markers/** - HEV marker genes from [Sawada et al. (2022)](https://doi.org/10.1158/2326-6066.CIR-21-0369).
 - **marker_genes/** - endothelial marker genes from [Kumar et al. (2023)](https://doi.org/10.1038/s41586-023-06252-9).
@@ -25,7 +25,7 @@ wget "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE176078&format=file&file=
 
 ## cell_types/
 
-- **miniatlas/miniatlas_subset_classifications.csv** - the reference's cell type hierarchy: each `subset` cell type with its `minor` and `major` type and lineage (Epithelial, Immune, Stromal); used to order and colour cell types.
+- **miniatlas/miniatlas_subset_classifications.csv** - the reference's cell type hierarchy: each `subset` cell type with its `minor` and `major` type and lineage (Epithelial, Immune, Stromal); used to order and color cell types.
 
 ## probe_set/
 
@@ -33,7 +33,7 @@ wget "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE176078&format=file&file=
 
 ## plotting_colors/
 
-Colour palettes (CSV): cell types per annotation level (`miniatlas_{lineage,major,minor,subset}_colors.csv`), endothelial subtypes (`endothelial_colors.csv`), TLS and HEV annotations (`TLS_HEV_colors.csv`), breast cancer subtypes (`SCSubtype_colors.csv`), pathology annotation layers (`path_colors.csv`) and transcripts (`transcript_colors.csv`).
+Color palettes (CSV): cell types per annotation level (`miniatlas_{lineage,major,minor,subset}_colors.csv`), endothelial subtypes (`endothelial_colors.csv`), TLS and HEV annotations (`TLS_HEV_colors.csv`), breast cancer subtypes (`SCSubtype_colors.csv`), pathology annotation layers (`path_colors.csv`) and transcripts (`transcript_colors.csv`).
 
 ## areas_of_interest/
 

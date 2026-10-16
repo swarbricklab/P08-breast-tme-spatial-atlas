@@ -4,12 +4,12 @@
 # Extended Data Fig. 10i + Extended Data Fig. 10j: render the close-vs-far DEG table (DEG_close_vs_far.csv from
 # 02_DEG_close_vs_far.py) as:
 #   - Extended Data Fig. 10i: a volcano of the mean log-transformed difference (close - far) vs -log10 BH-P,
-#           coloured by significance (purple = higher close to GC, brown = lower,
-#           grey = ns), with canonical HEV markers outlined + bold-labelled and all
-#           significant genes labelled (adjustText avoids overlaps).
+#           colored by significance (purple = higher close to GC, brown = lower,
+#           gray = ns), with canonical HEV markers outlined + bold-labeled and all
+#           significant genes labeled (adjustText avoids overlaps).
 #   - Extended Data Fig. 10j: a transposed dot plot of the significant genes, split into up-/down-close
 #           blocks, with close (<=500 um) vs far (>500 um) rows, dot size = % of cells
-#           expressing and colour = per-gene-max-scaled mean expression.
+#           expressing and color = per-gene-max-scaled mean expression.
 # Both are built purely from the DEG CSV (no expression reload).
 
 # --- Define environment
@@ -28,7 +28,7 @@ from adjustText import adjust_text
 
 mpl.rcParams['pdf.fonttype'] = 42
 
-# Colour scheme: darkorchid = higher close to GC (up), brown = higher far from GC (down).
+# Color scheme: darkorchid = higher close to GC (up), brown = higher far from GC (down).
 CLOSE_COLOR = '#9932CC'   # darkorchid
 FAR_COLOR   = '#8c6d31'   # brown
 
@@ -46,9 +46,9 @@ parser.add_argument("--res_dir", required=True)
 parser.add_argument("--sample_sheet", default=None, help="Accepted for runner compatibility (unused).")
 parser.add_argument("--near_gc_um", type=float, default=500.0)
 parser.add_argument("--lfc_threshold", type=float, default=0.05,
-                    help="Below |mean diff| this, dots are grey (ns).")
+                    help="Below |mean diff| this, dots are gray (ns).")
 parser.add_argument("--padj_threshold", type=float, default=0.05,
-                    help="Above BH-adjusted p this, dots are grey (ns).")
+                    help="Above BH-adjusted p this, dots are gray (ns).")
 parser.add_argument("--hev_markers", nargs='+',
                     default=['TSPAN7', 'RAMP3', 'MEOX2', 'SPNS2', 'IL33', 'ACKR1',
                              'SELE', 'SELP', 'TMEM173', 'LTBR', 'SPP1'],
@@ -83,12 +83,12 @@ n_close = int(deg['n_close'].iloc[0])
 n_far   = int(deg['n_far'].iloc[0])
 
 
-# --- Volcano helpers (adjustText labelling + directional arrows)
+# --- Volcano helpers (adjustText labeling + directional arrows)
 
 def adjust_text_func(ax, df, x_val, y_val, gene_col='gene',
                      min_distance=0.15, label_size=7, color='#0f3c5a', lw=0.4,
                      bold_genes=None, priority_genes=None):
-    """Annotate genes in df. priority_genes are ALWAYS labelled; the rest are
+    """Annotate genes in df. priority_genes are ALWAYS labeled; the rest are
     filtered by min_distance to avoid collisions, then adjustText repositions
     everything so labels don't overlap."""
     priority_set = set(priority_genes) if priority_genes else set()
@@ -220,7 +220,7 @@ def draw_deg_dotplot_transposed(deg, gene_list, title, bold_genes=None, near_gc_
                                 bar_fill_alpha=0.55):
     """Transposed dot plot: genes on the y-axis (split into up-/down-close blocks,
     most-significant at top), close/far on the x-axis, vertical count bars on top,
-    vertical colourbar + size legend on the right. Built from the DEG CSV."""
+    vertical colorbar + size legend on the right. Built from the DEG CSV."""
     df = deg[deg['gene'].isin(gene_list)].copy()
     if df.empty:
         print('No genes for transposed DEG dotplot — skipping.')
@@ -318,7 +318,7 @@ def draw_deg_dotplot_transposed(deg, gene_list, title, bold_genes=None, near_gc_
     count_ax.set_xlabel(f'n {unit_label}', fontsize=label_fontsize)
     count_ax.xaxis.set_label_position('top')
 
-    # Vertical colourbar (right).
+    # Vertical colorbar (right).
     cbar_pad = 0.03
     cbar_x0 = ax_pos.x1 + cbar_pad
     cbar_width  = space_per_dot * cbar_height_factor

@@ -4,7 +4,7 @@
 # Per-sample spatial overview of the discrete-TLS classification. For each Visium
 # section a 3-panel figure shows: epithelial pathology annotation, TLS topology
 # (intratumoral / peritumoral / stromal_distant), and DBSCAN spatial clustering
-# (each cluster a distinct colour, lone TLS in grey). All sections are saved in a
+# (each cluster a distinct color, lone TLS in gray). All sections are saved in a
 # single multi-page PDF.
 
 # --- Define environment
@@ -111,7 +111,7 @@ clust_df = (pd.read_csv(clustering_path) if os.path.exists(clustering_path)
 print(f"Topology rows: {len(dist_df)}   Clustering rows: {len(clust_df)}")
 
 
-# --- Colour schemes
+# --- Color schemes
 
 topo_categories = ['intratumoral', 'peritumoral', 'stromal_distant']
 topo_colors = {
@@ -127,12 +127,12 @@ epi_colors = {
     'benign':   '#fee090',
     'normal':   '#74add1',
 }
-# Cluster colours: tab20 hues excluding the grey pair (indices 14, 15), which is
+# Cluster colors: tab20 hues excluding the gray pair (indices 14, 15), which is
 # reserved for lone TLS so a cluster can never be confused with a lone TLS.
 _tab20 = mpl.colormaps['tab20']
 CLUSTER_COLORS = [mpl.colors.to_hex(_tab20(i)) for i in range(20) if i not in (14, 15)]
-LONE_COLOR   = '#4d4d4d'                # dark grey — lone (noise) TLS: neutral, reads on the
-                                        # H&E, lighter than black, and no cluster uses grey
+LONE_COLOR   = '#4d4d4d'                # dark gray — lone (noise) TLS: neutral, reads on the
+                                        # H&E, lighter than black, and no cluster uses gray
 
 # Pretty legend labels + font sizes
 topo_display = {'intratumoral': 'Intratumoral', 'peritumoral': 'Peritumoral',
@@ -147,8 +147,8 @@ cluster_label_col = f'dbscan_label_eps{eps}'
 
 
 def add_legend_below(ax, labels, colors, title):
-    """Add a colour-patch legend centred just below the axes (so it never
-    overlaps the neighbouring panels)."""
+    """Add a color-patch legend centered just below the axes (so it never
+    overlaps the neighboring panels)."""
     if not labels:
         return
     handles = [mpatches.Patch(facecolor=c, edgecolor='black', linewidth=0.4)

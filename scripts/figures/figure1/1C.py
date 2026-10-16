@@ -56,7 +56,7 @@ resource_dir = os.path.join(project_dir, 'resources')
 
 tissue_metadata = pd.read_csv(os.path.join(resource_dir, 'tissue_metadata.csv'))
 
-# One row per patient (primary tumours; lymph-node rows are a separate tissue)
+# One row per patient (primary tumors; lymph-node rows are a separate tissue)
 primary = tissue_metadata[tissue_metadata['tissue_type'] == 'Primary tumor']
 subtype_dict = dict(zip(primary['donor_id'], primary['clinical_subtype']))
 sample_list = list(primary['donor_id'])

@@ -1,4 +1,4 @@
-# Rules for scripts/05_xenium_mechanisms (Xenium Prime 5K breast tumours):
+# Rules for scripts/05_xenium_mechanisms (Xenium Prime 5K breast tumors):
 #   01 identify TLS regions     - TLS polygons + per-cell in_TLS (per sample); composition (Extended Data Fig. 7b,c)
 #                                 and CD40/CD40LG expression in TLS (Extended Data Fig. 7d)
 #   02 identify HEV regions     - HEV niches per sample (thresholds from config)

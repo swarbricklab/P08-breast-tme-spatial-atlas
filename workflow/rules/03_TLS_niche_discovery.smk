@@ -1,17 +1,17 @@
-# Rules for scripts/03_TLS_niche_discovery (Visium breast tumours + matched lymph nodes):
-#   01 identify TLS          - TLS model score per spot, grouping of TLS-high spots (tumours + lymph
+# Rules for scripts/03_TLS_niche_discovery (Visium breast tumors + matched lymph nodes):
+#   01 identify TLS          - TLS model score per spot, grouping of TLS-high spots (tumors + lymph
 #                              nodes), discrete-TLS number/size/clustering/topology (Extended Data Fig. 3b)
-#   02 identify TLS niches   - Harmony/Leiden clustering of TLS-high spots across tumour sections
+#   02 identify TLS niches   - Harmony/Leiden clustering of TLS-high spots across tumor sections
 #   03 extract signatures    - niche marker genes; GC filtered against invasive epithelium, HEV
 #                              against endothelial-high spots; final signature files (used by 04)
-#   04 map signatures        - niche scores per spot (tumours + lymph nodes), high-score areas
+#   04 map signatures        - niche scores per spot (tumors + lymph nodes), high-score areas
 #
 # All scripts write under --res_dir (config res_dir), so res_dir can be changed.
 # No f-strings in this file: Snakemake 7.32 on Python 3.12 mangles them (pads the replacement
 # fields with spaces and collapses escaped braces), so paths are built by concatenation.
-# Inputs from outside the workflow: {H5AD}/visium (tumour and lymph node objects),
+# Inputs from outside the workflow: {H5AD}/visium (tumor and lymph node objects),
 # data/pathology_annotations/visium, results/02_cell_type_mapping/deconvolution/visium/major_level,
-# resources/ (gene lists, tissue metadata, colours, pathology categories).
+# resources/ (gene lists, tissue metadata, colors, pathology categories).
 
 T3_SCRIPTS = "scripts/03_TLS_niche_discovery"
 T3 = RES + "/03_TLS_niche_discovery"
@@ -33,7 +33,7 @@ FINAL_SIGNATURES = [NICHE_SIGS + "/04_final_niche_signature_files/" + f for f in
     "hevs_filtered_endothelial_genes.csv",
 ]]
 
-# Tumour and lymph node sections share {H5AD}/visium and most result folders (lymph nodes go to a
+# Tumor and lymph node sections share {H5AD}/visium and most result folders (lymph nodes go to a
 # lymph_nodes/ subfolder), so per-sample rules are restricted to their own sample list.
 VIS_RE = "|".join(VIS_SAMPLES)
 LN_RE = "|".join(LN_SAMPLES)
@@ -49,7 +49,7 @@ VIS_ANNOTATION = "data/pathology_annotations/visium/{sample}_pathology_annotatio
 # ── 01 · identify TLS ────────────────────────────────────────────────────────
 
 rule v03_run_TLS_model:
-    """01: Andersson 2021 TLS model score per spot (tumour sections)."""
+    """01: Andersson 2021 TLS model score per spot (tumor sections)."""
     input:
         h5ad  = VIS_H5AD,
         coefs = T3_TLS_COEFS,
@@ -97,7 +97,7 @@ rule v03_run_TLS_model_lymph_nodes:
 
 
 rule v03_group_TLS_high:
-    """02: Group spatially contiguous TLS-high spots (score > 0.01; tumour sections)."""
+    """02: Group spatially contiguous TLS-high spots (score > 0.01; tumor sections)."""
     input:
         h5ad      = VIS_H5AD,
         tls_model = rules.v03_run_TLS_model.output.csv,
@@ -291,7 +291,7 @@ rule v03_cluster_TLS_high:
 
 rule v03_extract_niche_signatures:
     """03/01: Filter cluster markers by specificity; signatures of the T cell zone, B cell zone,
-    HEV and germinal centre clusters (identified by marker genes)."""
+    HEV and germinal center clusters (identified by marker genes)."""
     input:
         h5ad = rules.v03_cluster_TLS_high.output.h5ad,
         degs = rules.v03_cluster_TLS_high.output.degs,
@@ -460,7 +460,7 @@ rule v03_organize_signature_files:
 # ── 04 · map niche signatures ────────────────────────────────────────────────
 
 rule v03_score_signatures:
-    """04/01: GC, B cell zone and T cell zone scores (top 20/50/100 genes) per spot (tumours)."""
+    """04/01: GC, B cell zone and T cell zone scores (top 20/50/100 genes) per spot (tumors)."""
     input:
         h5ad       = VIS_H5AD,
         tls_model  = rules.v03_run_TLS_model.output.csv,
@@ -524,7 +524,7 @@ rule v03_score_signatures_lymph_nodes:
 
 
 rule v03_group_high_score_areas:
-    """04/02: Group contiguous spots with a niche score (top 20 genes) > 0.7 (tumours; Fig. 2g,h)."""
+    """04/02: Group contiguous spots with a niche score (top 20 genes) > 0.7 (tumors; Fig. 2g,h)."""
     input:
         h5ad      = VIS_H5AD,
         tls_model = rules.v03_run_TLS_model.output.csv,

@@ -263,7 +263,7 @@ def _soften_bars(ax):
         bar.set_edgecolor('black')
 
 
-# --- Per-sample sorted overview (one bar per section, coloured by subtype)
+# --- Per-sample sorted overview (one bar per section, colored by subtype)
 # Stack from bottom up:
 #   bar (count) → size box → TLS clustering stack → TLS topology stack
 #   → subtype strip → capture-area strip + title.
@@ -317,7 +317,7 @@ def _draw_box_per_sample(ax, source_df, value_col, sample_order, bar_colors,
         patch_artist=True, showfliers=False,
         medianprops={'color': 'black', 'linewidth': 1.2},
     )
-    # Recolour each box (fill semi-transparent, outline in the subtype colour)
+    # Recolor each box (fill semi-transparent, outline in the subtype color)
     # so identity stays readable despite the faded fill. Whiskers stay black.
     for i, color in enumerate(bar_colors):
         r, g, b, _ = mpl.colors.to_rgba(color)
@@ -358,7 +358,7 @@ LONE_COLOR           = '#fdae61'           # amber
 
 
 def cluster_stack(sample_id):
-    """Ordered (heights, colors) for the fraction-normalised clustering stack.
+    """Ordered (heights, colors) for the fraction-normalized clustering stack.
     Bottom -> top: cluster 1 (largest) .. cluster k as blue shades, then one
     amber segment per lone TLS. Every segment is a single spatial group, so its
     height is that group's TLS count (a cluster's members, or 1 for a lone TLS);
@@ -389,7 +389,7 @@ def cluster_stack(sample_id):
 
 
 def _draw_cluster_stack(ax, sample_order, ylabel):
-    """Per-sample fraction-normalised stacked bar of clustered (blue shades,
+    """Per-sample fraction-normalized stacked bar of clustered (blue shades,
     one per distinct cluster) vs lone (amber) TLS. The number of distinct
     clusters reads straight off the number of blue shades in each bar."""
     for i, s in enumerate(sample_order):

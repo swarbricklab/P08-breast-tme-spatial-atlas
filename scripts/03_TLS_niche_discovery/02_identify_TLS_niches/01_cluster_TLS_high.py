@@ -255,7 +255,7 @@ sce.pp.harmony_integrate(all_adata, 'sample_id')
 # Assign the new PCs to the standard slot
 all_adata.obsm['X_pca'] = all_adata.obsm['X_pca_harmony']
 
-# neighbourhood graph
+# neighborhood graph
 n_pcs=30
 
 sc.pp.neighbors(all_adata, n_pcs=n_pcs, random_state=seed)

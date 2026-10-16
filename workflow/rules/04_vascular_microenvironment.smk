@@ -111,7 +111,7 @@ rule h04_group_HEV_bins:
 
 
 rule h04_expand_HEV_groups:
-    """02b: Seed-and-expand HEV groups to neighbouring bins with HEV score >= 0.3."""
+    """02b: Seed-and-expand HEV groups to neighboring bins with HEV score >= 0.3."""
     input:
         h5ad     = expand(HD_H5AD, res=["square_048um", "square_016um"]),
         groups   = rules.h04_group_HEV_bins.output.csv,
@@ -226,7 +226,7 @@ rule h04_assess_HEV_pathology_annotations:
 
 
 rule h04_calculate_all_HEV_distances:
-    """05: Distance of every 16 µm bin to each HEV (input for the stLearn neighbourhoods)."""
+    """05: Distance of every 16 µm bin to each HEV (input for the stLearn neighborhoods)."""
     input:
         h5ad     = expand(HD_H5AD, res="square_016um"),
         hev      = HEV_GROUPS,
@@ -474,7 +474,7 @@ rule h04_compare_PVL_association:
 # ── 04 · ligand-receptor analysis (stLearn; long) ────────────────────────────────
 
 rule h04_run_LR_analysis_stlearn:
-    """01: stLearn LR analysis per sample in HEV neighbourhoods; lr_bin 0 = HEV bins only,
+    """01: stLearn LR analysis per sample in HEV neighborhoods; lr_bin 0 = HEV bins only,
     25 = HEV + perivascular bins (~4 h for the largest sample, P29_HD)."""
     input:
         h5ad      = expand(HD_H5AD, res="square_016um"),

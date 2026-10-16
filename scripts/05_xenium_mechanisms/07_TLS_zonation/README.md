@@ -1,6 +1,6 @@
 # 07_TLS_zonation
 
-Resolve segmented TLS regions into **B cell / T cell zones** and **germinal centres (GCs)** on a 50 µm grid, by scoring per-bin pseudobulk profiles against the Visium-derived niche signatures (`resources/gene_lists/TLS_niche_signatures/niche_signatures.csv`). Upstream of the chemokine-source (09), GC-proximity (10) and SPP1 (11) analyses.
+Resolve segmented TLS regions into **B cell / T cell zones** and **germinal centers (GCs)** on a 50 µm grid, by scoring per-bin pseudobulk profiles against the Visium-derived niche signatures (`resources/gene_lists/TLS_niche_signatures/niche_signatures.csv`). Upstream of the chemokine-source (09), GC-proximity (10) and SPP1 (11) analyses.
 
 | Script | Env | Mode | Figure |
 |---|---|---|---|
@@ -11,7 +11,7 @@ Resolve segmented TLS regions into **B cell / T cell zones** and **germinal cent
 
 **`01_classify_zones.py`** — bins cells to a 50 µm grid inside the TLS regions and scores each bin for the B cell zone / T cell zone / GC niche signatures (top-20 on-panel genes). Classifies bins as B cell zone / T cell zone / mixed (score > 0.3) and GC (score > 0.8), and labels discrete GCs (8-connectivity, merging single-bin gaps). Writes per sample: `{s}_BT_zone_bins.csv`, `{s}_BT_zone_classification.csv`, `{s}_GC_zone_bins.csv`, `{s}_GC_zone_classification.csv`.
 
-**`02_zonation_overview.py`** — cohort overview: the B/T zone spatial map (Extended Data Fig. 9c), per-bin T:B ratio distribution (Extended Data Fig. 9d), GC spatial overview (Extended Data Fig. 10g), and the number of discrete GCs per sample coloured by clinical subtype (Extended Data Fig. 10h).
+**`02_zonation_overview.py`** — cohort overview: the B/T zone spatial map (Extended Data Fig. 9c), per-bin T:B ratio distribution (Extended Data Fig. 9d), GC spatial overview (Extended Data Fig. 10g), and the number of discrete GCs per sample colored by clinical subtype (Extended Data Fig. 10h).
 
 **`03_zoom_GCs.py`** — per discrete GC, an aligned-H&E panel with the GC outline plus the top-5 GC-signature transcripts overlaid (Extended Data Fig. 10g). Reads only the GC crops from the full-res H&E (tile by tile) and the overview from a low-resolution pyramid level (`read_tiff_region`/`read_tiff_overview` in `scripts/helper_functions.py`), so it needs < 30 GB.
 
@@ -19,7 +19,7 @@ Resolve segmented TLS regions into **B cell / T cell zones** and **germinal cent
 
 **Zone label values** (used downstream): `TLS_zone ∈ {B_cell_zone, T_cell_zone, mixed}`; `GC_zone = GC`.
 
-**Inputs:** `data/anndata_objects/xenium/{s}.h5ad` (layer `filtered_counts`); TLS regions from `results/05_xenium_mechanisms/01_identify_TLS_regions/csv_files/`; niche signatures; and, for `03`/`04`, the aligned H&E (`data/images/he/aligned_images/xenium/{s}.ome.tif`) + SpatialData (`data/spatialdata_objects/xenium/{s}.zarr`). `04` also reads the zone-zoom AOI geojson (`resources/areas_of_interest/xenium/{s}_zone_zoom.geojson`) and transcript colours (`resources/plotting_colors/transcript_colors.csv`); it only runs for samples that have an annotated zone-zoom geojson (currently P22_Xe5k).
+**Inputs:** `data/anndata_objects/xenium/{s}.h5ad` (layer `filtered_counts`); TLS regions from `results/05_xenium_mechanisms/01_identify_TLS_regions/csv_files/`; niche signatures; and, for `03`/`04`, the aligned H&E (`data/images/he/aligned_images/xenium/{s}.ome.tif`) + SpatialData (`data/spatialdata_objects/xenium/{s}.zarr`). `04` also reads the zone-zoom AOI geojson (`resources/areas_of_interest/xenium/{s}_zone_zoom.geojson`) and transcript colors (`resources/plotting_colors/transcript_colors.csv`); it only runs for samples that have an annotated zone-zoom geojson (currently P22_Xe5k).
 
 **Outputs:** `results/05_xenium_mechanisms/07_TLS_zonation/…`.
 

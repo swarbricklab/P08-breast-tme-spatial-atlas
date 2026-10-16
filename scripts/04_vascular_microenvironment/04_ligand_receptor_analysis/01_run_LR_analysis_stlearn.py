@@ -324,7 +324,7 @@ radius_max = c*2
 # Round up to whole pixel
 radius_max = math.ceil(radius_max)
 
-# Enlarge the neighbour radius slightly so all spots are captured; the exact
+# Enlarge the neighbor radius slightly so all spots are captured; the exact
 # radius occasionally misses spots near region boundaries.
 radius_max = radius_max * 1.1
 
@@ -365,7 +365,7 @@ print(len(lrs))
 # Running the analysis #
 st.tl.cci.run(data, lrs,
                   min_spots = 20, #Filter out any LR pairs with no scores for less than min_spots
-                  distance=radius_max, # None defaults to spot+immediate neighbours; distance=0 for within-spot mode
+                  distance=radius_max, # None defaults to spot+immediate neighbors; distance=0 for within-spot mode
                   n_pairs=10000, # Number of random pairs to generate; low as example, recommend ~10,000
                   n_cpus=None, # Number of CPUs for parallel. If None, detects & use all available.
                   )
@@ -529,7 +529,7 @@ st.tl.cci.run_cci(data, 'cell_type', # Spot cell information either in data.obs 
                   spot_mixtures=False, # If True will use the label transfer scores,
                                       # so spots can have multiple cell types if score>cell_prop_cutoff
                   cell_prop_cutoff=0.2, # Spot considered to have cell type if score>0.2
-                  sig_spots=True, # Only consider neighbourhoods of spots which had significant LR scores.
+                  sig_spots=True, # Only consider neighborhoods of spots which had significant LR scores.
                   n_perms=1000, # Permutations of cell information to get background, recommend ~1000
                   n_cpus=len(os.sched_getaffinity(0)), # CPUs allocated to the job; stLearn's default (1) runs
                                                        # the permutations single-threaded
@@ -546,7 +546,7 @@ plt.suptitle(f'{sample_id} ({subtype}) - LR HEVs - spots <{bin_size}µm HEV - in
 
 # --- Plot: CCI network
 
-# Visualising the no. of interactions between cell types across all LR pairs #
+# Visualizing the no. of interactions between cell types across all LR pairs #
 pos_1 = st.pl.ccinet_plot(data, 'cell_type', return_pos=True)
 plt.suptitle(f'{sample_id} ({subtype}) - LR HEVs - spots <{bin_size}µm HEV - CCI network', y=1.1, fontweight='bold')
 

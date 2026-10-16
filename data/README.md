@@ -82,7 +82,7 @@ Pathologist annotations per spot or bin (CSV):
 
 - **visium/** - annotated in separate layers (epithelial, immune, stroma, additional features; categories in [resources/pathology_annotations/](../resources/pathology_annotations/pathology_categories_per_layer.json)), plus a `single_layer` column with one label per spot.
 - **visium_hd/** - one label per 8 µm bin.
-- **visium_lymph_nodes/** - germinal centre annotations for the lymph node sections, per spot (CSV) and as polygons (GeoJSON; open the H&E image in QuPath, then drag in the GeoJSON).
+- **visium_lymph_nodes/** - germinal center annotations for the lymph node sections, per spot (CSV) and as polygons (GeoJSON; open the H&E image in QuPath, then drag in the GeoJSON).
 
 ### processed/
 

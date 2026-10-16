@@ -83,7 +83,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
                                 'clinical_subtype'].values[0]
 
 
-# --- Colours (SPP1 transcript colour; LAM1 macrophage cells indigo)
+# --- Colors (SPP1 transcript color; LAM1 macrophage cells indigo)
 
 tx_color_csv  = os.path.join(project_dir, 'resources', 'plotting_colors', 'transcript_colors.csv')
 tx_color_dict = pd.read_csv(tx_color_csv, index_col=0)['color'].to_dict()

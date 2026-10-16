@@ -37,7 +37,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 plt.rcParams['axes.grid'] = False
 
 TICK_FS, SUP_FS, ANNO_FS = 8, 12, 7
-PRODUCER_C = '#d1352b'   # highlight colour for reference producers (matches 01_reference_producers dot plot)
+PRODUCER_C = '#d1352b'   # highlight color for reference producers (matches 01_reference_producers dot plot)
 
 
 # --- Argparse arguments
@@ -128,7 +128,7 @@ SHORT_TO_FULL = {short: full for full, short in SUBSETS.items()}
 PRODUCER_FLAG = {(disp(full), g): (full in PRODUCER_SETS[g]) for full in _cells_full for g in GENES}
 PROD_LABEL = f"≥{producer_tag.replace('over_', '')}%"
 
-# per-cell lineage / major-type colours (for the annotation strips + legends)
+# per-cell lineage / major-type colors (for the annotation strips + legends)
 CELL_LINEAGE = {ct: _sub2lin.get(SHORT_TO_FULL[ct], 'NA') for ct in CELL_ORDER}
 CELL_MAJOR   = {ct: _sub2maj.get(SHORT_TO_FULL[ct], 'NA') for ct in CELL_ORDER}
 LINEAGE_C    = {ct: _lin_lut.get(CELL_LINEAGE[ct], '#cccccc') for ct in CELL_ORDER}
@@ -145,7 +145,7 @@ for g in GENES:
     print(f"  {g}: {[disp(s) for s in PRODUCER_SETS[g]]}")
 print(f'Cell types (x-axis, lineage-ordered): {CELL_ORDER}')
 
-# standard transcript colours from the project palette
+# standard transcript colors from the project palette
 _tx_lut = dict(pd.read_csv(os.path.join(project_dir, 'resources', 'plotting_colors',
                                         'transcript_colors.csv'))[['transcript', 'color']].values)
 GENE_C = {g: _tx_lut.get(g, '#888888') for g in GENES}
@@ -166,7 +166,7 @@ def star(p):
 
 
 def boxplot_panel(ax, values_per_x, colors, samples_per_x, box_w):
-    """Colour-by-x boxes at integer positions (width box_w) + per-sample jittered dots and
+    """Color-by-x boxes at integer positions (width box_w) + per-sample jittered dots and
     connecting lines. Caller owns xlim / xticks / strips (positions are 0..n-1)."""
     n = len(values_per_x)
     bp = ax.boxplot([np.asarray(v) for v in values_per_x],
@@ -235,7 +235,7 @@ for s in samples:
     if len(binf) == 0:
         print(f'{s}: no TLS zone bins — skipping')
         continue
-    # recover the 50um grid origin from the bin-centre coords (bin_x = xmin + (bin_ix+0.5)*grid)
+    # recover the 50um grid origin from the bin-center coords (bin_x = xmin + (bin_ix+0.5)*grid)
     xmin = float(binf['bin_x'].iloc[0] - (binf['bin_ix'].iloc[0] + 0.5) * grid_um)
     ymin = float(binf['bin_y'].iloc[0] - (binf['bin_iy'].iloc[0] + 0.5) * grid_um)
     bin_zone = binf.set_index(['bin_ix', 'bin_iy'])['TLS_zone']
@@ -296,8 +296,8 @@ cdf = pd.DataFrame(corr_rows)
 
 
 # --- Correlation boxplots: one panel per gene (shared y), x = candidate producers ordered by
-# lineage then major type. Boxes in the gene's transcript colour, per-sample dots + lines,
-# one-sample Wilcoxon (r != 0) star per box. Above each panel a 3-row colour grid annotates each
+# lineage then major type. Boxes in the gene's transcript color, per-sample dots + lines,
+# one-sample Wilcoxon (r != 0) star per box. Above each panel a 3-row color grid annotates each
 # producer — Lineage (top), Major type, then % of cells expressing that chemokine in the reference
 # (bottom, shared vmin/vmax across genes, own colorbar). Reference producers of the panel's gene
 # get a bold-red x-tick label. All text one size (BODY_FS) except gene + main titles.
@@ -402,7 +402,7 @@ def corr_boxplot_figure(stratum, metric, title):
                 ax_strip.text(-0.02, y_c, lab, transform=ax_strip.get_yaxis_transform(),
                               ha='right', va='center', fontsize=BODY_FS)
 
-    # --- right column: legends (Lineage, Major type, x-tick colour key) stacked flush, then cbar
+    # --- right column: legends (Lineage, Major type, x-tick color key) stacked flush, then cbar
     rx = (ML + panels_w + 0.12) / fig_w
     lin_present = [l for l in LINEAGE_ORDER if l in set(CELL_LINEAGE.values())]
     maj_present = list(dict.fromkeys(CELL_MAJOR[ct] for ct in CELL_ORDER))
@@ -442,7 +442,7 @@ def corr_boxplot_figure(stratum, metric, title):
     cbar.set_label('% expressing (ref)', fontsize=BODY_FS)
     cbar.ax.tick_params(labelsize=BODY_FS)
 
-    # shared x-axis label centred under the panels
+    # shared x-axis label centered under the panels
     center_x = (ML + panels_w / 2) / fig_w
     fig.text(center_x, 0.12 / fig_h, 'Candidate producers', ha='center', va='bottom',
              fontsize=BODY_FS, fontweight='bold')

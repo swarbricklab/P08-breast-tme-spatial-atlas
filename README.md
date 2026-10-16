@@ -38,6 +38,6 @@ A Snakemake workflow runs the analysis (steps 03–05) and figure scripts in dep
 | [workflow/](workflow/README.md) | Snakemake workflow that runs steps 03–05 and the figure scripts |
 | [config/](config/) | Sample sheets (one per platform), workflow configuration and cluster profile, `params.sh` for the job submission scripts |
 | [data/](data/README.md) | Input data (AnnData and SpatialData objects, images, pathology annotations), pulled with DVC; layout in [docs/tree.txt](docs/tree.txt) |
-| [resources/](resources/README.md) | Gene signatures, cell type hierarchy, colour palettes, regions of interest and tissue metadata |
+| [resources/](resources/README.md) | Gene signatures, cell type hierarchy, color palettes, regions of interest and tissue metadata |
 | [environment/](environment/README.md) | Conda environments |
 | results/ | Outputs, one folder per step; `results/02_cell_type_mapping` (cell type mapping) is pulled with DVC, the rest is written by the workflow |

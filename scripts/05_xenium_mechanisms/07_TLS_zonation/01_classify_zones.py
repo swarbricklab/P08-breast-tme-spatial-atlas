@@ -2,7 +2,7 @@
 
 # --- Aim
 # Classify 50 um bins inside previously-identified TLS regions into B-cell / T-cell
-# zones AND germinal-centre (GC) zones in a single pass (Extended Data Figs. 9c,d and 10g,h
+# zones AND germinal-center (GC) zones in a single pass (Extended Data Figs. 9c,d and 10g,h
 # support). Approach (per-bin / pseudobulk):
 #   1. Bin cells into a 50 um square grid (micron coordinates)
 #   2. Pseudo-bulk raw counts per bin, then normalize_total + log1p

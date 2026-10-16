@@ -455,7 +455,7 @@ def add_color_legend(fig, labels, color_dict, title='', x=0, y=0, offset=0.01, s
 
 # ---------------------------------------------------------------------------
 # Per-gene-normalized dot plot: each gene is independently rescaled so dot size
-# and colour span that gene's min->max across the groupby categories. Used for
+# and color span that gene's min->max across the groupby categories. Used for
 # the Extended Data Fig. 10c,j dot plots.
 # ---------------------------------------------------------------------------
 # Dotplot where each gene is independently rescaled — dot size and color span
@@ -464,7 +464,7 @@ def add_color_legend(fig, labels, color_dict, title='', x=0, y=0, offset=0.01, s
 def _compute_dotplot_df(adata, var_names, groupby, vmin=0, vmax=1,
                          standard_scale='var', size_normalize=True,
                          color_mode='standard_scale'):
-    """Compute the per-(gene, category) dataframe of scaled colour and dot-size
+    """Compute the per-(gene, category) dataframe of scaled color and dot-size
     values. Same scaling math as the original dotplot, but separated so the
     categorical-sub-axes path can share scaling across all genes."""
     categories = adata.obs[groupby].cat.categories.tolist()
@@ -503,7 +503,7 @@ def _compute_dotplot_df(adata, var_names, groupby, vmin=0, vmax=1,
         # Per-gene max-norm: val / max. Unlike 'var', the smallest non-zero
         # value is preserved as a ratio rather than forced to 0. Cbar vmin is
         # set to the smallest non-zero scaled value so the colormap range is
-        # fully utilised across all dots.
+        # fully utilized across all dots.
         for gene in var_names:
             gene_mask = df['gene'] == gene
             gene_vals = df.loc[gene_mask, 'mean_expr']
@@ -678,8 +678,8 @@ def per_gene_norm_dotplot_with_legends(
                            color_vmin=color_vmin, color_vmax=color_vmax, color_mode=color_mode)
                 # Category title above the sub-ax. Default 45° rotation
                 # anchors the text at the sub-ax left edge so it doesn't crowd
-                # narrow neighbours; rotation=0 falls back to a regular
-                # set_title (centred horizontally above each sub-ax).
+                # narrow neighbors; rotation=0 falls back to a regular
+                # set_title (centered horizontally above each sub-ax).
                 if category_title_rotation == 0:
                     sub_ax.set_title(
                         cat_name, fontweight='bold',

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Extended Data Fig. 9e: cohort library-normalised (CP10K) expression density of the niche chemokines CXCL13 &
+# Extended Data Fig. 9e: cohort library-normalized (CP10K) expression density of the niche chemokines CXCL13 &
 # CCL19 across three zone categories, per mm² of occupied 50 µm bins:
 #   - B_cell_zone   (TLS, B zone)
 #   - T_cell_zone   (TLS, T zone)
@@ -9,7 +9,7 @@
 #                    roughly match the B+T bin count as a baseline)
 # One panel per gene, per-sample dots, two-sided paired Wilcoxon signed-rank (n=6) for
 # B-T, B-non_TLS, T-non_TLS. Density = sum(filtered_counts) / bin area; the `filtered_counts`
-# layer is library-normalised to 1e4/cell (CP10K), so this is CP10K signal / mm².
+# layer is library-normalized to 1e4/cell (CP10K), so this is CP10K signal / mm².
 
 # --- Define environment
 # env: xen-hev

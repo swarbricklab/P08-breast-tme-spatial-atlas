@@ -16,7 +16,7 @@
 #
 # Inputs : areas-of-interest geojson ({sample_id}_zone_zoom.geojson, micron polygons named
 #          'B cell zone' / 'T cell zone'); BT zone bin CSV from 01_classify_zones.py; spatialdata
-#          zarr; aligned full-res H&E (.ome.tif); Xenium h5ad (scalefactors); transcript colours.
+#          zarr; aligned full-res H&E (.ome.tif); Xenium h5ad (scalefactors); transcript colors.
 # Output : {res_dir}/05_xenium_mechanisms/07_TLS_zonation/04_zoom_zones/plots/{sample_id}_zone_zoom.pdf
 
 
@@ -132,7 +132,7 @@ subtype   = tissue_metadata.loc[tissue_metadata['tissue_id'].astype(str) == str(
                                 'clinical_subtype'].values[0]
 
 
-# --- Transcript colours
+# --- Transcript colors
 
 tx_color_csv  = os.path.join(project_dir, 'resources', 'plotting_colors', 'transcript_colors.csv')
 tx_color_dict = pd.read_csv(tx_color_csv, index_col=0)['color'].to_dict()
@@ -323,7 +323,7 @@ width_ov = overview_coords[1] - overview_coords[0]
 new_ax.set_xlim(0, width_ov); new_ax.set_ylim(width_ov, 0)
 new_ax.grid(False); new_ax.set_xticks([]); new_ax.set_yticks([])
 
-# 50 um zone bins overlaid. Transform bin centres + two opposite corners per bin (microns ->
+# 50 um zone bins overlaid. Transform bin centers + two opposite corners per bin (microns ->
 # pixels) so a rotated alignment still gives the right per-bin pixel size.
 bin_cx_px, bin_cy_px = micron_to_he_pixel(zone_bins['bin_x'].values, zone_bins['bin_y'].values)
 bin_x0_px, bin_y0_px = micron_to_he_pixel(zone_bins['bin_x'].values - grid_um / 2,

@@ -253,7 +253,7 @@ radius_max = c*2
 # Round up to whole pixel
 radius_max = math.ceil(radius_max)
 
-# Enlarge the neighbour radius slightly so all spots are captured; the exact
+# Enlarge the neighbor radius slightly so all spots are captured; the exact
 # radius occasionally misses spots near region boundaries.
 radius_max = radius_max * 1.1
 
