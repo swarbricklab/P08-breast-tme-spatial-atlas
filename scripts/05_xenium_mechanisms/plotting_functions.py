@@ -25,12 +25,13 @@ import scipy.cluster.hierarchy as sch
 
 def transform_geojson_to_image_space(gdf, adata, sample_id, project_dir):
     """
-    Transform GeoJSON geometries from Xenium micron space to image pixel space.
+    Transform GeoJSON geometries from Xenium micron space to the pixel space of the hires
+    H&E image stored in the AnnData object (same transform as the cell coordinates in
+    scripts/01_preprocessing/xenium/02_handle_images/01_make_adata_objects_with_images.py).
     Steps:
     1. Convert from microns to pixels
     2. Apply inverse transformation matrix
     3. Scale by hires scalefactor
-    4. Shift by crop coordinates
     """
     # Imported lazily so scripts that only use the plotting helpers can import this
     # module in environments without shapely.
@@ -38,22 +39,16 @@ def transform_geojson_to_image_space(gdf, adata, sample_id, project_dir):
     hires_factor = adata.uns['spatial'][sample_id]['scalefactors']['tissue_hires_scalef']
     microns_per_pixel = 0.2125  # From experiment.xenium file
     # Load transformation matrix
-    path_to_transform_file = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'alignment_matrix', f'{sample_id}_matrix.csv')
+    path_to_transform_file = os.path.join(project_dir, 'data', 'images', 'he', 'alignment_files', 'xenium', f'{sample_id}_matrix.csv')
     transform_matrix = pd.read_csv(path_to_transform_file, header=None).to_numpy()
     inverse_transform = np.linalg.inv(transform_matrix)
-    # Load crop coordinates
-    crop_coords_file = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'crop_coords', f'{sample_id}_crop_coordinates.csv')
-    crop_coords = pd.read_csv(crop_coords_file)
-    x_start = crop_coords['x_start'].values[0]
-    y_start = crop_coords['y_start'].values[0]
     def transform_func(x, y, z=None):
         coords = np.column_stack([x, y])
         coords_pixels = coords / microns_per_pixel
         hom_coords = np.hstack([coords_pixels, np.ones((coords_pixels.shape[0], 1))])
         transformed = (inverse_transform @ hom_coords.T).T[:, :2]
         scaled = transformed * hires_factor
-        shifted = scaled - np.array([x_start * hires_factor, y_start * hires_factor])
-        return shifted[:, 0], shifted[:, 1]
+        return scaled[:, 0], scaled[:, 1]
     gdf['geometry'] = gdf['geometry'].apply(lambda geom: shapely_transform(transform_func, geom))
     return gdf
 

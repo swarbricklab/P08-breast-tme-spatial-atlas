@@ -81,7 +81,7 @@ sdata = sd.read_zarr(os.path.join(spat_dat_dir, filename))
 # --- Load the transformation matrix
 # Records how the image was aligned to the xenium coordinates
 
-alignment_dir = os.path.join(project_dir, 'resources', 'image_alignment', 'xenium', 'alignment_matrix')
+alignment_dir = os.path.join(project_dir, 'data', 'images', 'he', 'alignment_files', 'xenium')
 transform_matrix = pd.read_csv(os.path.join(alignment_dir, f'{sample_id}_matrix.csv'), header=None).to_numpy()
 
 

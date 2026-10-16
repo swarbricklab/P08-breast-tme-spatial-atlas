@@ -4,10 +4,10 @@ set -euxo pipefail
 
 # --- Aim: submit jobs for a certain script for all samples (on nci) with access to a gpu
 
-while getopts s:p: flag
+while getopts s: flag
 do
     case "${flag}" in
-        s) file_name=${OPTARG};; # name of the script you want to run (inlcuding the path to it from the current directory)
+        s) file_name=${OPTARG};; # name of the script you want to run (including the path to it from the current directory)
     esac
 done
 
@@ -17,7 +17,7 @@ echo "Run script $file_name"
 
 source "../config/params.sh"
 
-# --- Paths to donwstream scripts
+# --- Paths to downstream scripts
 
 run_script_file="$cwd/run_single_sample_job.sh" # downstream bash script that will run the python script
 function_script_file="$cwd/$file_name" # actual python script to be run
@@ -26,8 +26,7 @@ function_script_file="$cwd/$file_name" # actual python script to be run
 # --- Identify samples
 # Identify all from the sample sheet
 # Extract the section_id column
-samples=$(awk -F',' 'NR > 1 {print $3}' $visium_sample_sheet) 
-# samples="major"
+samples=$(awk -F',' 'NR > 1 {print $3}' $sample_sheet) 
 
 echo "Identified samples: $samples"
 
@@ -61,6 +60,6 @@ do
         -l storage=gdata/a56+gdata/px14+scratch/px14 \
         -l ngpus=1 \
         -V \
-        -- $run_script_file $function_script_file $h5ad_dir $project_dir $s $environment $res_dir $visium_sample_sheet
+        -- $run_script_file $function_script_file $h5ad_dir $project_dir $s $environment $res_dir $sample_sheet
         
 done

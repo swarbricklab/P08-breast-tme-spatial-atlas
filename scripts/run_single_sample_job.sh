@@ -14,7 +14,7 @@ project_dir=$3
 sample_id=$4
 environment=$5
 res_dir=$6
-visium_sample_sheet=$7
+sample_sheet=$7
 
 # Initialize Conda environment
 if [ -f /g/data/a56/conda/miniconda/etc/profile.d/conda.sh ]; then
@@ -31,4 +31,4 @@ $function_script_file \
   --sample_id $sample_id \
   --project_dir $project_dir \
   --res_dir $res_dir \
-  --sample_sheet $visium_sample_sheet \
+  --sample_sheet $sample_sheet \

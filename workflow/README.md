@@ -13,6 +13,7 @@ A Snakemake workflow that runs the analysis scripts of steps 03–05 and the fig
     - `visium/`: `P12_LN_Vis`, `P18_Vis`, `P22_Vis`, `P24_Vis`, `P29_Vis_Rep1`
     - `visium_hd/`: `P26_HD`, `P27_HD`, `P29_HD`, `P32_HD`
     - `xenium/`: `P17_Xe5k`, `P22_Xe5k`, `P24_Xe5k`, `P26_Xe5k`, `P29_Xe5k`, `P32_Xe5k`
+  - optional, from the BioImage Archive (34 MB): the Xenium alignment matrices in `data/images/he/alignment_files/xenium/` (`dvc pull data/images/he/alignment_files.dvc`), used only to draw the TLS outlines on the per-section overview plots of `05_xenium_mechanisms/01_identify_TLS_regions`. Without them the workflow still runs and those plots are made without the outlines.
 
 ## Running
 

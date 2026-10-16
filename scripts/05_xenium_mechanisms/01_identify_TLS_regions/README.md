@@ -14,7 +14,7 @@ Segment **tertiary lymphoid structure (TLS)** regions from dense spatial co-clus
 
 **`03_gene_expression_TLS.py`** — cohort matrixplot of mean CD40 and CD40LG expression (min-max scaled 0–1 per gene) across the subset-level cell types comprising ≥1% of in-TLS cells, with a per-cell-type count bar on top (Extended Data Fig. 7d). Writes `All_samples_TLS_gene_expression_CD40LG_CD40.pdf`.
 
-**Inputs:** `data/anndata_objects/xenium/{s}.h5ad`; Tangram label transfers `results/02_cell_type_mapping/label_transfer/xenium/{level}_level/{s}_{level}_pred_cell_types.csv` (col `pred_cell_type`; `01` uses the major level `T-cells`/`B-cells`, `02`/`03` use major/minor/subset); the per-cell TLS annotations from `01` (`{s}_cell_TLS_annotations.csv`); `config/sample_sheet_xenium.csv`; `resources/tissue_metadata.csv`; cell-type classifications `resources/cell_types/miniatlas/miniatlas_subset_classifications.csv`; colours `resources/plotting_colors/miniatlas_major_colors.csv`.
+**Inputs:** `data/anndata_objects/xenium/{s}.h5ad`; Tangram label transfers `results/02_cell_type_mapping/label_transfer/xenium/{level}_level/{s}_{level}_pred_cell_types.csv` (col `pred_cell_type`; `01` uses the major level `T-cells`/`B-cells`, `02`/`03` use major/minor/subset); the per-cell TLS annotations from `01` (`{s}_cell_TLS_annotations.csv`).
 
 **Outputs:** `results/05_xenium_mechanisms/01_identify_TLS_regions/…` — per-sample `csv_files/` + `plots/` from `01`; cohort summaries under `all_samples/{cellular_composition, gene_expression}/`.
 

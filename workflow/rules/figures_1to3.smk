@@ -715,7 +715,7 @@ rule fig_3K:
         "python " + F13_S + "/figure3/3K.py {params.args} > {log} 2>&1"
 
 
-# ── Extended Data Fig. 1 (supplementary overviews) ─────────────────────────
+# ── Extended Data Fig. 1 (pathology annotation overviews) ─────────────────────────
 
 rule fig_ED1C:
     """Extended Data Fig. 1c: Presence of each pathology annotation category per section."""

@@ -217,7 +217,7 @@ print(f'Loaded {len(tx_df)} transcripts for the top {len(top_genes)} GC genes', 
 # bins land on the aligned image exactly like the transcripts.
 #
 # Note: a per-sample alignment matrix also exists at
-#   resources/image_alignment/xenium/alignment_matrix/{sample_id}_matrix.csv
+#   data/images/he/alignment_files/xenium/{sample_id}_matrix.csv
 # but is not needed here because the .ome.tif is already registered to image_space and the
 # spatialdata affine is used to map the bins. This assumes transcript-native coords share
 # the bin micron frame, which holds for Xenium (cells + transcripts use one global micron

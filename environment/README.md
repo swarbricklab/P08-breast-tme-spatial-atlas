@@ -1,98 +1,21 @@
-# Environment Documentation
+# Conda environments
 
-This directory contains environment definition and snapshot files for reproducible analysis workflows.
+- **EDF/** - environment definitions, with the main packages and versions: `conda env create -f environment/EDF/<env>.yaml`
+- **ESF/** - snapshots of the environments used for the analysis, with every package version: `conda env create -f environment/ESF/<env>.yaml` to reproduce them exactly.
 
-## Environment Usage in Scripts
+Each script names its environment in its header (`# env: xen-hev`). The workflow activates the environments by name, so create them under the names below; the job submission scripts take the name from `environment` in [config/params.sh](../config/params.sh).
 
-Each analysis script includes a line near the top specifying which environment was used. This helps ensure reproducibility and clarity when running or submitting scripts.
+| Environment | Used for |
+|---|---|
+| `spatial-pilot` | Visium analyses (steps 01, 03), building the scRNA-seq reference, and the Leiden clustering in `05_xenium_mechanisms/08_FDC_recovery` |
+| `vis-hd` | Visium HD analyses (steps 01, 04) |
+| `xen-hev` | Xenium analyses (steps 01, 05) |
+| `spatdat` | Creating and reading the Xenium SpatialData objects (transcript-level analyses and plots) |
+| `cell2location` | Cell type deconvolution (step 02) |
+| `tangram` | Label transfer to Xenium (step 02) |
+| `gseapy` | Gene set enrichment analyses |
+| `shapely` | Figure scripts that need `shapely`, `adjustText` or `upsetplot` |
+| `snakemake` | Running the [workflow](../workflow/README.md) |
+| `data-access` | Pulling the data with DVC from the public archives (see [Getting the data](../README.md#getting-the-data)) |
 
-**Example:**
-```python
-# --- Define environment
-# env: xen-hev
-```
-
-When submitting scripts as jobs (e.g., via HPC), the environment can also be set in the `params.sh` file:
-```bash
-# Environment to use
-environment="xen-hev"
-```
-This allows job submission scripts to activate the correct environment automatically.
-
----
-
-## Notes on Reproducibility
-
-The analyses for Visium, Visium HD, and Xenium data were performed in separate environments (`spatial-pilot`, `vis-hd`, `xen-hev`) to ensure compatibility during development. **For reproducibility, you can use a single combined environment** (e.g., merging the dependencies from `spatial-pilot`, `vis-hd`, and `xen-hev`) to run all spatial transcriptomics analyses, though package versions may differ slightly from those used in the original analysis.
-
-However, we recommend keeping the following environments separate as they are based on official package documentation and have specific version requirements:
-- **cell2location**: For spatial deconvolution
-- **tangram**: For mapping single-cell data to spatial coordinates
-- **spatdat**: For SpatialData object creation and manipulation
-
-Both Environment Definition Files (EDF) and Environment Snapshot Files (ESF) are provided for full reproducibility.
-
----
-
-## Structure
-
-- **EDF/**: Environment Definition Files. Use these YAML files to create new conda environments:
-  ```bash
-  conda env create -f environment/EDF/{env_file}.yaml
-  ```
-- **ESF/**: Environment Snapshot Files. These are exported from active environments to capture exact package versions:
-  ```bash
-  conda activate {env_name}
-  conda env export --no-build > environment/ESF/{env_name}.yaml
-  ```
-
-## Environments
-
-### Platform-Specific Analysis Environments (can be combined)
-
-These environments were used separately during development but can be merged into a single environment for simplified reproduction:
-
-#### spatial-pilot
-- Used for Visium analysis
-- Core packages: scanpy, squidpy, cell2location (inference only)
-
-#### vis-hd
-- Used for Visium HD analysis
-- Core packages: scanpy, squidpy
-
-#### xen-hev
-- Used for Xenium analysis (e.g., TLS and HEV region identification)
-- Core packages: scanpy, squidpy
-
-### Specialized Tool Environments (recommended to keep separate)
-
-These environments are based on official package documentation and should be kept separate due to specific version requirements:
-
-#### cell2location
-- Used for spatial deconvolution model training
-- Based on official cell2location installation instructions
-
-#### tangram
-- Used for mapping single-cell reference data to spatial coordinates
-- Based on official Tangram installation instructions
-
-#### spatdat
-- Used for creation and handling of SpatialData objects (Xenium data)
-- Based on official SpatialData installation instructions
-
-### Utility Environments
-
-#### gseapy
-- Used for gene set enrichment analysis with the gseapy package
-
-#### shapely
-- Used for scripts requiring spatial geometry operations, advanced annotation placement, and set visualization. This environment is mainly used for figure generation rather than analysis.
-- Key packages: `shapely`, `adjusttext`, `upsetplot`
-
-#### data-access
-- Used to fetch the input data from the public archives with DVC; see [Getting the data](../README.md#getting-the-data) for setup, including the one-off `archivefs dvc enable` step
-- Key packages: `dvc`, `archivefs` (DVC access to Zenodo, BioImage Archive, and GEO), `chirograph` (reads the archive manifests in `.chirograph/`)
-
----
-
-For each environment, refer to the corresponding YAML file in EDF for dependencies and to ESF for a snapshot of the installed packages.
+`spatial-pilot`, `vis-hd` and `xen-hev` were kept separate during development but have similar contents; to run scripts by hand, one merged environment would also work (package versions may then differ slightly from those used), but the workflow expects the three names. Keep `cell2location`, `tangram` and `spatdat` separate: they follow the installation instructions of those packages and pin specific versions.

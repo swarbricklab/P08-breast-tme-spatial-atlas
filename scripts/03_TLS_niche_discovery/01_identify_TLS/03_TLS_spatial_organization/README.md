@@ -9,7 +9,7 @@ These scripts operate on the *stringent* Extended Data Fig. 3b definition of a d
 1. keep only groups of **≥3 directly adjacent** TLS-high spots, then
 2. **merge surviving groups separated by a single spot**.
 
-This is implemented once in the shared helper `discrete_tls.py` and reused by `01`, `02` and `04` so all panels report the same TLS set. `discrete_tls.py` is an importable module, **not a runnable step** (hence no number/argparse).
+`discrete_tls.py` implements this once for `01`, `02` and `04`, so all panels use the same TLS set; it is imported by those scripts, not run on its own.
 
 ## Scripts
 
@@ -35,7 +35,6 @@ This is implemented once in the shared helper `discrete_tls.py` and reused by `0
 - TLS-model scores: `results/03_TLS_niche_discovery/01_identify_TLS/01_run_TLS_model/{s}_TLS_model.csv`
 - Visium objects: `data/anndata_objects/visium/{s}.h5ad`
 - Pathology annotations: `data/pathology_annotations/visium/{s}_pathology_annotations.csv` (`epithelial` column; `invasive`/`in_situ` = cancer)
-- `config/sample_sheet_visium.csv`; `resources/tissue_metadata.csv`; subtype colours `resources/plotting_colors/SCSubtype_colors.csv`
 
 ## Outputs
 
