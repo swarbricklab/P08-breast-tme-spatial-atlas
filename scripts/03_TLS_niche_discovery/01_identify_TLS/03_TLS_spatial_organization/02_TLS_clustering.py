@@ -44,7 +44,7 @@ parser.add_argument("--dbscan_eps_um", type=str, default="500",
                     help="Comma-separated DBSCAN eps values in µm (edge-to-edge)")
 parser.add_argument("--min_TLS_spots", type=int, default=3,
                     help="Minimum directly-adjacent spots for a discrete TLS "
-                         "(Figure S3B stringent definition)")
+                         "(Extended Data Fig. 3b stringent definition)")
 
 args = vars(parser.parse_args())
 
@@ -122,7 +122,7 @@ for sample in sample_list:
     tissue_area_mm2 = tissue_area_um2 / 1e6
 
     groups_df  = pd.read_csv(groups_file, index_col=0)
-    # Discrete TLS (Fig S3B): >=min_TLS_spots adjacent spots, single-spot-gap merge
+    # Discrete TLS (Extended Data Fig. 3b): >=min_TLS_spots adjacent spots, single-spot-gap merge
     tls_groups = define_discrete_tls(groups_df, coords_um, group_col=GROUP_COL,
                                      min_spots=min_TLS_spots)
     tls_ids    = list(tls_groups.unique())

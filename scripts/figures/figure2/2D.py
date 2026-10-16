@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2D: heatmap of top marker genes per TLS cluster
+# Plot Fig. 2d: heatmap of top marker genes per TLS cluster
 
 # --- Define environment
 # env: spatial-pilot

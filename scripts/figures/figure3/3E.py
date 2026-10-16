@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# PVL subtype DEG analysis in scRNA-seq reference - matrixplot with gene category markers (Figure 3E)
+# PVL subtype DEG analysis in scRNA-seq reference - matrixplot with gene category markers (Fig. 3e)
 # Shows top genes per PVL subtype with presence matrix marking contractile, complement, chemokine, cell cycle, and hypoxia response genes
 
 # --- Define environment
@@ -25,7 +25,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="PVL subtype DEG analysis for Figure 3E",
+parser = argparse.ArgumentParser(description="PVL subtype DEG analysis for Fig. 3e",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

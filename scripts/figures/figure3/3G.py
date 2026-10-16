@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3G: stacked barplot showing proportion of HEV-overlapping vessels per endothelial lineage
+# Plot Fig. 3g: stacked barplot showing proportion of HEV-overlapping vessels per endothelial lineage
 # Shows how different endothelial lineages (arterial, capillary, venous, lymphatic) associate with HEVs based on overlap
 
 # --- Define environment

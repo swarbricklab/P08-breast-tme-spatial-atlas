@@ -2,10 +2,10 @@
 
 # --- Aim
 # Representative single-transcript zoom of adjacent B cell zone and T cell zone fields in one
-# sample (Figure S9F-G). Produces one page:
-#   - Overview (S9F): aligned H&E cropped around the two fields, with the 50 um zone bins
+# sample (Extended Data Fig. 9f,g). Produces one page:
+#   - Overview (Extended Data Fig. 9f): aligned H&E cropped around the two fields, with the 50 um zone bins
 #     (B cell zone / T cell zone / mixed) overlaid and the two zoom fields boxed.
-#   - Grid (S9G): rows = B cell zone (top) and T cell zone (bottom); columns = H&E, B/T cell
+#   - Grid (Extended Data Fig. 9g): rows = B cell zone (top) and T cell zone (bottom); columns = H&E, B/T cell
 #     markers (MS4A1, CD3E), CXCL13, CCL19, CCL21, FDC markers (CR1, CR2) and HEV markers
 #     (TSPAN7, MEOX2), each an H&E crop with the transcripts of that group overlaid.
 #
@@ -50,10 +50,10 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-# Single representative sample (Fig S9F-G uses P22_Xe5k, the sample whose B/T fields were
+# Single representative sample (Extended Data Fig. 9f,g uses P22_Xe5k, the sample whose B/T fields were
 # annotated). Dispatches through submit_array_jobs_nci.sh -> run_single_sample_job.sh.
 
-parser = argparse.ArgumentParser(description="Zone zoom (B vs T cell zone fields), Figure S9F-G",
+parser = argparse.ArgumentParser(description="Zone zoom (B vs T cell zone fields), Extended Data Fig. 9f,g",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad input files")
 parser.add_argument("--sample_id", default='P22_Xe5k',
@@ -86,7 +86,7 @@ else:
     sample_sheet_path = os.path.join(project_dir, 'config', 'sample_sheet_xenium.csv')
 
 
-# --- Figure spec (Fig S9G column layout: H&E, B/T cell, CXCL13, CCL19, CCL21, FDC, HEV)
+# --- Figure spec (Extended Data Fig. 9g column layout: H&E, B/T cell, CXCL13, CCL19, CCL21, FDC, HEV)
 
 area_names_zoom = ['B cell zone', 'T cell zone']   # zoom rows, top -> bottom
 
@@ -309,7 +309,7 @@ for ax, (title, _) in zip(axs[0, :], zoom_col_specs):
     ax.set_title(title, fontweight='bold', fontsize=25)
 
 
-# --- Overview ax on the left, spanning both zoom rows (S9F)
+# --- Overview ax on the left, spanning both zoom rows (Extended Data Fig. 9f)
 
 ax_top_y    = axs[0, 0].get_position().y1
 ax_bottom_y = axs[-1, 0].get_position().y0
@@ -433,7 +433,7 @@ fig.text((trans_x_start + trans_x_end) / 2, bracket_y + 0.005, 'Transcripts',
 
 title_y = top_y1 + 0.30
 title_x = (new_ax.get_position().x0 + axs[0, -1].get_position().x1) / 2
-fig.suptitle(f'S9F–G — {sample_id} ({subtype}): B cell zone vs T cell zone '
+fig.suptitle(f'Extended Data Fig. 9f,g — {sample_id} ({subtype}): B cell zone vs T cell zone '
              f'(scalebar: {scalebar_val_overview:g} {scalebar_units} overview, '
              f'{scalebar_val_zoom:g} {scalebar_units} insets)',
              x=title_x, y=title_y, ha='center', fontweight='bold', fontsize=30)

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# DEG analysis (input to the S10I volcano + S10J dotplot): for ACKR1+ endothelial
+# DEG analysis (input to the Extended Data Fig. 10i volcano + Extended Data Fig. 10j dotplot): for ACKR1+ endothelial
 # cells in intra-TLS HEV niches, compare GC-proximal (close, <= 500 um from a GC)
 # vs GC-distal (far) cells, pooled across the GC-positive samples. The unit is the
-# cell (S10I reports cell counts, e.g. ~795 close / ~4021 far).
+# cell (Extended Data Fig. 10i reports cell counts, e.g. ~795 close / ~4021 far).
 #
 # For every gene detected in >= 10 % of the pooled cells, close vs far log-transformed
 # expression is compared with a two-sided Mann-Whitney U test, Benjamini-Hochberg

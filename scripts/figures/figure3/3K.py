@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3K: relationship between number of HEVs and TLS size
+# Plot Fig. 3k: relationship between number of HEVs and TLS size
 # Shows correlation between number of HEVs proximal to a TLS and the size of the TLS (number of 48 µm bins)
 
 # --- Define environment

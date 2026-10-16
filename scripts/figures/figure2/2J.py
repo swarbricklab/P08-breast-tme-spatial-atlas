@@ -2,7 +2,7 @@
 
 # --- Aim
 # Plot GC score distribution per annotation as a ridgeplot for lymph node samples
-# This creates Figure 2J
+# This creates Fig. 2j
 
 # --- Define environment
 # env: spatial-pilot
@@ -20,7 +20,7 @@ from mycolorpy import colorlist as mcp
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot GC score distribution per annotation for Figure 2J",
+parser = argparse.ArgumentParser(description="Plot GC score distribution per annotation for Fig. 2j",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

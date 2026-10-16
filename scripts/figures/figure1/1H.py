@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 1H: B-cell to T-cell ratios per clinical subtype
+# Plot Fig. 1h: B-cell to T-cell ratios per clinical subtype
 # Shows ratios across TLS/aggregate annotated spots
-# This creates Figure 1H
+# This creates Fig. 1h
 
 
 # --- Define environment

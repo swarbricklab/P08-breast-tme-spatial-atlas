@@ -2,8 +2,8 @@
 
 # --- Aim
 # Summarise the cellular composition of the identified Xenium TLS regions across the cohort.
-# Produces the proportion of each cell type located inside vs outside TLS regions (S7B) and
-# the average relative abundance of each cell type among cells within TLS regions (S7C).
+# Produces the proportion of each cell type located inside vs outside TLS regions (Extended Data Fig. 7b) and
+# the average relative abundance of each cell type among cells within TLS regions (Extended Data Fig. 7c).
 
 # --- Define environment
 # env: xen-hev
@@ -25,7 +25,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Cellular composition of Xenium TLS regions (S7B, S7C)",
+parser = argparse.ArgumentParser(description="Cellular composition of Xenium TLS regions (Extended Data Fig. 7b,c)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -141,7 +141,7 @@ subset_cell_types_sorted = sorted(
                    if get_major(x, level='subset') in major_cell_types_sorted else len(major_cell_types_sorted), x))
 
 
-# --- Plot 1 (S7B): proportion of each cell type located inside vs outside TLS regions
+# --- Plot 1 (Extended Data Fig. 7b): proportion of each cell type located inside vs outside TLS regions
 
 def inside_outside_proportions(tls_df, annotation_key):
     """Per-sample proportion of each cell type's cells that fall inside TLS regions."""
@@ -163,7 +163,7 @@ def inside_outside_proportions(tls_df, annotation_key):
 
 
 def add_sample_dots(ax, sample_props, annotation_key, sorted_cells, value_col, dot_size=3):
-    """Per-sample points on top of the mean bars (as in Fig. 3G); sample_props is long format,
+    """Per-sample points on top of the mean bars (as in Fig. 3g); sample_props is long format,
     one row per sample x cell type."""
     x_lut = dict(zip(sorted_cells, np.arange(len(sorted_cells))))
     # Fixed horizontal slot per sample so samples with identical values don't stack on top of each other
@@ -234,7 +234,7 @@ title_y = axs[0].get_position().y1 + 0.4
 plt.suptitle('All samples - Cells inside vs outside of TLS regions', x=title_x, y=title_y, fontweight='bold')
 
 
-# --- Plot 2 (S7C): average relative abundance of each cell type within TLS regions
+# --- Plot 2 (Extended Data Fig. 7c): average relative abundance of each cell type within TLS regions
 
 def tls_composition(tls_df, annotation_key):
     """Per-sample relative abundance of each cell type among cells inside TLS regions."""

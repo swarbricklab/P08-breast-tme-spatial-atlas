@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot selected GC examples for Figure 2G
+# Plot selected GC examples for Fig. 2g
 # Shows GCs detected by signature
-# This creates Figure 2G
+# This creates Fig. 2g
 
 # --- Define environment
 # env: spatial-pilot
@@ -26,7 +26,7 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot GC examples for Figure 2G",
+parser = argparse.ArgumentParser(description="Plot GC examples for Fig. 2g",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

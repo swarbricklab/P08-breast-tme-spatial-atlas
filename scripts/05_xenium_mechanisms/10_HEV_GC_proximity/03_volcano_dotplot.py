@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S10I + S10J: render the close-vs-far DEG table (DEG_close_vs_far.csv from
+# Extended Data Fig. 10i + Extended Data Fig. 10j: render the close-vs-far DEG table (DEG_close_vs_far.csv from
 # 02_DEG_close_vs_far.py) as:
-#   - S10I: a volcano of the mean log-transformed difference (close - far) vs -log10 BH-P,
+#   - Extended Data Fig. 10i: a volcano of the mean log-transformed difference (close - far) vs -log10 BH-P,
 #           coloured by significance (purple = higher close to GC, brown = lower,
 #           grey = ns), with canonical HEV markers outlined + bold-labelled and all
 #           significant genes labelled (adjustText avoids overlaps).
-#   - S10J: a transposed dot plot of the significant genes, split into up-/down-close
+#   - Extended Data Fig. 10j: a transposed dot plot of the significant genes, split into up-/down-close
 #           blocks, with close (<=500 um) vs far (>500 um) rows, dot size = % of cells
 #           expressing and colour = per-gene-max-scaled mean expression.
 # Both are built purely from the DEG CSV (no expression reload).
@@ -36,7 +36,7 @@ FAR_COLOR   = '#8c6d31'   # brown
 # --- Argparse arguments (Methods-fixed thresholds are hard-coded defaults)
 
 parser = argparse.ArgumentParser(
-    description="S10I volcano + S10J dot plot from the close-vs-far DEG table.",
+    description="Extended Data Fig. 10i volcano + Extended Data Fig. 10j dot plot from the close-vs-far DEG table.",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("-s", "--samples", nargs="*", help="Accepted for runner compatibility (unused).")
@@ -66,7 +66,7 @@ padj_threshold     = args["padj_threshold"]
 hev_markers        = args["hev_markers"]
 min_label_distance = args["min_label_distance"]
 
-unit_label = 'cells'   # DEG is cell-level (S10I reports cell counts)
+unit_label = 'cells'   # DEG is cell-level (Extended Data Fig. 10i reports cell counts)
 
 
 # --- Paths
@@ -363,36 +363,36 @@ def draw_deg_dotplot_transposed(deg, gene_list, title, bold_genes=None, near_gc_
 plt.rcParams['axes.axisbelow'] = True
 hev_set = set(hev_markers)
 
-# S10I — volcano: annotate all sig genes + HEV markers (HEV markers always shown,
+# Extended Data Fig. 10i — volcano: annotate all sig genes + HEV markers (HEV markers always shown,
 # even if non-sig). Both HEV markers and every sig gene are priority so no dot is
 # dropped by min_distance; adjustText repositions overlaps.
 sig_mask = (deg['padj'] < padj_threshold) & (deg['mean_diff'].abs() > lfc_threshold)
 sig_genes = set(deg.loc[sig_mask, 'gene'])
 annotate = deg[sig_mask | deg['gene'].isin(hev_set)]
-print(f'S10I annotate set: {len(annotate)} genes ({int(sig_mask.sum())} sig + HEV markers)')
+print(f'Extended Data Fig. 10i annotate set: {len(annotate)} genes ({int(sig_mask.sum())} sig + HEV markers)')
 fig_v = draw_volcano(
     deg, annotate,
-    title=(f'S10I — HEVs close vs far from GC (≤{int(near_gc_um)} µm = close)\n'
+    title=(f'Extended Data Fig. 10i — HEVs close vs far from GC (≤{int(near_gc_um)} µm = close)\n'
            f'{n_close} close vs {n_far} far {unit_label}'),
     figsize=(4, 4), label_size=7, min_distance=min_label_distance,
     highlight_outline=hev_set, priority_genes=hev_set | sig_genes,
 )
-volcano_pdf = os.path.join(plots_dir, 'S10I_DEG_close_vs_far_volcano.pdf')
+volcano_pdf = os.path.join(plots_dir, 'ED10I_DEG_close_vs_far_volcano.pdf')
 fig_v.savefig(volcano_pdf, bbox_inches='tight', dpi=300)
 plt.close(fig_v)
 print(f'Saved: {volcano_pdf}')
 
-# S10J — transposed dot plot of the significant genes (up/down-close blocks).
+# Extended Data Fig. 10j — transposed dot plot of the significant genes (up/down-close blocks).
 sig_gene_list = deg.loc[sig_mask, 'gene'].tolist()
-print(f'S10J dotplot: {len(sig_gene_list)} sig genes')
+print(f'Extended Data Fig. 10j dotplot: {len(sig_gene_list)} sig genes')
 fig_d = draw_deg_dotplot_transposed(
     deg, sig_gene_list,
-    title=(f'S10J — ACKR1+ HEV ECs, close vs far from GC\n'
+    title=(f'Extended Data Fig. 10j — ACKR1+ HEV ECs, close vs far from GC\n'
            f'significant genes (BH-P<{padj_threshold}, |diff|>{lfc_threshold})'),
     bold_genes=hev_set, near_gc_um=near_gc_um,
 )
 if fig_d is not None:
-    dotplot_pdf = os.path.join(plots_dir, 'S10J_DEG_close_vs_far_dotplot.pdf')
+    dotplot_pdf = os.path.join(plots_dir, 'ED10J_DEG_close_vs_far_dotplot.pdf')
     fig_d.savefig(dotplot_pdf, bbox_inches='tight', dpi=300)
     plt.close(fig_d)
     print(f'Saved: {dotplot_pdf}')

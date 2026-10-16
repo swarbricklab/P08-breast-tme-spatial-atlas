@@ -1,6 +1,6 @@
 # Rules for scripts/03_TLS_niche_discovery (Visium breast tumours + matched lymph nodes):
 #   01 identify TLS          - TLS model score per spot, grouping of TLS-high spots (tumours + lymph
-#                              nodes), discrete-TLS number/size/clustering/topology (Fig S3B)
+#                              nodes), discrete-TLS number/size/clustering/topology (Extended Data Fig. 3b)
 #   02 identify TLS niches   - Harmony/Leiden clustering of TLS-high spots across tumour sections
 #   03 extract signatures    - niche marker genes; GC filtered against invasive epithelium, HEV
 #                              against endothelial-high spots; final signature files (used by 04)
@@ -199,7 +199,7 @@ rule v03_TLS_clustering:
 
 
 rule v03_TLS_number_size_overview:
-    """03/03: Cohort overview of TLS number, size, clustering and topology (Fig S3B)."""
+    """03/03: Cohort overview of TLS number, size, clustering and topology (Extended Data Fig. 3b)."""
     input:
         tls_model  = expand(rules.v03_run_TLS_model.output.csv, sample=VIS_SAMPLES),
         distances  = rules.v03_TLS_distances_topology.output.csv,
@@ -492,7 +492,7 @@ rule v03_score_signatures:
 
 
 rule v03_score_signatures_lymph_nodes:
-    """04/01: GC, B cell zone and T cell zone scores per spot (lymph nodes; Fig 2i, 2j)."""
+    """04/01: GC, B cell zone and T cell zone scores per spot (lymph nodes; Fig. 2i,j)."""
     input:
         h5ad       = VIS_H5AD,
         tls_model  = rules.v03_run_TLS_model_lymph_nodes.output.csv,
@@ -524,7 +524,7 @@ rule v03_score_signatures_lymph_nodes:
 
 
 rule v03_group_high_score_areas:
-    """04/02: Group contiguous spots with a niche score (top 20 genes) > 0.7 (tumours; Fig 2g, 2h)."""
+    """04/02: Group contiguous spots with a niche score (top 20 genes) > 0.7 (tumours; Fig. 2g,h)."""
     input:
         h5ad      = VIS_H5AD,
         tls_model = rules.v03_run_TLS_model.output.csv,

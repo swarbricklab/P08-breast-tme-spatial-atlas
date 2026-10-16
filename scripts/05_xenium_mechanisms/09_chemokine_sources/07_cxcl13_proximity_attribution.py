@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S9K + S9L: Tfh/FDC density across TLS zones and CXCL13 source attribution.
+# Extended Data Fig. 9k + Extended Data Fig. 9l: Tfh/FDC density across TLS zones and CXCL13 source attribution.
 #
-# S9K (density): Tfh and FDC cell density (cells / mm^2) in the B vs T cell zone, per-sample
+# Extended Data Fig. 9k (density): Tfh and FDC cell density (cells / mm^2) in the B vs T cell zone, per-sample
 # points over a box, with a two-sided paired Wilcoxon between zones. The Tfh and FDC panels
 # share a common y-axis so the two cell types can be compared on the same scale. The FDC panel
 # uses only samples with a recovered FDC population.
 #
-# S9L (proximity attribution): CXCL13 transcripts are attributed to reference-defined producers.
+# Extended Data Fig. 9l (proximity attribution): CXCL13 transcripts are attributed to reference-defined producers.
 # Candidate producers are miniatlas reference subsets in which >= 15% of cells express CXCL13
 # (Tfh CD4+, CD8+ LAG3 and cycling MKI67+ T cells), plus FDC (absent from the reference;
 # recovered separately). A cell is a proximity anchor only if it is a producer type AND carries
@@ -59,7 +59,7 @@ TICK_FS, SUP_FS, ANNO_FS = 8, 12, 7
 # < 30 CXCL13 tx, pool sources < 1 %) are hard-coded defaults.
 
 parser = argparse.ArgumentParser(
-    description="S9K/S9L: Tfh/FDC density + CXCL13 reference-producer proximity attribution (cohort)",
+    description="Extended Data Fig. 9k,l: Tfh/FDC density + CXCL13 reference-producer proximity attribution (cohort)",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-s", "--samples", nargs='+', required=True)
 parser.add_argument("--h5ad_dir", default=None, help="defaults to <project_dir>/data/anndata_objects")
@@ -199,7 +199,7 @@ samples_by_subtype = {st: sorted([s for s in sample_list if subtype_dict.get(s) 
 sorted_samples = [s for st in present_subtypes for s in samples_by_subtype[st]]
 
 
-# --- Reference cell-type classifications + colours (for the S9L producer segments)
+# --- Reference cell-type classifications + colours (for the Extended Data Fig. 9l producer segments)
 
 classif = pd.read_csv(os.path.join(project_dir, 'resources', 'cell_types', 'miniatlas',
                                    'miniatlas_subset_classifications.csv'))
@@ -237,7 +237,7 @@ def _base_subset_color(cat):
     return lineage_color.get(lineage, 'lightgray')
 
 
-# Palette covering every S9L category. Tfh + CD8 LAG3 reference colours are near-white, so we
+# Palette covering every Extended Data Fig. 9l category. Tfh + CD8 LAG3 reference colours are near-white, so we
 # assign explicit visible colours matching the reference-producer scheme.
 cat_palette = dict(src_palette)
 for p in ref_producers:
@@ -312,8 +312,8 @@ def load_sample(sample):
     subset.index = subset.index.astype(str)
     cell_df = cell_df.merge(subset, left_on='cell_id', right_index=True, how='left')
 
-    # FDC / Tfh membership. cell_type (Tfh/FDC/other) drives the S9K density panels; is_fdc gates
-    # the FDC proximity anchor for S9L.
+    # FDC / Tfh membership. cell_type (Tfh/FDC/other) drives the Extended Data Fig. 9k density panels; is_fdc gates
+    # the FDC proximity anchor for Extended Data Fig. 9l.
     fdc_csv = os.path.join(fdc_dir, f'{sample}_FDC_Tfh_barcodes.csv')
     fdc_ids = set()
     if os.path.isfile(fdc_csv):
@@ -465,7 +465,7 @@ nbins_df    = pd.DataFrame(nbins_rows)
 
 
 # ==========================================================================================
-# S9K: Tfh and FDC cell density (cells / mm^2) per zone (shared y-axis across panels)
+# Extended Data Fig. 9k: Tfh and FDC cell density (cells / mm^2) per zone (shared y-axis across panels)
 # ==========================================================================================
 
 cells_in_z = all_cells[all_cells['zone'].isin(zones_of_i)]
@@ -568,13 +568,13 @@ fig.canvas.draw()
 title_x = (axes[0].get_position().x0 + axes[-1].get_position().x1) / 2
 top_extent = max(fig.transFigure.inverted().transform(
     ax.get_tightbbox(fig.canvas.get_renderer()))[1][1] for ax in axes)
-fig.suptitle('S9K — Tfh and FDC density per TLS zone',
+fig.suptitle('Extended Data Fig. 9k — Tfh and FDC density per TLS zone',
              x=title_x, y=top_extent + 0.05, ha='center', va='bottom',
              fontsize=SUP_FS, fontweight='bold')
 
 
 # ==========================================================================================
-# S9L: CXCL13 reference-producer source attribution (excluding background) per zone
+# Extended Data Fig. 9l: CXCL13 reference-producer source attribution (excluding background) per zone
 # ==========================================================================================
 
 counts_no_bg = counts_long[counts_long['attribution'] != 'background'].copy()
@@ -675,14 +675,14 @@ def stacked_bar(fig, ax_pos, proportions_df, xtick_labels, suptitle):
                  ha='center', va='bottom', fontsize=SUP_FS, fontweight='bold')
 
 
-# --- S9L cohort stacked bar (B vs T zone)
+# --- Extended Data Fig. 9l cohort stacked bar (B vs T zone)
 fig = plt.figure(figsize=(3.0, 3.2))
 p_left, p_bottom = 0.28, 0.24
 p_w = 0.16 * len(zones_of_i)
 stacked_bar(fig, [p_left, p_bottom, p_w, 0.56],
             proportions_df=cohort_collapsed,
             xtick_labels=[pretty_zone(z) for z in cohort_collapsed.index],
-            suptitle=(f'S9L — cohort {TARGET_GENE} source attribution per zone\n'
+            suptitle=(f'Extended Data Fig. 9l — cohort {TARGET_GENE} source attribution per zone\n'
                       f'(>= {min_pct_expr}% ref producers; d_max={d_max:g} um, anchor >= '
                       f'{min_producer_count} tx, background < {min_cell_count_other} tx; {cohort_note})'))
 
@@ -705,7 +705,7 @@ counts_long.to_csv(os.path.join(csv_dir, 'cxcl13_producer_attribution_counts_lon
 per_sample_collapsed.to_csv(os.path.join(csv_dir, 'cxcl13_producer_attribution_per_sample.csv'), index=False)
 cohort_collapsed.to_csv(os.path.join(csv_dir, 'cxcl13_producer_attribution_cohort.csv'))
 
-pdf_path = os.path.join(plot_dir, 'S9K_S9L_cxcl13_proximity_attribution.pdf')
+pdf_path = os.path.join(plot_dir, 'ED9K_ED9L_cxcl13_proximity_attribution.pdf')
 save_multi_image(pdf_path)
 print(f'\nSaved: {pdf_path}')
 print('Script successfully completed')

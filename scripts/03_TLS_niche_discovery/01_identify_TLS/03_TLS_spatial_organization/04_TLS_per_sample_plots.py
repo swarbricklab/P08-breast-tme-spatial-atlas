@@ -49,7 +49,7 @@ parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file")
 parser.add_argument("--TLS_threshold", type=float, default=0.01)
 parser.add_argument("--min_TLS_spots", type=int, default=3,
                     help="Minimum directly-adjacent spots for a discrete TLS "
-                         "(Figure S3B stringent definition)")
+                         "(Extended Data Fig. 3b stringent definition)")
 parser.add_argument("--dbscan_eps_um", type=int, default=500,
                     help="DBSCAN eps (µm) whose labels are plotted; must exist as "
                          "a dbscan_label_epsX column in clustering_per_TLS.csv")
@@ -184,7 +184,7 @@ def render_sample(sample):
         index=adata.obs_names, columns=['x', 'y'],
     )
 
-    # Discrete-TLS labels per spot (Fig S3B definition)
+    # Discrete-TLS labels per spot (Extended Data Fig. 3b definition)
     groups_file = os.path.join(groups_dir, f'{sample}_TLS_groups.csv')
     if os.path.exists(groups_file):
         gdf = pd.read_csv(groups_file, index_col=0)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5G: gene expression in cells inside vs outside TLS regions
+# Plot Fig. 5g: gene expression in cells inside vs outside TLS regions
 # Shows cell type-specific expression patterns comparing TLS interior with surrounding tissue
 
 # --- Define environment
@@ -305,7 +305,7 @@ def prepare_plot(tls_df, annotation_key):
     mean_false = 1 - mean_true
     return mean_true, std_true, mean_false, sample_prop_all
 
-# Per-sample points on top of the mean bars (as in Fig. 3G)
+# Per-sample points on top of the mean bars (as in Fig. 3g)
 def add_sample_dots(ax, sample_props, annotation_key, sorted_cells, value_col, dot_size=2):
     # sample_props: long format, one row per sample x cell type
     x_lut = dict(zip(sorted_cells, np.arange(len(sorted_cells))))

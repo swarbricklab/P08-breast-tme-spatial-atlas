@@ -1,10 +1,10 @@
 # 06_cellular_enrichment
 
-Quantify **cell-type enrichment within ~200 µm of HEV niches** and correlate proximal abundance with endothelial `SPP1` expression. Generates data for Table S12.
+Quantify **cell-type enrichment within ~200 µm of HEV niches** and correlate proximal abundance with endothelial `SPP1` expression. Generates data for Supplementary Table 12.
 
 | Script | Env | Mode | Figure |
 |---|---|---|---|
-| `01_SPP1_vs_proximal_enrichment.py` | xen-hev | `--sample_id` | Table S12 |
+| `01_SPP1_vs_proximal_enrichment.py` | xen-hev | `--sample_id` | Supplementary Table 12 |
 
 **`01_SPP1_vs_proximal_enrichment.py`** — loads the HEV niches from `02_identify_HEV_regions`, TLS annotations and Tangram subset labels; for each HEV niche finds all non-niche cells within 200 µm (KD-tree minimum distance), tabulates their cell-type proportions, computes mean ACKR1+ endothelial `SPP1` per niche, and Pearson-correlates each proximal cell-type proportion against niche SPP1. Writes per-niche SPP1 + cell proportions (`{s}_HEV_SPP1_and_cell_proportions.csv`) and the correlation table (`{s}_HEV_SPP1_and_cell_proportions_corr.csv`), plus a PDF, under `maxdist_200um/`.
 
@@ -12,4 +12,4 @@ Quantify **cell-type enrichment within ~200 µm of HEV niches** and correlate pr
 
 **Outputs:** `results/05_xenium_mechanisms/06_cellular_enrichment/SPP1_vs_cell_abundance/maxdist_200um/…` (`csv_files/`, `plots/`).
 
-**Run order:** requires `01_identify_TLS_regions` and `02_identify_HEV_regions`; run per sample. Feeds Table S12.
+**Run order:** requires `01_identify_TLS_regions` and `02_identify_HEV_regions`; run per sample. Feeds Supplementary Table 12.

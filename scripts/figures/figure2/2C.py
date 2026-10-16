@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2C: barplot showing prevalence of lymphoid structures per clinical subtype
+# Plot Fig. 2c: barplot showing prevalence of lymphoid structures per clinical subtype
 # Shows proportion of spots with high TLS score stratified by breast cancer subtype
 
 # --- Define environment

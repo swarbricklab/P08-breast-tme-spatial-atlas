@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 1E: barplot of sample composition by pathology annotations & deconvolution results
+# Plot Fig. 1e: barplot of sample composition by pathology annotations & deconvolution results
 # Shows stacked bars for each sample with proportions of pathology categories and cell types
-# This creates Figure 1E
+# This creates Fig. 1e
 
 # --- Define environment
 # env: spatial-pilot

@@ -51,7 +51,7 @@ def min_dist(res):
     return expand(VDIST_DIR + "/" + res + "/csv_files/min_dist/{{sample}}_distance_closest_{e}_per_spot.csv", e=ENDO)
 
 LR_DIR = V04 + "/04_ligand_receptor_analysis"
-LR_BINS = ["0", "25"]       # µm; 0 = HEV bins only (Fig. 5d, ED10), 25 = HEV + perivascular (Fig. 4, ED8)
+LR_BINS = ["0", "25"]       # µm; 0 = HEV bins only (Fig. 5d, Extended Data Fig. 10), 25 = HEV + perivascular (Fig. 4, Extended Data Fig. 8)
 STLEARN_H5AD = LR_DIR + "/01_run_LR_analysis_stlearn/{lr_bin}um_bin/csv_files/{sample}_HEV_LR_analysis_stlearn.h5ad"
 
 
@@ -255,7 +255,7 @@ rule h04_calculate_all_HEV_distances:
 # ── 02 · identify all vasculature ────────────────────────────────────────────────
 
 rule h04_classify_vessels:
-    """01: Segment vessels by dominant deconvolved endothelial type (Fig. 3b-d)."""
+    """01: Segment vessels by dominant deconvolved endothelial type (Fig. 3b–d)."""
     input:
         h5ad     = expand(HD_H5AD, res="square_016um"),
         decon    = expand(DECON, level="minor", allow_missing=True),
@@ -348,7 +348,7 @@ rule h04_calculate_vessel_distances:
 
 
 rule h04_assess_PVL_association:
-    """04: PVL abundance across distance bins from each vessel type (Fig. 3f, ED6e)."""
+    """04: PVL abundance across distance bins from each vessel type (Fig. 3f, Extended Data Fig. 6e)."""
     input:
         h5ad     = expand(HD_H5AD, res="square_016um"),
         decon    = expand(DECON, level="minor", allow_missing=True),
@@ -412,7 +412,7 @@ rule h04_compare_microenvironment:
 
 
 rule h04_compare_gene_expression:
-    """02: DEGs HEV vs non-HEV ACKR1 vessel bins, all samples (Fig. 3i, Table S8; Fig. 5d)."""
+    """02: DEGs HEV vs non-HEV ACKR1 vessel bins, all samples (Fig. 3i, Supplementary Table 8; Fig. 5d)."""
     input:
         h5ad     = expand(H5AD + "/visium_hd/square_016um/{sample}.h5ad", sample=HD_SAMPLES),
         vessels  = expand(VESSEL_CLASS, sample=HD_SAMPLES),
@@ -509,8 +509,8 @@ rule h04_run_LR_analysis_stlearn:
 
 
 rule h04_analyze_LR_all:
-    """02: Aggregate stLearn results across samples per bin size (Fig. 4g-h, ED8d,g at 25 µm;
-    Fig. 5d, ED10a-b at 0 µm)."""
+    """02: Aggregate stLearn results across samples per bin size (Fig. 4g,h, Extended Data Fig. 8d,g at 25 µm;
+    Fig. 5d, Extended Data Fig. 10a,b at 0 µm)."""
     input:
         h5ad  = expand(STLEARN_H5AD, sample=HD_SAMPLES, allow_missing=True),
         hev   = expand(HEV_GROUPS, sample=HD_SAMPLES),
@@ -538,7 +538,7 @@ rule h04_analyze_LR_all:
 
 
 rule h04_plot_LR_per_sample:
-    """03: Per-sample LR plots and HEV spot grouping (only the 25 µm run is needed; Fig. 4i-j)."""
+    """03: Per-sample LR plots and HEV spot grouping (only the 25 µm run is needed; Fig. 4i,j)."""
     input:
         h5ad         = expand(HD_H5AD, res="square_016um"),
         stlearn      = STLEARN_H5AD,

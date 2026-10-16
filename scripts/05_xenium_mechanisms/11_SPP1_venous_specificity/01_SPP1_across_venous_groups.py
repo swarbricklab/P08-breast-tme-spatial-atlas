@@ -2,7 +2,7 @@
 
 # --- Aim
 # Compare SPP1 log-transformed expression across four ACKR1+ venous EC groups and
-# produce Figure S10C (SPP1 + venous/HEV-marker per-gene-max dot plot with
+# produce Extended Data Fig. 10c (SPP1 + venous/HEV-marker per-gene-max dot plot with
 # per-group cell-count bars) plus the supporting violin/box panels.
 #
 # Stratification follows the HEV-microenvironment approach: HEV-vs-non-HEV is
@@ -29,7 +29,7 @@
 #
 # Output (one PDF): cohort dot plot of SPP1 + HEV markers (ACKR1, TSPAN7, RAMP3,
 # MEOX2), per-gene-max scaled, across the four groups, with per-group cell-count
-# bars  [S10C].
+# bars  [Extended Data Fig. 10c].
 
 
 # --- Define environment
@@ -58,7 +58,7 @@ PANEL_TITLE_FS = 11
 
 parser = argparse.ArgumentParser(
     description="SPP1 expression across ACKR1+ venous EC groups (TLS / HEV "
-                "splits) — Figure S10C",
+                "splits) — Extended Data Fig. 10c",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("-s", "--samples", nargs='+', required=True,
@@ -277,7 +277,7 @@ print(f'Total ACKR1+ ECs across cohort: {len(all_cells)}')
 
 # --- Plot config
 
-# --- Cohort dotplot (SPP1 + HEV markers), per-gene-max scaled [S10C]
+# --- Cohort dotplot (SPP1 + HEV markers), per-gene-max scaled [Extended Data Fig. 10c]
 
 all_adata = ad.concat(per_sample_adata, merge='same')
 all_adata.obs['group'] = pd.Categorical(
@@ -302,7 +302,7 @@ plotting_functions.per_gene_norm_dotplot_with_legends(
     transpose=True,
 )
 plt.suptitle(
-    f'S10C — {spp1_gene} & HEV markers in ACKR1+ venous EC groups '
+    f'Extended Data Fig. 10c — {spp1_gene} & HEV markers in ACKR1+ venous EC groups '
     f'(mean expr & dot size are per-gene fraction of max)',
     fontweight='bold', y=1.1, va='bottom')
 
@@ -314,7 +314,7 @@ out_base = os.path.join(res_dir, '05_xenium_mechanisms',
 plots_dir = os.path.join(out_base, 'plots')
 os.makedirs(plots_dir, exist_ok=True)
 
-pdf_path = os.path.join(plots_dir, 'S10C_SPP1_across_venous_groups.pdf')
+pdf_path = os.path.join(plots_dir, 'ED10C_SPP1_across_venous_groups.pdf')
 save_multi_image(pdf_path)
 
 print(f'\nSaved: {pdf_path}')

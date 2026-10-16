@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2H: barplot showing number of germinal centers per clinical subtype
+# Plot Fig. 2h: barplot showing number of germinal centers per clinical subtype
 # GCs identified by signature scoring
 
 # --- Define environment

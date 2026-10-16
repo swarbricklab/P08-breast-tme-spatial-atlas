@@ -28,7 +28,7 @@ rule all_long:
     input:
         TARGETS + TARGETS_LONG
 
-# Xenium analyses and Xenium figure panels only (05_xenium_mechanisms + Fig. 4a-e,k and 5a-c,e-h)
+# Xenium analyses and Xenium figure panels only (05_xenium_mechanisms + Figs. 4a–e,k and 5a–c,e–h)
 def _flat(x):
     for i in x:
         if isinstance(i, (list, tuple)) or type(i).__name__ in ("Namedlist", "OutputFiles", "InputFiles"):
@@ -43,11 +43,11 @@ rule all_xenium:
         [t for t in _flat(TARGETS) if "/05_xenium_mechanisms/" in t]
         + [RES + "/figures/Fig_" + f + ".pdf" for f in XEN_FIGS]
 
-# Visium and Visium HD analyses (03, 04) and their figure panels (Fig. 1-3, supplementary overviews);
+# Visium and Visium HD analyses (03, 04) and their figure panels (Figs. 1–3, supplementary overviews);
 # all_visium_long adds the Visium HD ligand-receptor analysis (stLearn, up to ~4 h per sample) and the panels built on it
 def _is_visium(t):
     return ("/03_TLS_niche_discovery/" in t or "/04_vascular_microenvironment/" in t
-            or "/figures/Fig_1" in t or "/figures/Fig_2" in t or "/figures/Fig_3" in t or "/supplementary_overviews/" in t)
+            or "/figures/Fig_1" in t or "/figures/Fig_2" in t or "/figures/Fig_3" in t or "/extended_data/" in t)
 
 rule all_visium:
     input:

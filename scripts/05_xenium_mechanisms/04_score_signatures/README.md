@@ -1,10 +1,10 @@
 # 04_score_signatures
 
-Score **STING-pathway and type-I-interferon (IFN)** gene signatures across cell types in the vascular niche. Generates data for Table S9.
+Score **STING-pathway and type-I-interferon (IFN)** gene signatures across cell types in the vascular niche. Generates data for Supplementary Table 9.
 
 | Script | Env | Mode | Figure |
 |---|---|---|---|
-| `01_score_STING_signatures.py` | xen-hev | `--sample_id` | Table S9 |
+| `01_score_STING_signatures.py` | xen-hev | `--sample_id` | Supplementary Table 9 |
 
 **`01_score_STING_signatures.py`** — loads Tangram major/subset labels and the HEV niches from `02_identify_HEV_regions`, splits ACKR1+ endothelium into Venous / HEV-far-from-TLS / HEV-close-to-TLS, `sc.tl.score_genes`-scores each STING and type-I-IFN signature, and renders per-cell-type violin plots plus dot plots (raw and 0-1-scaled mean score × % expressing) across the vessel-type groups. Writes per-cell signature scores (`{s}_STING_signature_scores.csv`), the genes used per signature (`{s}_STING_signatures_genes_used.csv`) and a PDF.
 
@@ -12,4 +12,4 @@ Score **STING-pathway and type-I-interferon (IFN)** gene signatures across cell 
 
 **Outputs:** `results/05_xenium_mechanisms/04_score_signatures/01_score_STING_signatures/…` (`plots/`, `csv_files/`).
 
-**Run order:** requires `02_identify_HEV_regions`; run per sample. Feeds Table S9.
+**Run order:** requires `02_identify_HEV_regions`; run per sample. Feeds Supplementary Table 9.

@@ -33,7 +33,7 @@ snakemake --profile config/profiles/nci_a56 results/figures/Fig_2I.pdf --forceru
 
 Any single output can be a target; figure panels are `results/figures/Fig_<panel>.pdf`, made by rules named `fig_<panel>`. Outputs go to `results/`. Rule logs are `logs/workflow/<rule>/<sample>.log` (per-sample rules) or `logs/workflow/<rule>.log`, in `logs/workflow_<res_dir>/` instead when `res_dir` is changed; scheduler logs are in `logs/joblogs/`.
 
-Most jobs need under 50 GB of memory and finish in minutes. The largest requests are 256 GB (`fig_S1G`, all 33 Visium sections at once) and 168 GB (`h04_calculate_vessel_distances`), and the longest job is the stLearn analysis of P29_HD (~4 h).
+Most jobs need under 50 GB of memory and finish in minutes. The largest requests are 256 GB (`fig_ED1G`, all 33 Visium sections at once) and 168 GB (`h04_calculate_vessel_distances`), and the longest job is the stLearn analysis of P29_HD (~4 h).
 
 ## Configuration
 

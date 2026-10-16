@@ -1,17 +1,17 @@
 # Rules for scripts/05_xenium_mechanisms (Xenium Prime 5K breast tumours):
-#   01 identify TLS regions     - TLS polygons + per-cell in_TLS (per sample); composition (S7B-C)
-#                                 and CD40/CD40LG expression in TLS (S7D)
+#   01 identify TLS regions     - TLS polygons + per-cell in_TLS (per sample); composition (Extended Data Fig. 7b,c)
+#                                 and CD40/CD40LG expression in TLS (Extended Data Fig. 7d)
 #   02 identify HEV regions     - HEV niches per sample (thresholds from config)
-#   03 HEV microenvironment     - distance of every cell to the nearest HEV niche (Fig 4E)
-#   04 score signatures         - STING / type I IFN signature scores (Table S9, Fig 4C)
-#   05 gene-gene correlations   - TMEM173 / SPP1 pseudobulk correlations + GSEA (Table S10, Fig 4D,
-#                                 ED Fig 10d/f)
-#   06 cellular enrichment      - HEV SPP1 vs cell type abundance <200 um (Table S12, Fig 5H)
-#   07 TLS zonation             - B/T zones + GCs on a 50 um grid (S9C-D, S9F-G, S10G-H)
-#   08 FDC recovery             - FDC/Tfh subclustering (S9J)
-#   09 chemokine sources        - CXCL13/CCL19/CCL21 sources and gradients (S9A-B, S9E, S9H-I, S9K-L)
-#   10 HEV-GC proximity         - close vs far from GC DEG (S10I-J)
-#   11 SPP1 venous specificity  - SPP1 across venous EC groups (S10C), macrophage SPP1 zoom (S10E)
+#   03 HEV microenvironment     - distance of every cell to the nearest HEV niche (Fig. 4e)
+#   04 score signatures         - STING / type I IFN signature scores (Supplementary Table 9, Fig. 4c)
+#   05 gene-gene correlations   - TMEM173 / SPP1 pseudobulk correlations + GSEA (Supplementary Table 10, Fig. 4d,
+#                                 Extended Data Fig. 10d,f)
+#   06 cellular enrichment      - HEV SPP1 vs cell type abundance <200 um (Supplementary Table 12, Fig. 5h)
+#   07 TLS zonation             - B/T zones + GCs on a 50 um grid (Extended Data Figs. 9c,d,f,g and 10g,h)
+#   08 FDC recovery             - FDC/Tfh subclustering (Extended Data Fig. 9j)
+#   09 chemokine sources        - CXCL13/CCL19/CCL21 sources and gradients (Extended Data Fig. 9a,b,e,h,i,k,l)
+#   10 HEV-GC proximity         - close vs far from GC DEG (Extended Data Fig. 10i,j)
+#   11 SPP1 venous specificity  - SPP1 across venous EC groups (Extended Data Fig. 10c), macrophage SPP1 zoom (Extended Data Fig. 10e)
 #
 # No f-strings in this file: Snakemake 7.32 on Python 3.12 mangles them, so paths are built by
 # concatenation (expand(..., allow_missing=True) keeps the {sample} wildcard).
@@ -139,7 +139,7 @@ rule x05_identify_TLS:
 
 
 rule x05_composition_TLS:
-    """01/02: cohort TLS composition, inside vs outside TLS (S7B) and average composition (S7C)."""
+    """01/02: cohort TLS composition, inside vs outside TLS (Extended Data Fig. 7b) and average composition (Extended Data Fig. 7c)."""
     input:
         cells   = x05_all(X05_TLS_ANN),
         labels  = [x05_all(x05_labels(level)) for level in ["major", "minor", "subset"]],
@@ -166,7 +166,7 @@ rule x05_composition_TLS:
 
 
 rule x05_gene_expression_TLS:
-    """01/03: cohort CD40 / CD40LG expression across subset-level cell types in TLS (S7D)."""
+    """01/03: cohort CD40 / CD40LG expression across subset-level cell types in TLS (Extended Data Fig. 7d)."""
     input:
         h5ad    = x05_all(X05_H5AD),
         cells   = x05_all(X05_TLS_ANN),
@@ -259,7 +259,7 @@ rule x05_calculate_distance_HEV:
 # ── 04 · score signatures ────────────────────────────────────────────────────
 
 rule x05_score_STING_signatures:
-    """04/01: STING and type I IFN signature scores per cell (Table S9)."""
+    """04/01: STING and type I IFN signature scores per cell (Supplementary Table 9)."""
     input:
         h5ad          = X05_H5AD,
         major         = x05_labels("major"),
@@ -296,8 +296,8 @@ rule x05_score_STING_signatures:
 
 # ── 05 · gene-gene correlations ──────────────────────────────────────────────
 
-# Manuscript runs (Supplementary Table 10): TMEM173 x GO MF (Fig 4d), SPP1 x GO MF (ED Fig 10d),
-# SPP1 x GO BP (ED Fig 10f)
+# Manuscript runs (Supplementary Table 10): TMEM173 x GO MF (Fig. 4d), SPP1 x GO MF (Extended Data Fig. 10d),
+# SPP1 x GO BP (Extended Data Fig. 10f)
 X05_CORR_GENES = ["TMEM173", "SPP1"]
 X05_GSEA_RUNS = {"gene":     ["TMEM173", "SPP1", "SPP1"],
                  "gene_set": ["GO_Molecular_Function_2025", "GO_Molecular_Function_2025",
@@ -364,7 +364,7 @@ rule x05_GSEA_correlated_genes:
 X05_ENRICH = X05 + "/06_cellular_enrichment/SPP1_vs_cell_abundance/maxdist_200um"
 
 rule x05_SPP1_vs_proximal_enrichment:
-    """06/01: cell type proportions <200 um of each HEV niche vs niche endothelial SPP1 (Table S12)."""
+    """06/01: cell type proportions <200 um of each HEV niche vs niche endothelial SPP1 (Supplementary Table 12)."""
     input:
         h5ad          = X05_H5AD,
         cell_to_niche = X05_HEV_C2N,
@@ -431,7 +431,7 @@ rule x05_classify_zones:
 
 
 rule x05_zonation_overview:
-    """07/02: cohort B/T zone map (S9C), T:B ratio per bin (S9D), GC overview (S10G), GCs per sample (S10H)."""
+    """07/02: cohort B/T zone map (Extended Data Fig. 9c), T:B ratio per bin (Extended Data Fig. 9d), GC overview (Extended Data Fig. 10g), GCs per sample (Extended Data Fig. 10h)."""
     input:
         h5ad     = x05_all(X05_H5AD),
         labels   = x05_all(x05_labels("major")),
@@ -460,7 +460,7 @@ rule x05_zonation_overview:
 
 
 rule x05_zoom_GCs:
-    """07/03: per discrete GC, aligned-H&E zoom with the top GC-signature transcripts (S10G).
+    """07/03: per discrete GC, aligned-H&E zoom with the top GC-signature transcripts (Extended Data Fig. 10g).
     Reads the full-resolution H&E into memory (P24 was OOM-killed at 124.7 GB)."""
     input:
         gc_bins  = X05_GC_BINS,
@@ -490,7 +490,7 @@ rule x05_zoom_GCs:
 
 
 rule x05_zoom_zones:
-    """07/04: adjacent B / T cell zone single-transcript zoom (S9F-G); samples with a
+    """07/04: adjacent B / T cell zone single-transcript zoom (Extended Data Fig. 9f,g); samples with a
     resources/areas_of_interest/xenium/{sample}_zone_zoom.geojson (P22_Xe5k)."""
     input:
         geojson  = X05_AOI + "/{sample}_zone_zoom.geojson",
@@ -548,7 +548,7 @@ rule x05_identify_FDC:
 
 
 rule x05_FDC_overview:
-    """08/02: cohort FDC vs Tfh subcluster marker dot plot (S9J)."""
+    """08/02: cohort FDC vs Tfh subcluster marker dot plot (Extended Data Fig. 9j)."""
     input:
         h5ad     = x05_all(X05_H5AD),
         barcodes = x05_all(X05_FDC_BARCODES),
@@ -573,7 +573,7 @@ rule x05_FDC_overview:
 # ── 09 · chemokine sources ───────────────────────────────────────────────────
 
 rule x05_reference_producers:
-    """09/01: chemokine producer subsets in the scRNA-seq reference + niche-gene dot plot (S9A)."""
+    """09/01: chemokine producer subsets in the scRNA-seq reference + niche-gene dot plot (Extended Data Fig. 9a)."""
     input:
         sc_ref  = X05_SC_REF,
         classif = X05_CLASSIF,
@@ -582,7 +582,7 @@ rule x05_reference_producers:
         producers = expand(X05_PRODUCERS + "/{kind}_producers/over_{pct}/{kind}_producers.csv",
                            kind=["ccl", "cxcl13"], pct=["10", "15"]),
         niche_csv = X05_PRODUCERS + "/niche_genes/niche_gene_pct_expressing.csv",
-        pdf       = X05_CHEMO + "/01_reference_producers/plots/niche_genes/S9A_miniatlas_niche_genes_dotplots.pdf",
+        pdf       = X05_CHEMO + "/01_reference_producers/plots/niche_genes/ED9A_miniatlas_niche_genes_dotplots.pdf",
     conda:
         "xen-hev"
     params:
@@ -619,7 +619,7 @@ rule x05_extract_transcripts:
 
 
 rule x05_impvl_vs_icaf:
-    """09/03: imPVL s1 vs iCAF s2 discrimination dot plot in TLS (S9B)."""
+    """09/03: imPVL s1 vs iCAF s2 discrimination dot plot in TLS (Extended Data Fig. 9b)."""
     input:
         h5ad     = x05_all(X05_H5AD),
         labels   = x05_all(x05_labels("subset")),
@@ -630,7 +630,7 @@ rule x05_impvl_vs_icaf:
         metadata = X05_METADATA,
     output:
         counts = X05_CHEMO + "/03_impvl_vs_icaf/csv_files/focus_cell_counts_per_sample.csv",
-        pdf    = X05_CHEMO + "/03_impvl_vs_icaf/plots/S9B_impvl_s1_vs_icaf_s2_TLS.pdf",
+        pdf    = X05_CHEMO + "/03_impvl_vs_icaf/plots/ED9B_impvl_s1_vs_icaf_s2_TLS.pdf",
     conda:
         "xen-hev"
     params:
@@ -645,7 +645,7 @@ rule x05_impvl_vs_icaf:
 
 
 rule x05_zone_expression_density:
-    """09/04: CXCL13 / CCL19 CP10K density per zone, paired Wilcoxon (S9E)."""
+    """09/04: CXCL13 / CCL19 CP10K density per zone, paired Wilcoxon (Extended Data Fig. 9e)."""
     input:
         h5ad     = x05_all(X05_H5AD),
         bt_bins  = x05_all(X05_BT_BINS),
@@ -653,7 +653,7 @@ rule x05_zone_expression_density:
         metadata = X05_METADATA,
     output:
         csv = X05_CHEMO + "/04_zone_expression_density/csv_files/cohort_expression_density_avg_BT_seed42.csv",
-        pdf = X05_CHEMO + "/04_zone_expression_density/plots/S9E_cohort_expression_density_libnorm_avg_BT_seed42.pdf",
+        pdf = X05_CHEMO + "/04_zone_expression_density/plots/ED9E_cohort_expression_density_libnorm_avg_BT_seed42.pdf",
     conda:
         "xen-hev"
     params:
@@ -670,7 +670,7 @@ rule x05_zone_expression_density:
 X05_GRADIENTS = X05_CHEMO + "/05_chemokine_gradients"
 
 rule x05_chemokine_gradients:
-    """09/05: CCL19/CCL21 transcript and imPVL s1 / iCAF s2 density vs distance from HEV (S9H)."""
+    """09/05: CCL19/CCL21 transcript and imPVL s1 / iCAF s2 density vs distance from HEV (Extended Data Fig. 9h)."""
     input:
         h5ad          = x05_all(X05_H5AD),
         labels        = x05_all(x05_labels("subset")),
@@ -685,7 +685,7 @@ rule x05_chemokine_gradients:
                             table=["transcript_density_vs_dist", "celltype_density_vs_dist",
                                    "coexpr_source_composition", "coexpr_source_transcripts",
                                    "distance_profile_meta"]),
-        pdf        = X05_GRADIENTS + "/plots/S9H_CCL21_CCL19_density_vs_dist_bin_15um_excl0.pdf",   # name written by the script (0 µm bin excluded)
+        pdf        = X05_GRADIENTS + "/plots/ED9H_CCL21_CCL19_density_vs_dist_bin_15um_excl0.pdf",   # name written by the script (0 µm bin excluded)
     conda:
         "spatdat"
     params:
@@ -700,7 +700,7 @@ rule x05_chemokine_gradients:
 
 
 rule x05_reference_producer_corr:
-    """09/06: reference-producer density vs CCL19/CCL21 transcript density per 50 um bin (S9I)."""
+    """09/06: reference-producer density vs CCL19/CCL21 transcript density per 50 um bin (Extended Data Fig. 9i)."""
     input:
         producers = X05_PRODUCERS + "/ccl_producers/over_10/ccl_producers.csv",
         tx        = [x05_all(X05_TX.replace("{gene}", gene)) for gene in ["CCL19", "CCL21"]],
@@ -714,7 +714,7 @@ rule x05_reference_producer_corr:
         metadata  = X05_METADATA,
     output:
         csv = X05_CHEMO + "/06_reference_producer_corr/csv_files/reference_producer_corr.csv",
-        pdf = X05_CHEMO + "/06_reference_producer_corr/plots/S9I_reference_producer_corr.pdf",
+        pdf = X05_CHEMO + "/06_reference_producer_corr/plots/ED9I_reference_producer_corr.pdf",
     conda:
         "xen-hev"
     params:
@@ -731,7 +731,7 @@ rule x05_reference_producer_corr:
 X05_ATTRIBUTION = X05_CHEMO + "/07_cxcl13_proximity_attribution"
 
 rule x05_cxcl13_proximity_attribution:
-    """09/07: Tfh/FDC density per zone (S9K) and CXCL13 transcript source attribution (S9L)."""
+    """09/07: Tfh/FDC density per zone (Extended Data Fig. 9k) and CXCL13 transcript source attribution (Extended Data Fig. 9l)."""
     input:
         producers = X05_PRODUCERS + "/cxcl13_producers/over_15/cxcl13_producers.csv",
         barcodes  = x05_all(X05_FDC_BARCODES),
@@ -748,7 +748,7 @@ rule x05_cxcl13_proximity_attribution:
         csv = expand(X05_ATTRIBUTION + "/csv_files/{table}.csv",
                      table=["cxcl13_tfh_fdc_density_per_zone", "cxcl13_producer_attribution_counts_long",
                             "cxcl13_producer_attribution_per_sample", "cxcl13_producer_attribution_cohort"]),
-        pdf = X05_ATTRIBUTION + "/plots/S9K_S9L_cxcl13_proximity_attribution.pdf",
+        pdf = X05_ATTRIBUTION + "/plots/ED9K_ED9L_cxcl13_proximity_attribution.pdf",
     conda:
         "spatdat"
     params:
@@ -818,12 +818,12 @@ rule x05_DEG_close_vs_far:
 
 
 rule x05_volcano_dotplot:
-    """10/03: close vs far DEG volcano (S10I) and dot plot (S10J; only written when significant
+    """10/03: close vs far DEG volcano (Extended Data Fig. 10i) and dot plot (Extended Data Fig. 10j; only written when significant
     genes exist, so not an output)."""
     input:
         deg = rules.x05_DEG_close_vs_far.output.csv,
     output:
-        volcano = X05_HEV_GC + "/03_volcano_dotplot/plots/S10I_DEG_close_vs_far_volcano.pdf",
+        volcano = X05_HEV_GC + "/03_volcano_dotplot/plots/ED10I_DEG_close_vs_far_volcano.pdf",
     conda:
         "shapely"
     params:
@@ -840,7 +840,7 @@ rule x05_volcano_dotplot:
 # ── 11 · SPP1 venous specificity ─────────────────────────────────────────────
 
 rule x05_SPP1_across_venous_groups:
-    """11/01: SPP1 + venous/HEV markers across four ACKR1+ venous EC groups (S10C)."""
+    """11/01: SPP1 + venous/HEV markers across four ACKR1+ venous EC groups (Extended Data Fig. 10c)."""
     input:
         h5ad          = x05_all(X05_H5AD),
         labels        = x05_all(x05_labels("subset")),
@@ -851,7 +851,7 @@ rule x05_SPP1_across_venous_groups:
         sheet         = X05_SHEET,
         metadata      = X05_METADATA,
     output:
-        pdf = X05 + "/11_SPP1_venous_specificity/plots/S10C_SPP1_across_venous_groups.pdf",
+        pdf = X05 + "/11_SPP1_venous_specificity/plots/ED10C_SPP1_across_venous_groups.pdf",
     conda:
         "xen-hev"
     params:
@@ -867,7 +867,7 @@ rule x05_SPP1_across_venous_groups:
 
 
 rule x05_SPP1_macrophage_regions:
-    """11/02: macrophage SPP1 region zoom (S10E); samples with a
+    """11/02: macrophage SPP1 region zoom (Extended Data Fig. 10e); samples with a
     resources/areas_of_interest/xenium/{sample}_SPP1_macrophages.geojson (P29_Xe5k)."""
     input:
         geojson  = X05_AOI + "/{sample}_SPP1_macrophages.geojson",
@@ -880,7 +880,7 @@ rule x05_SPP1_macrophage_regions:
         sheet    = X05_SHEET,
         metadata = X05_METADATA,
     output:
-        pdf = X05 + "/11_SPP1_venous_specificity/plots/S10E_{sample}_SPP1_macrophages.pdf",
+        pdf = X05 + "/11_SPP1_venous_specificity/plots/ED10E_{sample}_SPP1_macrophages.pdf",
     wildcard_constraints:
         sample = X05_RE,
     conda:

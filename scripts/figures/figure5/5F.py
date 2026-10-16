@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5F: gene expression in HEVs correlated with distance to TLS
+# Plot Fig. 5f: gene expression in HEVs correlated with distance to TLS
 # Shows spatial expression gradients of SPP1 as function of proximity to TLS
 
 # --- Define environment

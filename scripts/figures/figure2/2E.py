@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2E: deconvolution results per TLS cluster
+# Plot Fig. 2e: deconvolution results per TLS cluster
 # Shows cell type enrichment of selected cell types in each TLS cluster
 
 

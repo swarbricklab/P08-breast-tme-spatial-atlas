@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5D: ligand-receptor interactions for HEV-upregulated genes
+# Plot Fig. 5d: ligand-receptor interactions for HEV-upregulated genes
 # Shows dotplot of LR pairs enriched in HEVs compared to ACKR1+ ECs across HEV compartments
 # Uses bin_size=0 (HEV bins only)
 

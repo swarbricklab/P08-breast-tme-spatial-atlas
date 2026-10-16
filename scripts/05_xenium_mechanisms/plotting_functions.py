@@ -461,7 +461,7 @@ def add_color_legend(fig, labels, color_dict, title='', x=0, y=0, offset=0.01, s
 # ---------------------------------------------------------------------------
 # Per-gene-normalized dot plot: each gene is independently rescaled so dot size
 # and colour span that gene's min->max across the groupby categories. Used for
-# the S10C and S10J dot plots.
+# the Extended Data Fig. 10c,j dot plots.
 # ---------------------------------------------------------------------------
 # Dotplot where each gene is independently rescaled — dot size and color span
 # min→max for that gene across the groupby categories. Useful for genes with

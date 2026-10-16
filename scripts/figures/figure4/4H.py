@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot dotplot showing top LR pairs enriched in TLS-HEVs (Figure 4H)
+# Plot dotplot showing top LR pairs enriched in TLS-HEVs (Fig. 4h)
 # Shows the source→target cell type combinations for each LR pair
 
 # --- Define environment
@@ -22,7 +22,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot top LR pairs dotplot for Figure 4H",
+parser = argparse.ArgumentParser(description="Plot top LR pairs dotplot for Fig. 4h",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

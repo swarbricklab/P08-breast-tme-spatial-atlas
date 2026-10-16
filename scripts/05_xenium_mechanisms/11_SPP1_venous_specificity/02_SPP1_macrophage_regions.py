@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Figure S10E: macrophage SPP1 outside TLS. For the representative sample (P29_Xe5k),
+# Extended Data Fig. 10e: macrophage SPP1 outside TLS. For the representative sample (P29_Xe5k),
 # show four tissue regions where LAM1 (Myeloid_c1_LAM1_FABP5) macrophages express SPP1,
 # alongside a whole-tissue overview with the four zoom boxes marked. Each region is one
 # column of a 3-row grid:
@@ -47,9 +47,9 @@ MACRO_LABEL    = 'Myeloid_c1_LAM1_FABP5'
 MACRO_COLOR    = 'indigo'
 
 
-# --- Argparse arguments (representative single sample; Fig S10E uses P29_Xe5k)
+# --- Argparse arguments (representative single sample; Extended Data Fig. 10e uses P29_Xe5k)
 
-parser = argparse.ArgumentParser(description="Macrophage SPP1 outside TLS region zoom (Figure S10E)",
+parser = argparse.ArgumentParser(description="Macrophage SPP1 outside TLS region zoom (Extended Data Fig. 10e)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--h5ad_dir", help="Path to directory for .h5ad input files")
 parser.add_argument("--sample_id", default='P29_Xe5k',
@@ -346,13 +346,13 @@ axs[2, -1].legend(handles=macro_legend(0.0), loc='center left', bbox_to_anchor=(
 
 title_x = (axs[0, 0].get_position().x0 + axs[0, -1].get_position().x1) / 2
 title_y = axs[0, 0].get_position().y1 + 0.2
-plt.suptitle(f'S10E — {sample_id} ({subtype}): macrophage SPP1 outside TLS '
+plt.suptitle(f'Extended Data Fig. 10e — {sample_id} ({subtype}): macrophage SPP1 outside TLS '
              f'(scalebar = {scalebar_um:g} µm)',
              x=title_x, y=title_y, fontsize=30, fontweight='bold')
 
 plots_dir = os.path.join(res_dir, '05_xenium_mechanisms', '11_SPP1_venous_specificity', 'plots')
 os.makedirs(plots_dir, exist_ok=True)
-pdf_path = os.path.join(plots_dir, f'S10E_{sample_id}_SPP1_macrophages.pdf')
+pdf_path = os.path.join(plots_dir, f'ED10E_{sample_id}_SPP1_macrophages.pdf')
 plt.savefig(pdf_path, bbox_inches='tight', dpi=500)
 plt.close('all')
 print(f'\nSaved: {pdf_path}')

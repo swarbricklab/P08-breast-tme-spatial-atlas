@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4D (part 2): GSEA pathway enrichment for STING-correlated genes
+# Plot Fig. 4d (part 2): GSEA pathway enrichment for STING-correlated genes
 # Shows biological pathways enriched in genes that correlate with STING in HEV niches
 
 # --- Define environment

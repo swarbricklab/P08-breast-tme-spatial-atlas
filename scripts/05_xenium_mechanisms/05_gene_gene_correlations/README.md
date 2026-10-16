@@ -1,11 +1,11 @@
 # 05_gene_gene_correlations
 
-Per-HEV-niche **pseudobulk correlation** of genes with endothelial `TMEM173` (STING) and `SPP1`, followed by **GSEA** on the correlated-gene lists. Together generate data for Table S10.
+Per-HEV-niche **pseudobulk correlation** of genes with endothelial `TMEM173` (STING) and `SPP1`, followed by **GSEA** on the correlated-gene lists. Together generate data for Supplementary Table 10.
 
 | Script | Env | Mode | Figure |
 |---|---|---|---|
-| `01_investigate_gene_correlations.py` | xen-hev | `--samples` | Table S10 |
-| `02_GSEA_analysis_on_correlated_genes.py` | gseapy | `--samples` | Table S10 |
+| `01_investigate_gene_correlations.py` | xen-hev | `--samples` | Supplementary Table 10 |
+| `02_GSEA_analysis_on_correlated_genes.py` | gseapy | `--samples` | Supplementary Table 10 |
 
 **`01_investigate_gene_correlations.py`** — pools all `--samples` HEV-niche cells (from `02_identify_HEV_regions`), builds a per-niche pseudobulk (mean-expression) matrix, and Pearson-correlates every gene against the gene of interest across niches, flagging p<0.05. Writes the ranked correlation table (`All_samples_HEV_{gene}_gene_correlations.csv`) and a rank-vs-correlation plot. The gene is set with `--gene_of_interest` (default `TMEM173`); the manuscript uses `TMEM173` (Fig. 4d) and `SPP1` (Extended Data Fig. 10d).
 

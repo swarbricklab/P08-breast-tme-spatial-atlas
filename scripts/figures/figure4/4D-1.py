@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4D (part 1): ranked correlation plot of genes with STING expression in HEVs
+# Plot Fig. 4d (part 1): ranked correlation plot of genes with STING expression in HEVs
 # Shows genes that correlate positively or negatively with STING pathway activation
 
 # --- Define environment

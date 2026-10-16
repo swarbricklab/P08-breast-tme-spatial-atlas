@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5B: spatial distribution of CCL19, CCL21, CXCL13, and TSPAN7 transcripts in HEV regions
+# Plot Fig. 5b: spatial distribution of CCL19, CCL21, CXCL13, and TSPAN7 transcripts in HEV regions
 # Shows transcript distribution of key chemokines and HEV markers within TLS & HEV regions
 # This script is set up for P29_Xe5k
 

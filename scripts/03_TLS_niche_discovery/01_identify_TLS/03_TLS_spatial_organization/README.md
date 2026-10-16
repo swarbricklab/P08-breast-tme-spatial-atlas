@@ -1,10 +1,10 @@
 # 03_TLS_spatial_organization
 
-Per-sample and cohort characterisation of **discrete tertiary lymphoid structures (TLS)** across the Visium cohort: TLS number, TLS size, spatial clustering (DBSCAN) and topology relative to the tumour. **Reproduces Supplementary Figure S3B** (and the reported cohort total of 433 TLS across the 33 Visium sections; median 8/section, range 0–37).
+Per-sample and cohort characterisation of **discrete tertiary lymphoid structures (TLS)** across the Visium cohort: TLS number, TLS size, spatial clustering (DBSCAN) and topology relative to the tumour. **Reproduces Extended Data Fig. 3b** (and the reported cohort total of 433 TLS across the 33 Visium sections; median 8/section, range 0–37).
 
 ## Discrete-TLS definition
 
-These scripts operate on the *stringent* Figure S3B definition of a discrete TLS, derived from the permissive per-spot grouping written by `../02_group_TLS_high.py` (`group_singleton_removed` = contiguous groups of ≥2 directly adjacent TLS-high spots, score > 0.01):
+These scripts operate on the *stringent* Extended Data Fig. 3b definition of a discrete TLS, derived from the permissive per-spot grouping written by `../02_group_TLS_high.py` (`group_singleton_removed` = contiguous groups of ≥2 directly adjacent TLS-high spots, score > 0.01):
 
 1. keep only groups of **≥3 directly adjacent** TLS-high spots, then
 2. **merge surviving groups separated by a single spot**.
@@ -17,7 +17,7 @@ This is implemented once in the shared helper `discrete_tls.py` and reused by `0
 |---|---|---|---|
 | `01_TLS_distances_topology.py` | spatial-pilot | cohort (`-s` / all) | `distances_per_TLS.csv` |
 | `02_TLS_clustering.py` | spatial-pilot | cohort (`-s` / all) | `clustering_per_TLS.csv`, `clustering_per_sample.csv` |
-| `03_TLS_number_size_overview.py` | spatial-pilot | cohort (`-s` / all) | overview PDF (**Fig S3B**) + summary CSVs |
+| `03_TLS_number_size_overview.py` | spatial-pilot | cohort (`-s` / all) | overview PDF (**Extended Data Fig. 3b**) + summary CSVs |
 | `04_TLS_per_sample_plots.py` | spatial-pilot | cohort (`-s` / all) | per-sample spatial PDF |
 | `discrete_tls.py` | — | helper (imported) | — |
 
@@ -25,7 +25,7 @@ This is implemented once in the shared helper `discrete_tls.py` and reused by `0
 
 **`02_TLS_clustering.py`** — DBSCAN (eps = 500 µm, minimum 2 members) on the pairwise edge-to-edge (minimum spot-to-spot) distances between discrete TLS, labelling each TLS `clustered` or `lone`. Writes `clustering_per_TLS.csv` (per-TLS labels) and `clustering_per_sample.csv` (per-sample summary).
 
-**`03_TLS_number_size_overview.py`** — the cohort overview figure (**Fig S3B**): a per-sample sorted bar of TLS number with stacked panels for TLS size, clustering composition (clustered vs lone) and topology, plus subtype/capture-area strips. Writes the single-page overview PDF and `summary_per_sample.csv` / `sizes_per_aggregate.csv`.
+**`03_TLS_number_size_overview.py`** — the cohort overview figure (**Extended Data Fig. 3b**): a per-sample sorted bar of TLS number with stacked panels for TLS size, clustering composition (clustered vs lone) and topology, plus subtype/capture-area strips. Writes the single-page overview PDF and `summary_per_sample.csv` / `sizes_per_aggregate.csv`.
 
 **`04_TLS_per_sample_plots.py`** — per-section 3-panel spatial overview (epithelial annotation, TLS topology, DBSCAN clustering) over the H&E, all sections in one multi-page PDF.
 

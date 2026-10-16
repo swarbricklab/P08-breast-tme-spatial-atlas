@@ -4,7 +4,7 @@
 # Plot the TLS niche signatures on lymph node sample P12_LN_Vis
 # Shows H&E, GC annotations (from pathology), and niche signatures
 # With overview + 2 zoomed areas (Primary follicle, Secondary follicle)
-# This creates Figure 2I
+# This creates Fig. 2i
 
 # --- Define environment
 # env: shapely
@@ -34,7 +34,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot TLS model overview for Figure 2I",
+parser = argparse.ArgumentParser(description="Plot TLS model overview for Fig. 2i",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")

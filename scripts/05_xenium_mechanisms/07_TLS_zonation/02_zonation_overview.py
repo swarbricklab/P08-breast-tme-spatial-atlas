@@ -3,10 +3,10 @@
 # --- Aim
 # Cohort-level summary of the TLS zonation classifications from 01_classify_zones.py.
 # Produces (one multi-page PDF):
-#   * Figure S9C  - spatial map of B/T cell zone bins per sample
-#   * Figure S9D  - per-bin T:B cell-ratio distribution, split by zone
-#   * Figure S10G (support) - spatial overview of GC bins per sample
-#   * Figure S10H - number of discrete GCs per sample, coloured by clinical subtype
+#   * Extended Data Fig. 9c  - spatial map of B/T cell zone bins per sample
+#   * Extended Data Fig. 9d  - per-bin T:B cell-ratio distribution, split by zone
+#   * Extended Data Fig. 10g (support) - spatial overview of GC bins per sample
+#   * Extended Data Fig. 10h - number of discrete GCs per sample, coloured by clinical subtype
 
 
 # --- Define environment
@@ -222,7 +222,7 @@ def spatial_grid(zone_col, palette, title, legend_handles, suptitle):
     plt.subplots_adjust(wspace=0.05, hspace=0.25, bottom=0.08)
 
 
-# --- Figure S9C: spatial map of B/T cell zone bins
+# --- Extended Data Fig. 9c: spatial map of B/T cell zone bins
 
 bt_handles = [mlines.Line2D([], [], color=bt_color_dict[z], marker='s', lw=0, markersize=12,
                             label=pretty_zone(z)) for z in classified_zones]
@@ -230,7 +230,7 @@ spatial_grid('TLS_zone', bt_color_dict, 'B/T zones', bt_handles,
              f'B/T cell zone classification across cohort (grid={int(grid_um)}um)')
 
 
-# --- Figure S9D: per-bin T:B cell-ratio distribution, split by zone
+# --- Extended Data Fig. 9d: per-bin T:B cell-ratio distribution, split by zone
 # Cells in the same bin share (T_score, B_score), so that pair identifies a bin.
 
 zones_for_ratio = ['B_cell_zone', 'T_cell_zone']
@@ -281,14 +281,14 @@ ax.legend(loc='center left', bbox_to_anchor=(1.02, 0.5), frameon=False, fontsize
 ax.set_title('Per-bin T:B cell ratio distribution by zone', fontsize=SUP_FS, fontweight='bold', pad=6)
 
 
-# --- Figure S10G (support): spatial overview of GC bins
+# --- Extended Data Fig. 10g (support): spatial overview of GC bins
 
 gc_handles = [mlines.Line2D([], [], color=gc_color, marker='s', lw=0, markersize=12, label='GC')]
 spatial_grid('GC_zone', gc_color, 'GC zones', gc_handles,
              f'GC zone classification across cohort (grid={int(grid_um)}um)')
 
 
-# --- Figure S10H: number of discrete GCs per sample, coloured by clinical subtype
+# --- Extended Data Fig. 10h: number of discrete GCs per sample, coloured by clinical subtype
 
 display_name_dict = {s: s for s in sample_list}
 

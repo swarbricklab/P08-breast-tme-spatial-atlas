@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4E: adhesion-receptor expression across cell types near HEVs
+# Plot Fig. 4e: adhesion-receptor expression across cell types near HEVs
 # Shows the scaled expression of the integrin / SPN / CD38 receptors that bind the
 # HEV-expressed adhesion ligands, across HEV-enriched cell types within <50um of HEVs
 
@@ -440,7 +440,7 @@ sum_df_rec = pd.DataFrame(sum_df_rec, columns=['sum'])
 plt.close()
 
 
-# --- Receptors-only heatmap (Figure 4E)
+# --- Receptors-only heatmap (Fig. 4e)
 # The published panel shows only the receptors (integrins / SPN / CD38) that bind the
 # HEV-expressed adhesion ligands, not the ligands themselves. Receptor rows are
 # hierarchically clustered; cell-type columns are kept in cumulative-receptor-expression

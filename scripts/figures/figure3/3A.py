@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot HEV signature at varying resolutions (Figure 3A)
+# Plot HEV signature at varying resolutions (Fig. 3a)
 # Shows HEV signature scores across different bin sizes with zoomed-in panels
 # This script is set up for P29_HD
 
@@ -31,7 +31,7 @@ sc.settings.verbosity = 3
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot HEV signature at varying resolutions for Figure 3A",
+parser = argparse.ArgumentParser(description="Plot HEV signature at varying resolutions for Fig. 3a",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")

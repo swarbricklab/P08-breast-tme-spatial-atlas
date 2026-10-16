@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 2B: ridgeplot showing TLS model scores per pathology annotation
+# Plot Fig. 2b: ridgeplot showing TLS model scores per pathology annotation
 # Shows distribution of TLS scores across different tissue compartments (expect highest in TLS/aggregate regions)
 
 # --- Define environment

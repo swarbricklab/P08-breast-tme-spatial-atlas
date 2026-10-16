@@ -7,7 +7,7 @@
 # term enrichment on the up-regulated genes, and draw the enrichment dot plot
 # (top terms per region; dot size = combined enrichment score, colour = -log10 adjusted P)
 # together with a bar of the total spot count per annotation.
-# This creates Figure S1G
+# This creates Extended Data Fig. 1g
 
 # --- Define environment
 # env: gseapy
@@ -179,7 +179,7 @@ for layer in annotation_layers:
 
 # --- Prepare for saving
 
-out_dir = os.path.join(res_dir, 'figures', 'supplementary_overviews')
+out_dir = os.path.join(res_dir, 'figures', 'extended_data')
 os.makedirs(out_dir, exist_ok=True)
 
 csv_dir = os.path.join(out_dir, 'csv_files')
@@ -187,10 +187,10 @@ os.makedirs(csv_dir, exist_ok=True)
 
 # Save the marker genes of all layers in one table
 marker_genes_df = pd.concat(deg_dict, names=['annotation_layer']).reset_index(level=0)
-marker_genes_df.to_csv(os.path.join(csv_dir, 'S1G_pathology_marker_genes.csv'), index=False)
+marker_genes_df.to_csv(os.path.join(csv_dir, 'ED1G_pathology_marker_genes.csv'), index=False)
 
 # Keep a record of which samples were used
-pd.DataFrame({'sample_id': annotated_samples}).to_csv(os.path.join(csv_dir, 'S1G_samples_included.csv'), index=False)
+pd.DataFrame({'sample_id': annotated_samples}).to_csv(os.path.join(csv_dir, 'ED1G_samples_included.csv'), index=False)
 
 
 # --- Load the desired category order per layer
@@ -243,7 +243,7 @@ enr_df = pd.concat(
     {(layer, group): enr_dict_full[layer][group] for layer in enr_dict_full for group in enr_dict_full[layer]},
     names=['annotation_layer', 'group'],
 ).reset_index(level=[0, 1])
-enr_df.to_csv(os.path.join(csv_dir, 'S1G_pathology_GO_enrichment.csv'), index=False)
+enr_df.to_csv(os.path.join(csv_dir, 'ED1G_pathology_GO_enrichment.csv'), index=False)
 
 
 # --- Identify the top terms per category and filter
@@ -529,7 +529,7 @@ plt.suptitle(f'Gene enrichment analysis - top {top_n} terms per annotation categ
 
 # --- Save the plots
 
-filename = 'Fig_S1G.pdf'
+filename = 'Fig_ED1G.pdf'
 save_multi_image(os.path.join(out_dir, filename))
 plt.close('all')
 

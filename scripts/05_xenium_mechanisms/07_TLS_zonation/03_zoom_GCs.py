@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Representative zoom plots of the discrete GC regions in one sample (Figure S10G).
+# Representative zoom plots of the discrete GC regions in one sample (Extended Data Fig. 10g).
 # For each discrete GC (connected component of GC-classified bins from 01_classify_zones.py)
 # a page is produced with:
 #   1. Full-tissue aligned H&E overview with the GC bbox marked
@@ -62,7 +62,7 @@ def pick_scalebar_um(side_um, lo_frac=0.25, hi_frac=0.35):
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Zoom plots for discrete GC regions (Figure S10G)",
+parser = argparse.ArgumentParser(description="Zoom plots for discrete GC regions (Extended Data Fig. 10g)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Runner contract (submit_array_jobs_nci.sh -> run_single_sample_job.sh)
@@ -75,7 +75,7 @@ parser.add_argument("--sample_sheet", help="Path to sample sheet CSV file", defa
 # Analysis parameters (Methods-fixed defaults; exposed but never required)
 parser.add_argument("--grid_um", type=float, default=50.0, help="Bin size used in step 01 (microns)")
 parser.add_argument("--top_n_genes", type=int, default=5,
-                    help="Number of top GC-signature transcripts to overlay (Fig S10G shows top 5)")
+                    help="Number of top GC-signature transcripts to overlay (Extended Data Fig. 10g shows top 5)")
 parser.add_argument("--genes_per_ax", type=int, default=5, help="Transcripts per panel")
 parser.add_argument("--pad_um", type=float, default=50.0, help="Padding around each GC bbox in microns")
 

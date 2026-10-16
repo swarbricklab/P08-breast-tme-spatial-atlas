@@ -1,11 +1,11 @@
-# Rules for the figure panels of Figures 1-3 and Extended Data Figure 1 (scripts/figures/figure1-3 and
-# scripts/figures/supplementary_overviews): one rule per script, named fig_<panel>.
-#   Figure 1 - cohort, pathology annotations, deconvolution (published inputs only)
-#   Figure 2 - TLS model and TLS niches (Visium; inputs from 03_TLS_niche_discovery)
-#   Figure 3 - HEVs and vasculature (Visium HD; inputs from 04_vascular_microenvironment)
-#   S1C, S1G - pathology annotation overviews (published inputs only)
+# Rules for the figure panels of Figs. 1–3 and Extended Data Fig. 1 (scripts/figures/figure1-3 and
+# scripts/figures/extended_data): one rule per script, named fig_<panel>.
+#   Fig. 1 - cohort, pathology annotations, deconvolution (published inputs only)
+#   Fig. 2 - TLS model and TLS niches (Visium; inputs from 03_TLS_niche_discovery)
+#   Fig. 3 - HEVs and vasculature (Visium HD; inputs from 04_vascular_microenvironment)
+#   Extended Data Fig. 1c,g - pathology annotation overviews (published inputs only)
 #
-# All figures go to {res_dir}/figures (S1C/S1G: {res_dir}/figures/supplementary_overviews).
+# All figures go to {res_dir}/figures (Extended Data Fig. 1c,g: {res_dir}/figures/extended_data).
 # Inputs from outside the workflow: {H5AD}/visium, {H5AD}/visium_hd, data/anndata_objects/sc_ref,
 # data/pathology_annotations, data/images/he/aligned_images, results/02_cell_type_mapping, resources/.
 # Several scripts plot fixed example sections (hard-coded in the script); their sample lists below
@@ -72,7 +72,7 @@ F13_2G_SAMPLES = ["P22_Vis", "P24_Vis", "P18_Vis", "P29_Vis_Rep1"]
 F13_3C_SAMPLES = ["P26_HD", "P27_HD", "P32_HD"]
 
 
-# ── Figure 1 ─────────────────────────────────────────────────────────────────
+# ── Fig. 1 ─────────────────────────────────────────────────────────────────
 
 rule fig_1C:
     """1C: Data modalities profiled per patient (number of sections per modality)."""
@@ -217,7 +217,7 @@ rule fig_1H:
         "python " + F13_S + "/figure1/1H.py {params.args} > {log} 2>&1"
 
 
-# ── Figure 2 ─────────────────────────────────────────────────────────────────
+# ── Fig. 2 ─────────────────────────────────────────────────────────────────
 
 rule fig_2A:
     """2A: TLS model score on P24_Vis with two zoomed areas (H&E, pathology annotations)."""
@@ -453,7 +453,7 @@ rule fig_2J:
         "python " + F13_S + "/figure2/2J.py {params.args} > {log} 2>&1"
 
 
-# ── Figure 3 ─────────────────────────────────────────────────────────────────
+# ── Fig. 3 ─────────────────────────────────────────────────────────────────
 # The full-resolution Visium HD H&E images are 11-17 GB, hence the memory of 3A-3C.
 
 F13_HD_RES = ["square_048um", "square_016um", "square_008um"]
@@ -715,10 +715,10 @@ rule fig_3K:
         "python " + F13_S + "/figure3/3K.py {params.args} > {log} 2>&1"
 
 
-# ── Extended Data Figure 1 (supplementary overviews) ─────────────────────────
+# ── Extended Data Fig. 1 (supplementary overviews) ─────────────────────────
 
-rule fig_S1C:
-    """S1C: Presence of each pathology annotation category per section."""
+rule fig_ED1C:
+    """Extended Data Fig. 1c: Presence of each pathology annotation category per section."""
     input:
         annotations = expand(F13_VIS_ANNO, sample=VIS_SAMPLES),
         categories  = F13_PATH_CATEGORIES,
@@ -727,7 +727,7 @@ rule fig_S1C:
         metadata    = F13_METADATA,
         sheet       = SHEETS["visium"],
     output:
-        pdf = F13_OUT + "/supplementary_overviews/Fig_S1C.pdf",
+        pdf = F13_OUT + "/extended_data/Fig_ED1C.pdf",
     conda:
         "spatial-pilot"
     params:
@@ -736,13 +736,13 @@ rule fig_S1C:
         mem_mb  = 4000,        # peak 0.5 GB (1 jobs)
         runtime = 15,          # peak 1 min
     log:
-        LOGW + "/fig_S1C.log",
+        LOGW + "/fig_ED1C.log",
     shell:
-        "python " + F13_S + "/supplementary_overviews/S1C.py {params.args} > {log} 2>&1"
+        "python " + F13_S + "/extended_data/ED1C.py {params.args} > {log} 2>&1"
 
 
-rule fig_S1G:
-    """S1G: DEGs per pathology annotation (one vs rest, all sections) and GO BP 2025 enrichment."""
+rule fig_ED1G:
+    """Extended Data Fig. 1g: DEGs per pathology annotation (one vs rest, all sections) and GO BP 2025 enrichment."""
     input:
         h5ad        = expand(F13_VIS_H5AD, sample=VIS_SAMPLES),
         annotations = expand(F13_VIS_ANNO, sample=VIS_SAMPLES),
@@ -750,10 +750,10 @@ rule fig_S1G:
         categories  = F13_PATH_CATEGORIES,
         path_colors = F13_PATH_COLORS,
     output:
-        pdf        = F13_OUT + "/supplementary_overviews/Fig_S1G.pdf",
-        markers    = F13_OUT + "/supplementary_overviews/csv_files/S1G_pathology_marker_genes.csv",
-        samples    = F13_OUT + "/supplementary_overviews/csv_files/S1G_samples_included.csv",
-        enrichment = F13_OUT + "/supplementary_overviews/csv_files/S1G_pathology_GO_enrichment.csv",
+        pdf        = F13_OUT + "/extended_data/Fig_ED1G.pdf",
+        markers    = F13_OUT + "/extended_data/csv_files/ED1G_pathology_marker_genes.csv",
+        samples    = F13_OUT + "/extended_data/csv_files/ED1G_samples_included.csv",
+        enrichment = F13_OUT + "/extended_data/csv_files/ED1G_pathology_GO_enrichment.csv",
     conda:
         "gseapy"
     params:
@@ -763,9 +763,9 @@ rule fig_S1G:
         mem_mb  = 256000,
         runtime = 240,
     log:
-        LOGW + "/fig_S1G.log",
+        LOGW + "/fig_ED1G.log",
     shell:
-        "python " + F13_S + "/supplementary_overviews/S1G.py {params.args} > {log} 2>&1"
+        "python " + F13_S + "/extended_data/ED1G.py {params.args} > {log} 2>&1"
 
 
 # ── targets ──────────────────────────────────────────────────────────────────
@@ -775,5 +775,5 @@ for _f13_rule in [rules.fig_1C, rules.fig_1D, rules.fig_1E, rules.fig_1F, rules.
                   rules.fig_2G, rules.fig_2H, rules.fig_2I, rules.fig_2J,
                   rules.fig_3A, rules.fig_3B, rules.fig_3C, rules.fig_3D, rules.fig_3E, rules.fig_3F,
                   rules.fig_3G, rules.fig_3H, rules.fig_3I, rules.fig_3J, rules.fig_3K,
-                  rules.fig_S1C, rules.fig_S1G]:
+                  rules.fig_ED1C, rules.fig_ED1G]:
     TARGETS += list(_f13_rule.output)

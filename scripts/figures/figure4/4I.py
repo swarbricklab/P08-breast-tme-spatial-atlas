@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot members of the lymphotoxin system in TLS HEVs vs stromal HEVs (Figure 4I)
+# Plot members of the lymphotoxin system in TLS HEVs vs stromal HEVs (Fig. 4i)
 # Shows expression of lymphotoxin signaling components in perivascular bins
 
 # --- Define environment
@@ -28,7 +28,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot lymphotoxin system expression for Figure 4I",
+parser = argparse.ArgumentParser(description="Plot lymphotoxin system expression for Fig. 4i",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

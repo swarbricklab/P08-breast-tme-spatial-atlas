@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3D: arterial vs venous vessel classification using marker genes
+# Plot Fig. 3d: arterial vs venous vessel classification using marker genes
 # Shows expression of arterial/venous markers in vessels classified by deconvolution results
 # Based on marker genes from Kumar 2023 normal breast study
-# This creates Figure 3D
+# This creates Fig. 3d
 
 # --- Define environment
 # env: vis-hd

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 1F: scatterplot of T cell vs B cell proportions across samples
+# Plot Fig. 1f: scatterplot of T cell vs B cell proportions across samples
 # Shows relationship between T cell and B cell abundance across breast cancer subtypes
 
 # --- Define environment

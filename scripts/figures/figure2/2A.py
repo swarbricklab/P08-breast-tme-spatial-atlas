@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot TLS model overview with zoomed areas (Figure 2A)
+# Plot TLS model overview with zoomed areas (Fig. 2a)
 # Shows TLS model score on full tissue + 2 zoomed areas with H&E and pathology annotations
 # This script is set up for sample P24_Vis
 
@@ -35,7 +35,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot TLS model overview for Figure 2A",
+parser = argparse.ArgumentParser(description="Plot TLS model overview for Fig. 2a",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")

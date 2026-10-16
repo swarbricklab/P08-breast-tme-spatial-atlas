@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3J: barplot showing PVL subtype association with HEV-overlapping vs non-overlapping vessels
+# Plot Fig. 3j: barplot showing PVL subtype association with HEV-overlapping vs non-overlapping vessels
 
 # --- Define environment
 # env: vis-hd

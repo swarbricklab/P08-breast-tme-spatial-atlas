@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Generate Figure 4G: Scatterplot showing key LR interactions between HEV groups (TLS-associated vs stromal HEV-like)
+# Generate Fig. 4g: Scatterplot showing key LR interactions between HEV groups (TLS-associated vs stromal HEV-like)
 
 # --- Define environment
 # env: vis-hd
@@ -23,7 +23,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Generate Figure 4G",
+parser = argparse.ArgumentParser(description="Generate Fig. 4g",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -200,7 +200,7 @@ rename_dict = {
 }
 
 
-# --- Generate Figure 4G
+# --- Generate Fig. 4g
 
 fig, ax = plt.subplots(figsize=(3, 3))
 

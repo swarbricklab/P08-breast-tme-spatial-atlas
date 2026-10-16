@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4F: zoomed view showing TLS-HEVs vs stromal HEV-like vessels
+# Plot Fig. 4f: zoomed view showing TLS-HEVs vs stromal HEV-like vessels
 # Shows spatial context for HEV classification used in ligand-receptor analysis
 # This script is set up for sample P29_HD
 
@@ -34,7 +34,7 @@ mpl.rcParams['pdf.fonttype'] = 42  # To get editable text in Illustrator
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Plot HEV grouping overview for figure 4F",
+parser = argparse.ArgumentParser(description="Plot HEV grouping overview for Fig. 4f",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 # Required

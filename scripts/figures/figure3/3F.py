@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3F: PVL (perivascular-like) subtype composition across distance from vessels
+# Plot Fig. 3f: PVL (perivascular-like) subtype composition across distance from vessels
 # Shows how different PVL subtypes associate with different vessel types based on proximity
 
 # --- Define environment

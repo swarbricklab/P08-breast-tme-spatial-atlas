@@ -1,9 +1,9 @@
-# --- Discrete-TLS definition (Figure S3B)
+# --- Discrete-TLS definition (Extended Data Fig. 3b)
 # Derives "discrete TLS" from the permissive per-spot TLS grouping produced by
 # 02_group_TLS_high (contiguous groups of >=2 directly adjacent TLS-high spots,
 # score > 0.01, in the 'group_singleton_removed' column).
 #
-# Stringent Figure S3B definition (per-sample quantification + spatial analysis):
+# Stringent Extended Data Fig. 3b definition (per-sample quantification + spatial analysis):
 #   1. Keep only groups of >= min_spots directly adjacent TLS-high spots.
 #   2. Merge surviving groups separated by a single spot (nearest centre-to-centre
 #      spot distance <= ~2 spot pitches).

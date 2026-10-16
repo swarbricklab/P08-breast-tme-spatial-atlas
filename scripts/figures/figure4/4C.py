@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4C: STING signature scores in venous ECs stratified by environment (canonical venous, stromal HEV-like & TLS-associated HEV)
+# Plot Fig. 4c: STING signature scores in venous ECs stratified by environment (canonical venous, stromal HEV-like & TLS-associated HEV)
 
 # --- Define environment
 # env: xen-hev

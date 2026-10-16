@@ -24,11 +24,11 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
 - **03_compare_HEV_to_other_venous/** 
   Targeted comparison between specialized HEVs and canonical venous structures.
   - `01_compare_microenvironment.py`: Compare the pathology-defined tissue composition surrounding HEV vs. canonical venous vessels.
-  - `02_compare_gene_expression.py`: Perform differential gene expression analysis between HEV and non-HEV venous bins. *(Generates data for **Table S8** and Figure 3I)*.
+  - `02_compare_gene_expression.py`: Perform differential gene expression analysis between HEV and non-HEV venous bins. *(Generates data for **Supplementary Table 8** and Fig. 3i)*.
   - `03_compare_PVL_association.py`: Quantify the enrichment of inflammatory PVLs in the immediate HEV niche vs. the canonical venous niche.
 
 - **04_ligand_receptor_analysis/** 
-  Ligand-receptor (L-R) interaction analysis within the vascular microenvironment. *(Generates data for **Table S11** and Figure 4)*.
+  Ligand-receptor (L-R) interaction analysis within the vascular microenvironment. *(Generates data for **Supplementary Table 11** and Fig. 4)*.
   - `01_run_LR_analysis_stlearn.py`: Execute `stLearn` to identify significant L-R co-expression in HEV-localized (0 µm) and HEV-perivascular (25 µm) neighborhoods (one run each, `--bin_size 0` / `--bin_size 25`; default 0).
   - `02_analyze_LR_all.py`: Aggregate interaction results across samples, calculating directional signaling vectors (e.g., Perivascular → HEV) and identifying TLS-enriched pathways (`--bin_size 0` / `--bin_size 25`, matching the stLearn run; default 25).
   - `03_plot_LR_per_sample.py`: Generate per-sample visualizations of significant ligand-receptor interactions, including spatial plots and dotplots stratified by distance to HEV (`--bin_size`, default 25).
@@ -50,5 +50,5 @@ This directory contains scripts for identifying, classifying, and analyzing vasc
 
 5. **Outputs:** 
    - Spatially annotated `.h5ad` objects containing vessel segmentations and distance metrics.
-   - CSV files containing HEV vs. Venous DEGs (**Table S8**) and significant L-R interactions (**Table S11**).
+   - CSV files containing HEV vs. Venous DEGs (**Supplementary Table 8**) and significant L-R interactions (**Supplementary Table 11**).
    - Spatial enrichment profiles and L-R dot plots.

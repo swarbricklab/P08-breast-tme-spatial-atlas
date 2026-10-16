@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4K: cell type-specific gene expression within TLS regions
+# Plot Fig. 4k: cell type-specific gene expression within TLS regions
 # Shows expression patterns of key genes in different cell populations inside TLS
 
 # --- Define environment

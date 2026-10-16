@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Figure S9H: spatial chemokine gradients moving out from the HEVs. For every
+# Extended Data Fig. 9h: spatial chemokine gradients moving out from the HEVs. For every
 # sample we extract density-vs-distance profiles and aggregate them into the
 # cohort figure.
 #
-# The headline S9H figure shows, as a broken-axis profile (mean +/- s.e.m., n=6):
+# The headline Extended Data Fig. 9h figure shows, as a broken-axis profile (mean +/- s.e.m., n=6):
 #   LEFT  = distance from the HEV centre within the T cell zone
 #   RIGHT = distance from the T-cell-zone edge into the surrounding non-TLS tissue
 # for BOTH
@@ -57,7 +57,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 # --- Argparse arguments
 
 parser = argparse.ArgumentParser(
-    description="S9H: CCL19/CCL21 transcript + imPVL s1/iCAF s2 cell density vs distance from HEV",
+    description="Extended Data Fig. 9h: CCL19/CCL21 transcript + imPVL s1/iCAF s2 cell density vs distance from HEV",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 # --- runner contract (cohort script)
@@ -529,7 +529,7 @@ for s in sample_list:
 
 
 # =====================================================================================
-# --- Aggregate the per-sample profiles + plot the cohort S9H figure
+# --- Aggregate the per-sample profiles + plot the cohort Extended Data Fig. 9h figure
 # =====================================================================================
 
 # (display/aggregation parameters are set as module constants above)
@@ -698,14 +698,14 @@ def _endpoint(agg, group_col, grp, zone, which):
     return (float(r['disp']), float(r['mean']))
 
 
-# --- S9H inputs (top row): CCL19 / CCL21 transcript density, HEV -> T cell zone -> non-TLS
+# --- Extended Data Fig. 9h inputs (top row): CCL19 / CCL21 transcript density, HEV -> T cell zone -> non-TLS
 
 tx_hev   = across(rebin(tx_all[tx_all['anchor'] == HEV_ANCHOR],        'transcript', 'gene', by_zone=True),  'gene')
 seg2_src = tx_all[(tx_all['anchor'] == 'tzone_edge') & (tx_all['zone_group'] == 'outside_TLS')]
 tx_tzone = across(rebin(seg2_src, 'transcript', 'gene', by_zone=False, edges=EDGES_SEG2), 'gene')
 
 
-# --- S9H inputs (bottom row): imPVL s1 / iCAF s2 cell density, HEV -> T cell zone -> non-TLS
+# --- Extended Data Fig. 9h inputs (bottom row): imPVL s1 / iCAF s2 cell density, HEV -> T cell zone -> non-TLS
 
 ct_hev   = across(rebin(ct_df[ct_df['anchor'] == HEV_ANCHOR], 'celldensity', 'cell_type', by_zone=True), 'cell_type')
 ct2_src  = ct_df[(ct_df['anchor'] == 'tzone_edge') & (ct_df['zone_group'] == 'outside_TLS')]
@@ -718,7 +718,7 @@ out_dir = os.path.join(res_dir, '05_xenium_mechanisms', '09_chemokine_sources',
 os.makedirs(out_dir, exist_ok=True)
 
 
-# --- Combined stacked S9H figure (CCL19/CCL21 transcripts over imPVL s1/iCAF s2 density)
+# --- Combined stacked Extended Data Fig. 9h figure (CCL19/CCL21 transcripts over imPVL s1/iCAF s2 density)
 
 _zone_col_f = os.path.join(_plot_col_dir, 'TLS_zone_colors.csv')
 _zone_col = (pd.read_csv(_zone_col_f).set_index('zone')['color'].to_dict()
@@ -813,12 +813,12 @@ _t = np.arange(0, seg_max_um + 1, 50)
 axsC[1, 0].set_xticks(_t[_t < seg_max_um]); axsC[1, 1].set_xticks(_t[_t > 0])
 _ip = INFO.split(' - '); _m = (len(_ip) + 1) // 2
 _info_2l = ' - '.join(_ip[:_m]) + '\n' + ' - '.join(_ip[_m:])
-figC.suptitle('S9H — CCL19/CCL21 transcripts & imPVL s1/iCAF s2 density vs distance from HEV\n' + _info_2l,
+figC.suptitle('Extended Data Fig. 9h — CCL19/CCL21 transcripts & imPVL s1/iCAF s2 density vs distance from HEV\n' + _info_2l,
               y=1.52, ha='center', fontweight='bold', fontsize=7)
 figC.tight_layout()
 
 BAND_SUFFIX = '' if band_kind == 'sem' else f'_{band_kind}'
-pdf_path = os.path.join(out_dir, f'S9H_{GENE_TAG}_density_vs_dist_{BIN_TAG}{BAND_SUFFIX}.pdf')
+pdf_path = os.path.join(out_dir, f'ED9H_{GENE_TAG}_density_vs_dist_{BIN_TAG}{BAND_SUFFIX}.pdf')
 save_multi_image(pdf_path)
 plt.close('all')
 

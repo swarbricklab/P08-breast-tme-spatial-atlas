@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5C: cell type-specific gene expression within TLS
+# Plot Fig. 5c: cell type-specific gene expression within TLS
 # Shows expression patterns of key chemokines and receptors in different cell populations inside TLS structures
 
 # --- Define environment

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 4A: gene expression comparison between ACKR1+ (venous) ECs in HEV vs non-HEV niches
+# Plot Fig. 4a: gene expression comparison between ACKR1+ (venous) ECs in HEV vs non-HEV niches
 
 # --- Define environment
 # env: xen-hev

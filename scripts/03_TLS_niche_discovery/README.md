@@ -8,14 +8,14 @@ This directory contains scripts and workflows for identifying, scoring, and char
   Initial TLS scoring and spatial grouping.
   - `01_run_TLS_model.py`: Apply the published TLS predictive model (Andersson et al., 2021) to Visium spots.
   - `02_group_TLS_high.py`: Visualize and group spatially contiguous regions with high TLS scores.
-  - `03_TLS_spatial_organization/`: Characterise discrete TLS across the cohort — number, size, spatial clustering (DBSCAN) and tumour topology (intratumoral / peritumoral / stromal-distant). Reproduces **Figure S3B**. See its [README](01_identify_TLS/03_TLS_spatial_organization/README.md).
+  - `03_TLS_spatial_organization/`: Characterise discrete TLS across the cohort — number, size, spatial clustering (DBSCAN) and tumour topology (intratumoral / peritumoral / stromal-distant). Reproduces **Extended Data Fig. 3b**. See its [README](01_identify_TLS/03_TLS_spatial_organization/README.md).
 
 - **02_identify_TLS_niches/**  
   Refined clustering and identification of internal TLS architectures.
-  - `01_cluster_TLS_high.py`: Integrate, cluster, and visualize TLS-high spots to identify core niches (T cell zone, B cell zone, Germinal Center, HEV). *(Generates data for Table S4)*.
+  - `01_cluster_TLS_high.py`: Integrate, cluster, and visualize TLS-high spots to identify core niches (T cell zone, B cell zone, Germinal Center, HEV). *(Generates data for Supplementary Table 4)*.
 
 - **03_extract_niche_signatures/**  
-   Extraction and biological filtering of niche marker gene signatures. *(Generates data for Table S5)*.
+   Extraction and biological filtering of niche marker gene signatures. *(Generates data for Supplementary Table 5)*.
    - `01_extract_niche_signatures.py`: Derive raw marker gene signatures from TLS clustering results.
    - `02_filter_GC_signature.py`: Filter germinal center (GC) signature genes against an epithelial background to remove shared markers (e.g., proliferation, DNA damage repair).
    - `03a_identify_endothelial_high.py`: Identify a background of pan-endothelial high spots across the tissue.
@@ -44,6 +44,6 @@ This directory contains scripts and workflows for identifying, scoring, and char
 
 5. **Output:**  
    - Spatially annotated `.h5ad` objects with TLS and niche scores.
-   - CSV files containing raw differentially expressed genes (**Table S4**) and final filtered spatial signatures (**Table S5**).
+   - CSV files containing raw differentially expressed genes (**Supplementary Table 4**) and final filtered spatial signatures (**Supplementary Table 5**).
    - A consolidated directory of the top 300 filtered gene signature CSVs for each niche, for convenient downstream analysis.
    - Spatial plots mapping the T cell zone, B cell zone, and GC niches.

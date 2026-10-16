@@ -22,7 +22,7 @@ Each subdirectory contains its own detailed README documenting the specific work
 
 ### Figure Generation
 
-- **[figures/](figures/)** - Scripts for generating manuscript figure panels, organized by figure number (figure1/ through figure5/). Each script is named according to its corresponding panel (e.g., `3B.py` generates Figure 3B). These scripts read preprocessed data from the analysis workflows and produce publication-ready plots.
+- **[figures/](figures/)** - Scripts for generating manuscript figure panels, organized by figure number (figure1/ through figure5/). Each script is named according to its corresponding panel (e.g., `3B.py` generates Fig. 3b). These scripts read preprocessed data from the analysis workflows and produce publication-ready plots.
 
 ### Utility Scripts
 

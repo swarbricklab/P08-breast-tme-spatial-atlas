@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Make spatial overviews of 5 selected samples for Figure 1D
+# Make spatial overviews of 5 selected samples for Fig. 1d
 # Shows H&E images and pathology annotations for one sample per clinical subtype
-# This creates Figure 1D
+# This creates Fig. 1d
 
 # --- Define environment
 # env: spatial-pilot

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5E: spatial transcript distribution of SPP1 in HEV regions
+# Plot Fig. 5e: spatial transcript distribution of SPP1 in HEV regions
 
 # --- Define environment
 # env: spatdat

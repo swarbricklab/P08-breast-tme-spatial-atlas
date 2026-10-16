@@ -5,12 +5,12 @@
 # This single cohort script merges three source analyses:
 #   (a) CCL19 / CCL21 producer subsets  (miniatlas subsets with >= X% of cells expressing),
 #   (b) CXCL13 producer subsets         (same metric),
-#   (c) the S9A dot plot of the TLS-niche chemokines / receptors / HEV markers across every
+#   (c) the Extended Data Fig. 9a dot plot of the TLS-niche chemokines / receptors / HEV markers across every
 #       reference subset, with candidate producers (> 15% of cells expressing any of
 #       CCL19 / CXCL13 / CCL21) highlighted.
 # For every subset we compute the % of cells expressing (raw counts > 0) and the mean
 # log-norm expression. Producer lists are emitted at BOTH thresholds: over_10 (>= 10%, used
-# by the downstream S9I reference-producer correlation) and over_15 (>= 15%, the headline).
+# by the downstream Extended Data Fig. 9i reference-producer correlation) and over_15 (>= 15%, the headline).
 # FDC are NOT in the reference and are always added downstream as a CXCL13 producer regardless
 # of this list.
 
@@ -47,7 +47,7 @@ sc.settings.verbosity = 3
 # figure and producer lists are built purely from the miniatlas reference.
 
 parser = argparse.ArgumentParser(
-    description="Reference (miniatlas) CCL19/CCL21 & CXCL13 producers + S9A niche-gene dot plot",
+    description="Reference (miniatlas) CCL19/CCL21 & CXCL13 producers + Extended Data Fig. 9a niche-gene dot plot",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("--h5ad_dir", default=None, help="Path to anndata objects dir (holds sc_ref/)")
@@ -60,7 +60,7 @@ parser.add_argument("--min_pct_exprs", nargs="*", type=float, default=[10.0, 15.
                     help="thresholds (%%): a subset is a producer if >= this %% of its cells "
                          "express; one output subdir over_<pct> per value")
 parser.add_argument("--bold_pct", type=float, default=15.0,
-                    help="S9A: bold a subset if > this %% of its cells express any of "
+                    help="Extended Data Fig. 9a: bold a subset if > this %% of its cells express any of "
                          "CCL19/CXCL13/CCL21 (headline candidate-producer threshold)")
 
 args = vars(parser.parse_args())
@@ -77,7 +77,7 @@ if h5ad_dir is None:
 LINEAGE_ORDER = ['Epithelial', 'Immune', 'Stromal']
 SUBSET_COL    = 'celltype_subset'      # miniatlas obs column holding the subset label
 CYCLING_COL   = 'miniatlas_cycling'    # classifications column (major class w/ Cycling split out)
-BOLD_GENES    = ['CCL19', 'CXCL13', 'CCL21']   # S9A: producers of any of these get a bold label
+BOLD_GENES    = ['CCL19', 'CXCL13', 'CCL21']   # Extended Data Fig. 9a: producers of any of these get a bold label
 
 
 # --- Output directories (plots / csv_files split)
@@ -249,7 +249,7 @@ emit_producers(['CXCL13'], 'cxcl13_producers',
 
 
 # ===========================================================================================
-# --- S9A: TLS-niche chemokines / receptors / HEV markers across the reference
+# --- Extended Data Fig. 9a: TLS-niche chemokines / receptors / HEV markers across the reference
 # Faithful port of the reference per-niche split dotplots. Per-gene min-max-scaled mean
 # expression (colour), fraction of cells expressing (dot size), swap_axes so genes are rows
 # and cell types are columns, a lineage / major-class row-colour matrix, and L-R brackets.
@@ -344,7 +344,7 @@ if missing_bold:
     print(f'WARNING: bold genes absent from reference (ignored for bolding): {missing_bold}')
 bold_mask = (pct_df[bold_genes_present] > BOLD_PCT).any(axis=1)
 bold_set = set(bold_mask[bold_mask].index)
-print(f'S9A: cell types bolded (> {BOLD_PCT:.0f}% expressing any of {bold_genes_present}, '
+print(f'Extended Data Fig. 9a: cell types bolded (> {BOLD_PCT:.0f}% expressing any of {bold_genes_present}, '
       f'n={len(bold_set)}):')
 for s in sorted_cell_types:
     if s in bold_set:
@@ -577,19 +577,19 @@ def make_niche_dotplot(top_genes_dict, lr_pairs, x_left_global=None):
     bold_producer_labels(heatmap_axs[-1])
 
     row_colors_ax_pos = row_colors_ax.get_position()
-    plt.suptitle(f'S9A — miniatlas {level} cell types (use_data={use_data})\n'
+    plt.suptitle(f'Extended Data Fig. 9a — miniatlas {level} cell types (use_data={use_data})\n'
                  f'bold = > {BOLD_PCT:.0f}% expressing any of ' + '/'.join(bold_genes_present),
                  x=(row_colors_ax_pos.x0 + row_colors_ax_pos.x1) / 2,
                  y=row_colors_ax_pos.y1 + 0.1, fontweight='bold')
     return x_left_global
 
 
-# --- Build the S9A niche dotplot
+# --- Build the Extended Data Fig. 9a niche dotplot
 
 make_niche_dotplot(PLOT3_GENES, [('CCL19', 'CCR7'), ('CXCL13', 'CXCR5')])
 
 
-# --- Save S9A outputs
+# --- Save Extended Data Fig. 9a outputs
 
 niche_csv_dir  = os.path.join(csv_root,  'niche_genes')
 niche_plot_dir = os.path.join(plot_root, 'niche_genes')
@@ -604,8 +604,8 @@ for fnum in plt.get_fignums():
     for ax in plt.figure(fnum).axes:
         ax.grid(False)
 
-save_multi_image(os.path.join(niche_plot_dir, 'S9A_miniatlas_niche_genes_dotplots.pdf'))
+save_multi_image(os.path.join(niche_plot_dir, 'ED9A_miniatlas_niche_genes_dotplots.pdf'))
 plt.close('all')
 
-print(f'Saved S9A: {niche_plot_dir}')
+print(f'Saved Extended Data Fig. 9a: {niche_plot_dir}')
 print("Script successfully completed")

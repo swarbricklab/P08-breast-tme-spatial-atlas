@@ -6,7 +6,7 @@
 # run DEG, and auto-flag any leiden cluster whose top DEGs include CR1/CR2 (the most specific FDC
 # markers on the panel) as FDC. Saves the per-sample FDC/Tfh barcode CSV (the sole FDC input
 # consumed downstream), the full DEG table, and a multi-page diagnostic PDF of UMAPs, dotplots,
-# violins and a spatial plot. Supports figure S9J (FDC recovery).
+# violins and a spatial plot. Supports Extended Data Fig. 9j (FDC recovery).
 
 # --- Define environment
 # env: spatial-pilot

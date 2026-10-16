@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot selected TLSs with H&E, pathology annotations, TLS model, niche signatures, and deconvolution (Figure 2F)
+# Plot selected TLSs with H&E, pathology annotations, TLS model, niche signatures, and deconvolution (Fig. 2f)
 # Horizontal orientation: 4 TLSs × 6 panels (H&E, pathology, TLS model, niche signatures, B-cells, T-cells)
 
 # --- Define environment
@@ -36,7 +36,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot selected TLSs for Figure 2F",
+parser = argparse.ArgumentParser(description="Plot selected TLSs for Fig. 2f",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

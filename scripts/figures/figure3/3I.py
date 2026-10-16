@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 3I: differential gene expression in HEV-overlapping vs non-overlapping vessels
+# Plot Fig. 3i: differential gene expression in HEV-overlapping vs non-overlapping vessels
 # Shows volcano plot and dotplot of genes enriched in vessels with HEV signatures
 # Stratified by vessel type based on deconvolution results
 

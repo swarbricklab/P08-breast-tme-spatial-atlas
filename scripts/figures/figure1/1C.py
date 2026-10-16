@@ -6,7 +6,7 @@
 # Section counts are derived directly from the per-modality sample sheets
 # (one row per profiled section), so the cohort composition is the single
 # source of truth and no separate resource file is required.
-# This creates Figure 1C
+# This creates Fig. 1c
 
 # --- Define environment
 # env: spatial-pilot
@@ -30,7 +30,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="Plot the data-modalities-per-patient matrix (Figure 1C)",
+parser = argparse.ArgumentParser(description="Plot the data-modalities-per-patient matrix (Fig. 1c)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot vessel morphology showing different endothelial types (Figure 3C)
+# Plot vessel morphology showing different endothelial types (Fig. 3c)
 # Shows high-resolution H&E and deconvolution results for different vessel types
 
 # --- Define environment
@@ -29,7 +29,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot vessel morphology for Figure 3C",
+parser = argparse.ArgumentParser(description="Plot vessel morphology for Fig. 3c",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",

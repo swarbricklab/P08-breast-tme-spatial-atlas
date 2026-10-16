@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot the top 10 cell types enriched in spots sending LTB signals to HEVs (Figure 4J)
+# Plot the top 10 cell types enriched in spots sending LTB signals to HEVs (Fig. 4j)
 
 # --- Define environment
 # env: vis-hd
@@ -31,7 +31,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot cellular enrichment in LTB-sending bins for Figure 4J",
+parser = argparse.ArgumentParser(description="Plot cellular enrichment in LTB-sending bins for Fig. 4j",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -300,7 +300,7 @@ all_avg_comp_df_top10['cell_type'] = pd.Categorical(all_avg_comp_df_top10['cell_
                                                 ordered=True)
 
 
-# --- Plot: Top 10 enriched cell types (Figure 4J)
+# --- Plot: Top 10 enriched cell types (Fig. 4j)
 
 sc.set_figure_params(fontsize=10)
 

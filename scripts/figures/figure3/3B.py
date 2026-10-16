@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot endothelial deconvolution and pathology annotations in zoomed areas (Figure 3B)
+# Plot endothelial deconvolution and pathology annotations in zoomed areas (Fig. 3b)
 # Shows H&E, deconvolution results, and pathology annotations for different tissue regions
 # This script is set up for P29_HD
 
@@ -34,7 +34,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 
 # --- Argparse arguments
-parser = argparse.ArgumentParser(description="Plot vessel classification with pathology annotations for Figure 3B",
+parser = argparse.ArgumentParser(description="Plot vessel classification with pathology annotations for Fig. 3b",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("--res_dir", help="Path to results directory")

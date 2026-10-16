@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S9B: inside TLS there are multiple CCL19+ stromal populations that are distinct lineages —
+# Extended Data Fig. 9b: inside TLS there are multiple CCL19+ stromal populations that are distinct lineages —
 # iCAF s2 (CAFs MSC iCAF-like s2) carries fibroblast markers, imPVL s1 (PVL Immature s1)
 # carries mural/perivascular markers. Pooling cells across all samples, draw the per-gene-max
 # scaled dot plot contrasting TLS-resident imPVL s1 vs iCAF s2:
@@ -39,7 +39,7 @@ sc.set_figure_params(facecolor='white', fontsize=10)
 # passes --h5ad_dir --project_dir --res_dir --sample_sheet --samples.
 
 parser = argparse.ArgumentParser(
-    description="S9B imPVL s1 vs iCAF s2 per-gene-max dot plot inside TLS (cohort)",
+    description="Extended Data Fig. 9b imPVL s1 vs iCAF s2 per-gene-max dot plot inside TLS (cohort)",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("--h5ad_dir", required=True, help="Path to anndata objects dir")
@@ -397,7 +397,7 @@ if missing:
     print(f'\nMarkers absent from panel (dropped): {missing}')
 
 
-# --- S9B: main comparison, imPVL s1 vs iCAF s2 inside TLS (per-gene max)
+# --- Extended Data Fig. 9b: main comparison, imPVL s1 vs iCAF s2 inside TLS (per-gene max)
 
 tls_pool = pool[pool.obs['group'].isin(TLS_COMPARISON)].copy()
 tls_pool.obs['group'] = tls_pool.obs['group'].cat.remove_unused_categories()
@@ -412,7 +412,7 @@ for fnum in plt.get_fignums():
     for ax in plt.figure(fnum).axes:
         ax.grid(False)
 
-pdf_path = os.path.join(plot_dir, 'S9B_impvl_s1_vs_icaf_s2_TLS.pdf')
+pdf_path = os.path.join(plot_dir, 'ED9B_impvl_s1_vs_icaf_s2_TLS.pdf')
 save_multi_image(pdf_path)
 plt.close('all')
 

@@ -2,7 +2,7 @@
 
 # --- Aim
 # Figure-quality cohort overview of per-sample TLS characteristics across the
-# Visium cohort (Supplementary Figure S3B): a per-sample sorted bar of TLS number
+# Visium cohort (Extended Data Fig. 3b): a per-sample sorted bar of TLS number
 # with stacked panels for TLS size, spatial clustering (DBSCAN clustered vs lone)
 # and topology (intratumoral / peritumoral / stromal_distant). Reads the
 # per-sample TLS-model spot counts and the per-TLS distances/clustering tables
@@ -125,7 +125,7 @@ subtype_order = ['Luminal A', 'Luminal B', 'Luminal B (HER2+)', 'HER2+', 'TNBC']
 
 # --- Locate inputs
 # Number / size / clustering / topology are all reported on the discrete-TLS set
-# (Figure S3B definition) written by 01 and 02. Total spot counts per section come
+# (Extended Data Fig. 3b definition) written by 01 and 02. Total spot counts per section come
 # from the per-sample TLS-model CSVs.
 
 tls_model_parent = os.path.join(

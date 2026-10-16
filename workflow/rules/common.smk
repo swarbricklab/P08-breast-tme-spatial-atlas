@@ -23,7 +23,5 @@ def base_args(sheet):
     return ("--h5ad_dir " + PROJECT_DIR + "/" + H5AD + " --project_dir " + PROJECT_DIR
             + " --res_dir " + PROJECT_DIR + "/" + RES + " --sample_sheet " + PROJECT_DIR + "/" + SHEETS[sheet])
 
-# Target lists filled by the rule files; rule all collects TARGETS, rule all_long TARGETS_LONG
-# (steps that take many hours, e.g. the Visium HD ligand-receptor analysis).
+# Target list filled by the rule files; rule all collects it.
 TARGETS = []
-TARGETS_LONG = []

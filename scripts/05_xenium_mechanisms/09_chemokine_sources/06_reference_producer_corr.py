@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# S9I: within-TLS spatial correlation of reference-producer cell abundance vs CCL19 / CCL21
+# Extended Data Fig. 9i: within-TLS spatial correlation of reference-producer cell abundance vs CCL19 / CCL21
 # transcript density, per 50 um bin. The candidate cell types are the scRNA-seq reference
 # CCL19 / CCL21 producers (subsets with >= 10 % of cells expressing, the `over_10` list from
 # 01_reference_producers). For every 50 um bin we count each producer subset's cells and sum
@@ -10,7 +10,7 @@
 # partial Spearman that controls for the total number of cells per bin (so a subset must track
 # a chemokine beyond the generic "dense bins have more of everything" effect). Per-sample
 # coefficients are tested against 0 with a two-sided Wilcoxon signed-rank (n = 6). The headline
-# panel (S9I) is the T-cell-zone partial Spearman; the all-TLS and B-cell-zone strata are shown
+# panel (Extended Data Fig. 9i) is the T-cell-zone partial Spearman; the all-TLS and B-cell-zone strata are shown
 # alongside. Reference producers of a given gene get a bold red x-tick label and a red outline
 # on that gene's % expressing annotation cell. Read-only: per-cell transcript counts, cell
 # centroids, TLS zone bins, cell-type labels and the reference producer list.
@@ -46,7 +46,7 @@ PRODUCER_C = '#d1352b'   # highlight colour for reference producers (matches 01_
 # (50 um grid, over_10 producer set, min 10 bins per stratum) are hard-coded defaults.
 
 parser = argparse.ArgumentParser(
-    description="S9I: reference-producer abundance vs CCL19/CCL21 density correlation per 50um bin (cohort)",
+    description="Extended Data Fig. 9i: reference-producer abundance vs CCL19/CCL21 density correlation per 50um bin (cohort)",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("-s", "--samples", nargs='+', required=True)
 parser.add_argument("--h5ad_dir", default=None, help="defaults to <project_dir>/data/anndata_objects")
@@ -455,9 +455,9 @@ def corr_boxplot_figure(stratum, metric, title):
     fig.text(center_x, (fig_h - 0.34) / fig_h, note, ha='center', va='top', fontsize=BODY_FS)
 
 
-# S9I: reference-producer vs chemokine correlation in the T cell zone
+# Extended Data Fig. 9i: reference-producer vs chemokine correlation in the T cell zone
 corr_boxplot_figure('T cell zone', 'partial_spearman',
-                    'S9I — reference-producer vs chemokine correlation (density-controlled)')
+                    'Extended Data Fig. 9i — reference-producer vs chemokine correlation (density-controlled)')
 
 
 # --- Report + save
@@ -474,7 +474,7 @@ out_base = os.path.join(res_dir, '05_xenium_mechanisms', '09_chemokine_sources',
 os.makedirs(os.path.join(out_base, 'plots'), exist_ok=True)
 os.makedirs(os.path.join(out_base, 'csv_files'), exist_ok=True)
 cdf.to_csv(os.path.join(out_base, 'csv_files', f'reference_producer_corr{genes_tag}.csv'), index=False)
-pdf_path = os.path.join(out_base, 'plots', f'S9I_reference_producer_corr{genes_tag}.pdf')
+pdf_path = os.path.join(out_base, 'plots', f'ED9I_reference_producer_corr{genes_tag}.pdf')
 save_multi_image(pdf_path)
 print(f'\nSaved: {pdf_path}')
 print('Script successfully completed')

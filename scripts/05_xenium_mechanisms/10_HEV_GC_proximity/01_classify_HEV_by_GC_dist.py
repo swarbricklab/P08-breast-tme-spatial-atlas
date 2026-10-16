@@ -3,7 +3,7 @@
 # --- Aim
 # Classify each intra-TLS HEV niche by its distance to the nearest germinal
 # centre (GC) and label it close (<= 500 um) or far (> 500 um) from a GC.
-# Upstream for Figure S10I/J (HEV endothelial cells stratified by GC proximity).
+# Upstream for Extended Data Fig. 10i,j (HEV endothelial cells stratified by GC proximity).
 #
 # Only HEV niches that sit within a TLS are considered (close_to_TLS == True,
 # defined as <= 100 um from a TLS in 05/02_identify_HEV_regions). For every such

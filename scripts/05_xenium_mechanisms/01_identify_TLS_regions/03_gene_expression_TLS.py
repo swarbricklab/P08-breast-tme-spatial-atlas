@@ -2,7 +2,7 @@
 
 # --- Aim
 # Plot mean CD40 and CD40LG expression across the cell types that comprise at least 1% of
-# cells within the identified Xenium TLS regions, min-max scaled 0-1 per gene (S7D).
+# cells within the identified Xenium TLS regions, min-max scaled 0-1 per gene (Extended Data Fig. 7d).
 
 # --- Define environment
 # env: xen-hev
@@ -28,7 +28,7 @@ mpl.rcParams['pdf.fonttype'] = 42
 
 # --- Argparse arguments
 
-parser = argparse.ArgumentParser(description="CD40/CD40LG expression in Xenium TLS regions (S7D)",
+parser = argparse.ArgumentParser(description="CD40/CD40LG expression in Xenium TLS regions (Extended Data Fig. 7d)",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 parser.add_argument("-s", "--samples",
@@ -151,7 +151,7 @@ def auto_resize_heatmap(ax, space_per_dot=0.04, width_ratio=0.7):
     ax.set_position([pos.x0, pos.y0, new_width, new_height])
 
 
-# --- Plot (S7D): CD40 / CD40LG heatmap, min-max scaled per gene
+# --- Plot (Extended Data Fig. 7d): CD40 / CD40LG heatmap, min-max scaled per gene
 
 # Restrict to genes present in the panel
 genes_present = [g for g in genes if g in all_adata.var_names]

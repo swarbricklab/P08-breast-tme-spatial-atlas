@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # --- Aim
-# Plot Figure 5H: Pearson correlations of HEV SPP1 expression with cell types across samples
+# Plot Fig. 5h: Pearson correlations of HEV SPP1 expression with cell types across samples
 # Accounts for variation in cell composition and HEV SPP1 expression levels
 
 # --- Define environment
