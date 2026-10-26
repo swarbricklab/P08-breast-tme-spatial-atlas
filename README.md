@@ -8,6 +8,8 @@ Analysis repository for spatial transcriptomics profiling of tertiary lymphoid s
 
 All input data are tracked as DVC imports that point directly at the public archives holding the data (Zenodo, BioImage Archive, GEO), so no access to our own storage is needed. `dvc pull` fetches files from the archive and verifies them against the checksums pinned in this repository. [data/README.md](data/README.md#data-availability) lists each `.dvc` file, what it contains, and its size.
 
+The `data-access` environment contains DVC and two small packages from PyPI, `chirograph` and `archivefs`, which let DVC fetch files from the archives. Without conda, `pip install dvc dvc-ssh chirograph archivefs` in Python 3.10 or later gives the same setup.
+
 ```bash
 git clone https://github.com/swarbricklab/P08-breast-tme-spatial-atlas.git
 cd P08-breast-tme-spatial-atlas

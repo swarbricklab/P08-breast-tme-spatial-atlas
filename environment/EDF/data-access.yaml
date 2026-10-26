@@ -1,6 +1,6 @@
 name: data-access
 
-# After creating the environment, run `archivefs dvc enable` once (see environment/README.md).
+# After creating the environment, run `archivefs dvc enable` once (see README.md, "Getting the data").
 
 channels:
   - conda-forge
@@ -8,7 +8,8 @@ channels:
 dependencies:
   - python=3.12
   - dvc>=3
+  - dvc-ssh
   - pip
   - pip:
-      - "chirograph @ git+https://github.com/swarbricklab/chirograph"
-      - "archivefs[chiro,dvc] @ git+https://github.com/swarbricklab/archivefs"
+      - chirograph>=0.2.1
+      - archivefs>=0.2.0
