@@ -45,7 +45,7 @@ The single-cell reference used for cell type mapping is pulled from its original
 |---|---|---|---|
 | scRNA-seq reference (compressed archive) | `resources/sc_ref/` | `resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc` | 533 MB |
 
-Pipeline outputs (`data/processed/` — Space Ranger / Xenium Onboard Analysis, used to build the AnnData/SpatialData objects) will be deposited on **GEO** (accession number to be added). Until then, `data/processed.dvc` points at an internal data repository and cannot be pulled from outside the lab.
+Pipeline outputs (`data/processed/` — Space Ranger / Xenium Onboard Analysis, used to build the AnnData/SpatialData objects) are available from **GEO** under [GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850). `data/processed.dvc` points at the lab's internal copy of these files and cannot be pulled from outside the lab; download them from GEO instead.
 
 ### Recreate from source
 
@@ -86,4 +86,4 @@ Pathologist annotations per spot or bin (CSV):
 
 ### processed/
 
-Unmodified 10x Genomics pipeline outputs, the input to [01_preprocessing](../scripts/01_preprocessing/README.md): `spaceranger_outs/visium/`, `spaceranger_outs/visium_hd/` (with `binned_outputs/square_<size>um/` per bin size) and `xenium_outs/`. See the 10x documentation for the [Space Ranger](https://www.10xgenomics.com/support/software/space-ranger/latest/analysis/outputs/output-overview) and [Xenium](https://www.10xgenomics.com/support/software/xenium-onboard-analysis/latest/analysis/xoa-output-understanding-outputs) output files; the Xenium outputs also open in [Xenium Explorer](https://www.10xgenomics.com/support/software/xenium-explorer).
+Unmodified 10x Genomics pipeline outputs, available from GEO ([GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850); see [GEO](#geo)), the input to [01_preprocessing](../scripts/01_preprocessing/README.md): `spaceranger_outs/visium/`, `spaceranger_outs/visium_hd/` (with `binned_outputs/square_<size>um/` per bin size) and `xenium_outs/`. See the 10x documentation for the [Space Ranger](https://www.10xgenomics.com/support/software/space-ranger/latest/analysis/outputs/output-overview) and [Xenium](https://www.10xgenomics.com/support/software/xenium-onboard-analysis/latest/analysis/xoa-output-understanding-outputs) output files; the Xenium outputs also open in [Xenium Explorer](https://www.10xgenomics.com/support/software/xenium-explorer).

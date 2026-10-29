@@ -2,7 +2,7 @@
 
 Analysis repository for spatial transcriptomics profiling of tertiary lymphoid structures (TLS) and high endothelial venules (HEV) in breast cancer using Visium, Visium HD, and Xenium platforms.
 
-**Data:** Zenodo [10.5281/zenodo.18917100](https://doi.org/10.5281/zenodo.18917100) · BioImage Archive [S-BIAD3080](https://doi.org/10.6019/S-BIAD3080) · EGA [EGAS00001008558](https://ega-archive.org/studies/EGAS00001008558) (sequencing reads, controlled access)
+**Data:** Zenodo [10.5281/zenodo.18917100](https://doi.org/10.5281/zenodo.18917100) · BioImage Archive [S-BIAD3080](https://doi.org/10.6019/S-BIAD3080) · GEO [GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850) (pipeline outputs) · EGA [EGAS00001008558](https://ega-archive.org/studies/EGAS00001008558) (sequencing reads, controlled access)
 
 ## Getting the data
 
@@ -23,7 +23,7 @@ dvc list -R --size . data/pathology_annotations    # inspect what a target conta
 dvc pull data/pathology_annotations.dvc            # fetch it
 ```
 
-- `dvc pull` with no target fetches everything (~1.4 TB), so pulling selectively is usually more practical. `data/processed.dvc` cannot yet be pulled from outside the lab (see [data/README.md](data/README.md#geo)).
+- `dvc pull` with no target fetches everything (~1.4 TB), so pulling selectively is usually more practical. `data/processed.dvc` points at the lab's internal copy of the pipeline outputs and cannot be pulled from outside the lab; download these from GEO ([GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850)) instead (see [data/README.md](data/README.md#geo)).
 - Run `dvc` from inside the repository: the archive manifests the pins refer to live in `.chirograph/`.
 - `Unsupported URL type chiro://` means `archivefs dvc enable` has not been run in the active environment.
 - The remote in `.dvc/config` is the lab's private DVC cache; it is not needed to pull the data.

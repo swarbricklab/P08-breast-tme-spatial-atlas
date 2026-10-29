@@ -1,6 +1,6 @@
 # 01_preprocessing
 
-Build the AnnData and SpatialData objects in `data/anndata_objects/` and `data/spatialdata_objects/` from the 10x pipeline outputs in `data/processed/` (see [data/README.md](../../data/README.md)). The objects are published, so this step only needs to be run to regenerate them. All scripts run per sample (`--sample_id`), in the order listed.
+Build the AnnData and SpatialData objects in `data/anndata_objects/` and `data/spatialdata_objects/` from the 10x pipeline outputs in `data/processed/` (available from GEO, [GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850); see [data/README.md](../../data/README.md#geo)). The objects are published, so this step only needs to be run to regenerate them. All scripts run per sample (`--sample_id`), in the order listed.
 
 | Script | Env | What it does |
 |---|---|---|
