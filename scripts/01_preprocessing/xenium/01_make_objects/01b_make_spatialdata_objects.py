@@ -53,7 +53,27 @@ os.makedirs(h5ad_dir, exist_ok=True)
 
 raw_data_dir_sample = os.path.join(project_dir, 'data', 'processed', 'xenium_outs', sample_id)
 
-sdata = xenium(path=raw_data_dir_sample, n_jobs=8, cells_as_circles=False, morphology_mip=False, morphology_focus=False, transcripts=True)
+if os.path.exists(os.path.join(raw_data_dir_sample, 'cells.zarr.zip')):
+    sdata = xenium(path=raw_data_dir_sample, n_jobs=8, cells_as_circles=False, morphology_mip=False, morphology_focus=False, transcripts=True)
+else:
+    # The GEO deposit has no cells.zarr.zip, which holds the cell and nucleus label images and the z_level
+    # column of the table (none of these are used downstream). Read without the label images, take
+    # nucleus_count from cells.parquet instead, leave z_level empty, and link the table to the cell
+    # boundary polygons instead of the cell label image.
+    import spatialdata_io.readers.xenium as xenium_reader
+
+    def cells_metadata_from_parquet(path, file, specs):
+        cells = pd.read_parquet(path / 'cells.parquet', columns=['cell_id', 'nucleus_count'])
+        cells['cell_id'] = xenium_reader._decode_cell_id_column(cells['cell_id'])
+        cells['z_level'] = np.nan
+        cells.index = cells.index.astype(str)
+        return cells
+
+    xenium_reader._get_cells_metadata_table_from_zarr = cells_metadata_from_parquet
+    sdata = xenium(path=raw_data_dir_sample, n_jobs=8, cells_as_circles=False, morphology_mip=False, morphology_focus=False, transcripts=True,
+                   cells_labels=False, nucleus_labels=False)
+    sdata.tables['table'].obs['region'] = 'cell_boundaries'
+    sdata.set_table_annotates_spatialelement('table', region='cell_boundaries', region_key='region', instance_key='cell_id')
 
 
 # --- Update the ids of the anndata object to match the cell_id
