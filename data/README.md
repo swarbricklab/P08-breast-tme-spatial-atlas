@@ -45,12 +45,19 @@ The single-cell reference used for cell type mapping is pulled from its original
 |---|---|---|---|
 | scRNA-seq reference (compressed archive) | `resources/sc_ref/` | `resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz.dvc` | 533 MB |
 
-Pipeline outputs (`data/processed/` — Space Ranger / Xenium Onboard Analysis, used to build the AnnData/SpatialData objects) are available from **GEO** under [GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850). `data/processed.dvc` points at the lab's internal copy of these files and cannot be pulled from outside the lab; download them from GEO instead.
+The 10x Genomics pipeline outputs (Space Ranger, Xenium Onboard Analysis), from which the AnnData and SpatialData objects are built, are on **GEO** under SuperSeries [GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850), one sub-series per platform. Each is pulled as GEO serves it: the per-section files bundled in `<series>_RAW.tar`, plus a table linking each section to its other deposits. The workflow unpacks them into [processed/](#processed) when it needs to build an object.
+
+| GEO series | Contents | Location in this repo | DVC file | Size |
+|---|---|---|---|---|
+| [GSE351843](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351843) | Visium, including the lymph node sections | `data/geo/visium/` | `data/geo/visium.dvc` | 4.5 GB |
+| [GSE351849](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351849) | Visium HD | `data/geo/visium_hd/` | `data/geo/visium_hd.dvc` | 5.3 GB |
+| [GSE350571](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE350571) | Xenium | `data/geo/xenium/` | `data/geo/xenium.dvc` | 167 GB |
 
 ### Recreate from source
 
+- `data/anndata_objects/` and `data/spatialdata_objects/` — objects not pulled from Zenodo are built by the workflow from the GEO deposit (target `objects`; see [../workflow/README.md](../workflow/README.md#building-the-objects-from-geo)).
 - `data/anndata_objects/sc_ref/` — built by the workflow (rule `s02_build_sc_ref`, see [../workflow/README.md](../workflow/README.md)) from the [GEO: GSE176078](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE176078) archive in `resources/sc_ref/`.
-- `data/anndata_objects/visium_hd/square_002um/` — the 2 µm bins are not in the Zenodo record, to save space. No analysis here uses them (the Visium HD analyses use the 8, 16 and 48 µm bins); regenerate them from the Space Ranger outputs if needed.
+- `data/anndata_objects/visium_hd/square_002um/` — the 2 µm bins are not in the Zenodo record, to save space. No analysis here uses them (the Visium HD analyses use the 8, 16 and 48 µm bins); [01_preprocessing](../scripts/01_preprocessing/README.md) writes them when it builds the Visium HD objects.
 
 ## Directory Structure
 
@@ -86,4 +93,4 @@ Pathologist annotations per spot or bin (CSV):
 
 ### processed/
 
-Unmodified 10x Genomics pipeline outputs, available from GEO ([GSE351850](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351850); see [GEO](#geo)), the input to [01_preprocessing](../scripts/01_preprocessing/README.md): `spaceranger_outs/visium/`, `spaceranger_outs/visium_hd/` (with `binned_outputs/square_<size>um/` per bin size) and `xenium_outs/`. See the 10x documentation for the [Space Ranger](https://www.10xgenomics.com/support/software/space-ranger/latest/analysis/outputs/output-overview) and [Xenium](https://www.10xgenomics.com/support/software/xenium-onboard-analysis/latest/analysis/xoa-output-understanding-outputs) output files; the Xenium outputs also open in [Xenium Explorer](https://www.10xgenomics.com/support/software/xenium-explorer).
+The 10x Genomics pipeline outputs, the input to [01_preprocessing](../scripts/01_preprocessing/README.md): `spaceranger_outs/visium/`, `spaceranger_outs/visium_hd/` (with `binned_outputs/square_<size>um/` per bin size) and `xenium_outs/`. [00_unpack_geo.py](../scripts/01_preprocessing/00_unpack_geo.py) unpacks them from the [GEO](#geo) deposit in `geo/` (the workflow runs it when needed). See the 10x documentation for the [Space Ranger](https://www.10xgenomics.com/support/software/space-ranger/latest/analysis/outputs/output-overview) and [Xenium](https://www.10xgenomics.com/support/software/xenium-onboard-analysis/latest/analysis/xoa-output-understanding-outputs) output files; the Xenium outputs also open in [Xenium Explorer](https://www.10xgenomics.com/support/software/xenium-explorer).

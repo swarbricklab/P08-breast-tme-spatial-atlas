@@ -8,7 +8,7 @@ Each script names its environment in its header (`# env: xen-hev`). The workflow
 | Environment | Used for |
 |---|---|
 | `spatial-pilot` | Visium analyses (steps 01, 03), building the scRNA-seq reference, and the Leiden clustering in `05_xenium_mechanisms/08_FDC_recovery` |
-| `vis-hd` | Visium HD analyses (steps 01, 04) |
+| `vis-hd` | Visium HD analyses (steps 01, 04); unpacking the GEO deposit (`00_unpack_geo.py`) |
 | `xen-hev` | Xenium analyses (steps 01, 05) |
 | `spatdat` | Creating and reading the Xenium SpatialData objects (transcript-level analyses and plots) |
 | `cell2location` | Cell type deconvolution (step 02) |
