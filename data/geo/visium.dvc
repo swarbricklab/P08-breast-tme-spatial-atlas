@@ -1,0 +1,19 @@
+md5: 0deee207a8416ad5c781a15c9ecd9e4c
+frozen: true
+meta:
+  archivefs:
+    archive: geo
+    accession: GSE351843
+    url: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE351843
+    source: geo://GSE351843
+    nfiles: 3
+    note: provenance summary only; the chiro:// pin and .chirograph manifest are authoritative
+deps:
+- md5: ad8509d9dde6a467210402c4ef4f4ee4.dir
+  size: 4471568149
+  nfiles: 3
+  hash: md5
+  path: chiro://md5:ced4c9fffd6bc3b422a274fc2f244e12
+outs:
+- hash: md5
+  path: visium

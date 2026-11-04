@@ -1,0 +1,30 @@
+{
+  "schema": "chirograph",
+  "schema_version": "1.1",
+  "hash_algorithm": "md5",
+  "provenance_type": "observed-download",
+  "record_accession": "GSE351843",
+  "concept": "geo:GSE351843",
+  "created": "2026-11-04T01:48:22Z",
+  "generator": "chirograph 0.2.1",
+  "size": 4471568149,
+  "nfiles": 3,
+  "body_hash": "45aa8621d8badd2c73ef262dd682068d",
+  "files": [
+    {
+      "relpath": "GSE351843_P08_Visium_cross_references.csv.gz",
+      "md5": "c1b544baec4a091a5f20bd81d3bbb01b",
+      "size": 1933
+    },
+    {
+      "relpath": "GSE351843_RAW.tar",
+      "md5": "a67123dc2158369f37c357dc91bc49a5",
+      "size": 4469893120
+    },
+    {
+      "relpath": "GSE351843_probe_set.csv.gz",
+      "md5": "bbad1041f2317870c3310f339c37a07b",
+      "size": 1673096
+    }
+  ]
+}
