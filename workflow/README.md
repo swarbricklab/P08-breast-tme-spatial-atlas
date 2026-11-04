@@ -1,13 +1,13 @@
 # Analysis workflow
 
-A Snakemake workflow that runs the analysis scripts of steps 03–05 and the figure scripts in dependency order, starting from the published inputs; it also builds the scRNA-seq reference object from its GEO archive. Preprocessing (step 01) and the cell type mapping models (step 02) are not part of it; their outputs are pulled from Zenodo. To rerun those steps, see [scripts/README.md](../scripts/README.md).
+A Snakemake workflow that runs the analysis scripts of steps 03–05 and the figure scripts in dependency order, starting from the published inputs; it also builds the scRNA-seq reference object from its GEO archive, and any AnnData or SpatialData object (step 01) that has not been pulled from Zenodo (see [Building the objects from GEO](#building-the-objects-from-geo)). The cell type mapping models (step 02) are not part of it; their outputs are pulled from Zenodo. To rerun that step, see [scripts/README.md](../scripts/README.md).
 
 ## Requirements
 
 - Snakemake 7.32.4: `conda env create -f environment/EDF/snakemake.yaml`, then `conda activate snakemake` and run from the repository root. Activate the environment rather than only putting `snakemake` on the `PATH`: the job submission script imports `snakemake` and `yaml` from it.
 - The six conda environments the rules activate by name (`spatial-pilot`, `vis-hd`, `xen-hev`, `spatdat`, `shapely`, `gseapy`), so they must appear in `conda env list`: `conda env create -f environment/EDF/<env>.yaml`. Exact versions are in `environment/ESF/`.
 - The inputs, pulled with DVC (see [Getting the data](../README.md#getting-the-data)):
-  - from Zenodo (~50 GB): `data/anndata_objects`, `data/spatialdata_objects`, `data/pathology_annotations`, `results/02_cell_type_mapping`;
+  - from Zenodo (~50 GB): `data/anndata_objects`, `data/spatialdata_objects` (or build these from GEO, see below), `data/pathology_annotations`, `results/02_cell_type_mapping`;
   - from GEO (533 MB): `resources/sc_ref/GSE176078_Wu_etal_2021_BRCA_scRNASeq.tar.gz`, from which the workflow builds the scRNA-seq reference;
   - the aligned H&E images, read only by the panels and zoom plots drawn on the H&E (leave them out with the `all_no_images` target). The workflow reads 15 of them (~133 GB). Pull the three folders in `data/images/he/aligned_images/` with DVC (~400 GB, all sections), or download just these files (each `<name>.ome.tif`) from the BioImage Archive ([S-BIAD3080](https://doi.org/10.6019/S-BIAD3080), `images/he/aligned_images/`) into the same paths under `data/`:
     - `visium/`: `P12_LN_Vis`, `P18_Vis`, `P22_Vis`, `P24_Vis`, `P29_Vis_Rep1`
@@ -29,10 +29,20 @@ snakemake --profile config/profiles/nci_a56 results/figures/Fig_2I.pdf --forceru
 | `all_no_images` | `all` without the steps that need the aligned H&E images |
 | `all_xenium` | Xenium analyses and figure panels only |
 | `all_visium` | Visium and Visium HD analyses and figure panels only |
+| `objects` | the AnnData and SpatialData objects only (built from GEO where missing) |
 
 The Visium HD ligand-receptor analysis (stLearn, up to ~4 h per sample on 16 CPUs) is part of `all`; to skip it and the panels built on it, add `--omit-from h04_run_LR_analysis_stlearn`. Any single output can be a target; figure panels are `results/figures/Fig_<panel>.pdf`, made by rules named `fig_<panel>`. Outputs go to `results/`. Rule logs are `logs/workflow/<rule>/<sample>.log` (per-sample rules) or `logs/workflow/<rule>.log`, in `logs/workflow_<res_dir>/` instead when `res_dir` is changed; scheduler logs are in `logs/joblogs/`.
 
 Most jobs need under 50 GB of memory and finish in minutes. The largest requests are 168 GB (`h04_calculate_vessel_distances`) and 124 GB (`v03_filter_GC_signature`), and the longest job is the stLearn analysis of P29_HD (~4 h).
+
+## Building the objects from GEO
+
+The analyses read the AnnData and SpatialData objects from `data/anndata_objects/` and `data/spatialdata_objects/`. Objects pulled from Zenodo are used as they are; the workflow builds only the missing ones (rules `p01_*`), from the GEO deposit of the 10x pipeline outputs, and writes them to the same paths. To build them from GEO, skip pulling the two object folders and pull these:
+
+- `data/geo/visium.dvc`, `data/geo/visium_hd.dvc`, `data/geo/xenium.dvc` (~177 GB), which the workflow unpacks into `data/processed/` (rule `p01_unpack_geo`);
+- for Xenium, the aligned H&E images and the alignment matrices (`data/images/he/aligned_images/xenium.dvc`, `data/images/he/alignment_files.dvc`).
+
+`snakemake --profile config/profiles/nci_a56 objects` builds just the objects. To rebuild an object pulled from Zenodo, delete it first. [scripts/01_preprocessing/README.md](../scripts/01_preprocessing/README.md#objects-built-from-geo) describes the steps.
 
 ## Configuration
 

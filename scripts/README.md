@@ -15,7 +15,7 @@ The analysis runs in five sequential steps, followed by the figure scripts. Each
 
 ## Running the scripts
 
-Steps 03–05 and the figure scripts are run by the Snakemake workflow, starting from the published inputs; see [workflow/README.md](../workflow/README.md). The outputs of steps 01 and 02 are published, so these two steps only need to be run to regenerate them.
+Steps 03–05 and the figure scripts are run by the Snakemake workflow, starting from the published inputs; see [workflow/README.md](../workflow/README.md). The outputs of steps 01 and 02 are published, so these two steps only need to be run to regenerate them; the workflow also runs step 01 for any object that has not been pulled from Zenodo.
 
 Every script has a command-line interface (`python <script> --help`) and names its conda environment in its header (`# env: xen-hev`; see [environment/](../environment/)). Scripts take `--project_dir`, `--h5ad_dir`, `--res_dir` and `--sample_sheet`, plus either `--sample_id` (one sample per run) or `--samples` (all samples in one run).
 
