@@ -6,12 +6,14 @@
 #   snakemake --profile config/profiles/nci_a56 all_no_images # everything that does not need the H&E images (data/images)
 #   snakemake --profile config/profiles/nci_a56 all_xenium    # Xenium analyses and figures only
 #   snakemake --profile config/profiles/nci_a56 all_visium    # Visium / Visium HD analyses and figures
+#   snakemake --profile config/profiles/nci_a56 objects       # only the AnnData / SpatialData objects (built from GEO where missing)
 #
 # Run from the repository root with Snakemake 7.32.4.
 
 configfile: "config/workflow/config.yaml"
 
 include: "rules/common.smk"
+include: "rules/01_preprocessing.smk"
 include: "rules/02_sc_reference.smk"
 include: "rules/03_TLS_niche_discovery.smk"
 include: "rules/04_vascular_microenvironment.smk"
@@ -22,6 +24,12 @@ include: "rules/figures_4to5.smk"
 rule all:
     input:
         TARGETS
+
+# The objects the analyses read: those already present (e.g. pulled from Zenodo) are kept, missing ones
+# are built from the GEO deposit (see rules/01_preprocessing.smk)
+rule objects:
+    input:
+        P01_OBJECTS
 
 # Xenium analyses and Xenium figure panels only (05_xenium_mechanisms + Figs. 4a–e,k and 5a–c,e–h)
 def _flat(x):
