@@ -39,7 +39,7 @@ Most jobs need under 50 GB of memory and finish in minutes. The largest requests
 
 The analyses read the AnnData and SpatialData objects from `data/anndata_objects/` and `data/spatialdata_objects/`. Objects pulled from Zenodo are used as they are; the workflow builds only the missing ones (rules `p01_*`), from the GEO deposit of the 10x pipeline outputs, and writes them to the same paths. To build them from GEO, skip pulling the two object folders and pull these:
 
-- `data/geo/visium.dvc`, `data/geo/visium_hd.dvc`, `data/geo/xenium.dvc` (~177 GB), which the workflow unpacks into `data/processed/` (rule `p01_unpack_geo`);
+- `data/geo/visium.dvc` (4.5 GB), `data/geo/visium_hd.dvc` (5.3 GB), `data/geo/xenium.dvc` (167 GB), which the workflow unpacks into `data/processed/` (rule `p01_unpack_geo`). Only the platforms a target needs are required, e.g. just `data/geo/xenium.dvc` for `all_xenium`;
 - for Xenium, the aligned H&E images and the alignment matrices (`data/images/he/aligned_images/xenium.dvc`, `data/images/he/alignment_files.dvc`).
 
 `snakemake --profile config/profiles/nci_a56 objects` builds just the objects. To rebuild an object pulled from Zenodo, delete it first. [scripts/01_preprocessing/README.md](../scripts/01_preprocessing/README.md#objects-built-from-geo) describes the steps.

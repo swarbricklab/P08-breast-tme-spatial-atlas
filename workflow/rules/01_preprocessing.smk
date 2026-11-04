@@ -40,8 +40,8 @@ rule p01_unpack_geo:
     conda:
         "vis-hd"
     resources:
-        mem_mb  = lambda wc: {"visium": 4000, "visium_hd": 32000, "xenium": 4000}[wc.platform],   # peak 13.5 GB (visium_hd)
-        runtime = lambda wc: {"visium": 30, "visium_hd": 30, "xenium": 120}[wc.platform],         # peak 6 min (visium_hd)
+        mem_mb  = lambda wc: {"visium": 4000, "visium_hd": 32000, "xenium": 4000}[wc.platform],   # peak 20.4 GB (visium_hd)
+        runtime = lambda wc: {"visium": 15, "visium_hd": 45, "xenium": 45}[wc.platform],          # peak 14 min (visium_hd), 10 min (xenium)
     log:
         LOGW + "/p01_unpack_geo/{platform}.log",
     shell:
